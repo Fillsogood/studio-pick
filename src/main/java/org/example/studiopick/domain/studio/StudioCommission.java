@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "\"StudioCommission\"")
+@Table(name = "\"Studio_Commission\"")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudioCommission {

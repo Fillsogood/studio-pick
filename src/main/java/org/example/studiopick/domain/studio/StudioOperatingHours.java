@@ -11,7 +11,7 @@ import org.example.studiopick.domain.common.enums.Weekday;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "\"StudioOperatingHours\"")
+@Table(name = "\"Studio_Operating_Hours\"")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudioOperatingHours extends BaseEntity {
