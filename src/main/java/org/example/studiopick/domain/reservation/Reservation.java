@@ -38,6 +38,9 @@ public class Reservation extends BaseEntity {
     
     @Column(name = "people_count")
     private Short peopleCount;
+
+    @Column(name = "total_amount", nullable = false)
+    private Long totalAmount;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -45,7 +48,7 @@ public class Reservation extends BaseEntity {
     
     @Builder
     public Reservation(User user, Studio studio, LocalDate reservationDate, 
-                      LocalTime startTime, LocalTime endTime, Short peopleCount, ReservationStatus status) {
+                      LocalTime startTime, LocalTime endTime, Short peopleCount, ReservationStatus status, Long totalAmount) {
         this.user = user;
         this.studio = studio;
         this.reservationDate = reservationDate;
@@ -53,6 +56,7 @@ public class Reservation extends BaseEntity {
         this.endTime = endTime;
         this.peopleCount = peopleCount;
         this.status = status != null ? status : ReservationStatus.PENDING;
+        this.totalAmount = totalAmount;
     }
     
     public void updateReservationTime(LocalDate reservationDate, LocalTime startTime, LocalTime endTime) {

@@ -10,5 +10,4 @@ public class StudioPickApplication {
     SpringApplication.run(StudioPickApplication.class, args);
   }
 
-
 }
