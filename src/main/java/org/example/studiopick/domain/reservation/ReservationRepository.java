@@ -13,5 +13,6 @@ public interface ReservationRepository {
   boolean existsOverlappingReservation(Long studioId, LocalDate date, ReservationStatus status, LocalTime start, LocalTime end);
 
   Reservation save(Reservation reservation);
+
   List<Reservation> findByStudioIdAndReservationDateAndStatus(Long studioId, LocalDate reservationDate, ReservationStatus reservationStatus);
 }

@@ -5,5 +5,5 @@ import java.util.Optional;
 
 public interface StudioOperatingHoursRepository {
 
-  Optional<StudioOperatingHours> findByStudioIdAndWeekday(Long studioId, DayOfWeek dayOfWeek);
+//  Optional<StudioOperatingHours> findByStudioIdAndWeekday(Long studioId, DayOfWeek dayOfWeek);
 }

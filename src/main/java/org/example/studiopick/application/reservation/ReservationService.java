@@ -35,6 +35,11 @@ public class ReservationService {
 
   @Transactional
   public ReservationResponse create(Long studioId, ReservationCreateCommand command) {
+
+    // 스튜디오 동시성 처리를 위한 락 흭득
+    Studio studio = studioRepository.findByIdWithLock(studioId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 Studio id를 찾을 수 없습니다."));
+
     reservationDomainService.validateOverlapping(
         command.studioId(),
         command.reservationDate(),
@@ -42,9 +47,6 @@ public class ReservationService {
         command.startTime(),
         command.endTime()
     );
-
-    Studio studio = studioRepository.findById(command.studioId())
-        .orElseThrow(() -> new IllegalArgumentException("해당 Studio id를 찾을 수 없습니다."));
 
     User user = userRepository.findById(command.userId())
         .orElseThrow(() -> new IllegalArgumentException("해당 User id를 찾을 수 없습니다."));
@@ -58,6 +60,7 @@ public class ReservationService {
         .endTime(command.endTime())
         .status(ReservationStatus.CONFIRMED)
         .peopleCount(command.peopleCount())
+        .totalAmount(command.totalAmount())
         .build();
 
     Reservation saved = reservationRepository.save(reservation);
