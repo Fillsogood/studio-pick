@@ -11,6 +11,7 @@ import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.User;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -41,6 +42,12 @@ public class Reservation extends BaseEntity {
 
     @Column(name = "total_amount", nullable = false)
     private Long totalAmount;
+
+    @Column(name = "cancelled_reason")
+    private String cancelldReason;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -79,10 +86,6 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.CONFIRMED;
     }
     
-    public void cancel() {
-        this.status = ReservationStatus.CANCELLED;
-    }
-    
     public void complete() {
         this.status = ReservationStatus.COMPLETED;
     }
@@ -102,4 +105,31 @@ public class Reservation extends BaseEntity {
     public boolean isValidTimeRange() {
         return startTime != null && endTime != null && startTime.isBefore(endTime);
     }
+
+    // 취소 가능 여부 체크
+    public boolean isCancellable() {
+        return this.status == ReservationStatus.CONFIRMED ||
+            this.status == ReservationStatus.PENDING;
+    }
+
+    // 취소 가능 시간 체크 (24시간 전)
+    public boolean isWithinCancellationPeriod() {
+        LocalDateTime reservationDateTime = this.reservationDate.atTime(this.startTime);
+        LocalDateTime cancellationDeadline = reservationDateTime.minusHours(24);
+        return LocalDateTime.now().isBefore(cancellationDeadline);
+    }
+
+    // 취소 실행
+    public void cancel(String reason) {
+        if (!isCancellable()) {
+            throw new IllegalStateException("취소할 수 없는 예약 상태입니다.");
+        }
+        if (!isWithinCancellationPeriod()) {
+            throw new IllegalStateException("예약 시작 24시간 전까지만 취소 가능합니다.");
+        }
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelldReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
 }

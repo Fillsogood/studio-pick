@@ -7,12 +7,12 @@ import org.example.studiopick.common.validator.UserValidator;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
-import org.example.studiopick.domain.reservation.ReservationRepository;
+
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.studio.StudioOperatingHoursRepository;
-import org.example.studiopick.domain.studio.StudioRepository;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.user.UserRepository;
+import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
+import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,8 +32,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReservationService {
   private final ReservationDomainService reservationDomainService;
-  private final ReservationRepository reservationRepository;
-  private final StudioRepository studioRepository;
+  private final JpaReservationRepository jpaReservationRepository;
+  private final JpaStudioRepository jpaStudioRepository;
   private final UserRepository userRepository;
   private final UserValidator userValidator;
   private final PaginationValidator paginationValidator;
@@ -41,7 +42,7 @@ public class ReservationService {
   public ReservationResponse create(Long studioId, ReservationCreateCommand command) {
 
     // 스튜디오 동시성 처리를 위한 락 흭득
-    Studio studio = studioRepository.findByIdWithLock(studioId)
+    Studio studio = jpaStudioRepository.findByIdWithLock(studioId)
         .orElseThrow(() -> new IllegalArgumentException("해당 Studio id를 찾을 수 없습니다."));
 
     reservationDomainService.validateOverlapping(
@@ -67,7 +68,7 @@ public class ReservationService {
         .totalAmount(command.totalAmount())
         .build();
 
-    Reservation saved = reservationRepository.save(reservation);
+    Reservation saved = jpaReservationRepository.save(reservation);
 
     return new ReservationResponse(
         saved.getId(),
@@ -78,7 +79,7 @@ public class ReservationService {
 
   public AvailableTimesResponse getAvailableTimes(Long studioId, LocalDate date) {
     // 1. 해당 날짜 예약 조회
-    List<Reservation> reservations = reservationRepository.findByStudioIdAndReservationDateAndStatus(
+    List<Reservation> reservations = jpaReservationRepository.findByStudioIdAndReservationDateAndStatus(
         studioId, date, ReservationStatus.CONFIRMED
     );
 
@@ -118,7 +119,7 @@ public class ReservationService {
 
     // 예약 조회 로직
     Pageable pageable = PageRequest.of(page - 1, size);
-    Page<Reservation> reservationsPage = reservationRepository
+    Page<Reservation> reservationsPage = jpaReservationRepository
         .findByUserIdOrderByReservationDateDesc(userId, pageable);
 
     List<UserReservationResponse> reservations = reservationsPage.getContent()
@@ -141,6 +142,30 @@ public class ReservationService {
         reservation.getEndTime().toString(),
         reservation.getStatus().name().toLowerCase(),
         reservation.getTotalAmount()
+    );
+  }
+
+  public ReservationCancelResponse cancleReservation(Long id, ReservationCancelRequest request) {
+    // 1.예약 조회 및 존재 확인
+    Reservation reservation = jpaReservationRepository.findById(id)
+        .orElseThrow(()-> new IllegalArgumentException("예약 Id를 찾을 수 없습니다."));
+
+    // 2. 본인 예약 확인
+    if (!reservation.getUser().getId().equals(request.userId())){
+      throw new IllegalArgumentException("본인의 예약만 취소할 수 있습니다.");
+    }
+
+    // 3. 취소
+    reservation.cancel(request.reason());
+
+    // 4. 저장
+    Reservation saved = jpaReservationRepository.save(reservation);
+
+    // 5. 응답 생성
+    return new ReservationCancelResponse(
+        saved.getId(),
+        saved.getStatus(),
+        LocalDateTime.now()
     );
   }
 }

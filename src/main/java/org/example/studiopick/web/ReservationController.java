@@ -2,10 +2,7 @@ package org.example.studiopick.web;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.reservation.ReservationService;
-import org.example.studiopick.application.reservation.dto.AvailableTimesResponse;
-import org.example.studiopick.application.reservation.dto.ReservationCreateCommand;
-import org.example.studiopick.application.reservation.dto.ReservationResponse;
-import org.example.studiopick.application.reservation.dto.UserReservationListResponse;
+import org.example.studiopick.application.reservation.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -65,4 +62,19 @@ public class ReservationController {
 
     return new ApiResponse<>(true, response, null);
   }
+
+  /**
+   * 예약 취소
+   */
+  @PutMapping("/{id}/cancel")
+  public ApiResponse<ReservationCancelResponse> cancelReservation(
+      @PathVariable Long id,
+      @RequestBody ReservationCancelRequest request
+  ) {
+    ReservationCancelResponse response = reservationService
+        .cancleReservation(id, request);
+
+    return new ApiResponse<>(true, response, "예약이 취소되었습니다.");
+  }
+
 }
