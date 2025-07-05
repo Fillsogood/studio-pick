@@ -1,9 +1,9 @@
 package org.example.studiopick.application.reservation;
 
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.reservation.dto.AvailableTimesResponse;
-import org.example.studiopick.application.reservation.dto.ReservationCreateCommand;
-import org.example.studiopick.application.reservation.dto.ReservationResponse;
+import org.example.studiopick.application.reservation.dto.*;
+import org.example.studiopick.common.validator.PaginationValidator;
+import org.example.studiopick.common.validator.UserValidator;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
@@ -13,6 +13,9 @@ import org.example.studiopick.domain.studio.StudioOperatingHoursRepository;
 import org.example.studiopick.domain.studio.StudioRepository;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.user.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +34,8 @@ public class ReservationService {
   private final ReservationRepository reservationRepository;
   private final StudioRepository studioRepository;
   private final UserRepository userRepository;
-  private final StudioOperatingHoursRepository studioOperatingHoursRepository;
+  private final UserValidator userValidator;
+  private final PaginationValidator paginationValidator;
 
   @Transactional
   public ReservationResponse create(Long studioId, ReservationCreateCommand command) {
@@ -103,6 +107,40 @@ public class ReservationService {
     return new AvailableTimesResponse(
         availableTimes,
         bookedTimes
+    );
+  }
+
+  public UserReservationListResponse getUserReservations(Long userId, int page, int size) {
+
+    // 입력값 검증
+    paginationValidator.validatePaginationParameters(page, size);
+    userValidator.findAndValidateUser(userId);
+
+    // 예약 조회 로직
+    Pageable pageable = PageRequest.of(page - 1, size);
+    Page<Reservation> reservationsPage = reservationRepository
+        .findByUserIdOrderByReservationDateDesc(userId, pageable);
+
+    List<UserReservationResponse> reservations = reservationsPage.getContent()
+        .stream()
+        .map(this::toUserReservationResponse)
+        .toList();
+
+    return new UserReservationListResponse(
+        reservations,
+        new PaginationResponse(page, reservationsPage.getTotalElements())
+    );
+  }
+
+  private UserReservationResponse toUserReservationResponse(Reservation reservation) {
+    return new UserReservationResponse(
+        reservation.getId(),
+        reservation.getStudio().getName(),
+        reservation.getReservationDate().toString(),
+        reservation.getStartTime().toString(),
+        reservation.getEndTime().toString(),
+        reservation.getStatus().name().toLowerCase(),
+        reservation.getTotalAmount()
     );
   }
 }

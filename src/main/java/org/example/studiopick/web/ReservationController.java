@@ -5,6 +5,7 @@ import org.example.studiopick.application.reservation.ReservationService;
 import org.example.studiopick.application.reservation.dto.AvailableTimesResponse;
 import org.example.studiopick.application.reservation.dto.ReservationCreateCommand;
 import org.example.studiopick.application.reservation.dto.ReservationResponse;
+import org.example.studiopick.application.reservation.dto.UserReservationListResponse;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/studios/{studioId}/reservations")
+@RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
 
@@ -25,10 +26,9 @@ public class ReservationController {
    */
   @PostMapping
   public ResponseEntity<ApiResponse<ReservationResponse>> createReservation(
-      @PathVariable Long studioId,
       @RequestBody ReservationCreateCommand command
   ) {
-    ReservationResponse response = reservationService.create(studioId, command);
+    ReservationResponse response = reservationService.create(command.studioId(), command);
 
     ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>(
         true,
@@ -44,10 +44,25 @@ public class ReservationController {
    */
   @GetMapping("/available-times")
   public ApiResponse<AvailableTimesResponse> getAvailableTimes(
-      @PathVariable Long studioId,
+      @RequestParam Long studioId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
   ) {
     AvailableTimesResponse response = reservationService.getAvailableTimes(studioId, date);
+    return new ApiResponse<>(true, response, null);
+  }
+
+  /**
+   * 사용자별 예약 목록 조회
+   */
+  @GetMapping
+  public ApiResponse<UserReservationListResponse> getReservations(
+      @RequestParam Long userId,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    UserReservationListResponse response = reservationService
+        .getUserReservations(userId, page, size);
+
     return new ApiResponse<>(true, response, null);
   }
 }
