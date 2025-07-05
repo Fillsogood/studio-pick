@@ -1,6 +1,8 @@
 package org.example.studiopick.domain.reservation;
 
 import org.example.studiopick.domain.common.enums.ReservationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,4 +17,9 @@ public interface ReservationRepository {
   Reservation save(Reservation reservation);
 
   List<Reservation> findByStudioIdAndReservationDateAndStatus(Long studioId, LocalDate reservationDate, ReservationStatus reservationStatus);
+
+  Page<Reservation> findByUserIdOrderByReservationDateDesc(
+      Long userId,
+      Pageable pageable
+  );
 }

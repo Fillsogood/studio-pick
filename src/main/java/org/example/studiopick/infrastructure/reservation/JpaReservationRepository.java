@@ -3,6 +3,8 @@ package org.example.studiopick.infrastructure.reservation;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,6 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
       @Param("start") LocalTime start,
       @Param("end") LocalTime end
   );
+
+  Page<Reservation> findByUserIdOrderByReservationDateDesc(Long userId, Pageable pageable);
 }
