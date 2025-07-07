@@ -1,4 +1,4 @@
-package org.example.studiopick.application.user;
+package org.example.studiopick.domain.user;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.domain.user.User;
@@ -19,6 +19,7 @@ public class UserService {
 
     @Transactional
     public void signup(UserSignupRequestDto dto) {
+
         // 중복 검사
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
@@ -35,7 +36,7 @@ public class UserService {
         // User 엔티티 생성
         User user = User.builder()
                 .email(dto.getEmail())
-                .password(passwordEncoder.encode(dto.getPassword()))
+                .password(passwordEncoder.encode(dto.getPassword()))  // 암호화 OK
                 .name(dto.getName())
                 .phone(dto.getPhone())
                 .nickname(dto.getNickname())
@@ -45,5 +46,11 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+    }
+
+    // 정규식 조건 메서드
+    private boolean isValidPassword(String password) {
+        String pattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()])[A-Za-z\\d!@#$%^&*()]{8,}$";
+        return password != null && password.matches(pattern);
     }
 }

@@ -2,7 +2,7 @@ package org.example.studiopick.web.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.user.UserService;
+import org.example.studiopick.domain.user.UserService;
 import org.example.studiopick.domain.user.UserSignupRequestDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
