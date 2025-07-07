@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.StudioStatus;
-import org.example.studiopick.domain.user.User;
+import org.example.studiopick.domain.user.entity.User;
 
 import java.util.ArrayList;
 import java.util.List;

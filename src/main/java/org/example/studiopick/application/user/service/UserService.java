@@ -1,11 +1,11 @@
-package org.example.studiopick.domain.user;
+package org.example.studiopick.application.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.domain.user.User;
-import org.example.studiopick.domain.user.UserRepository;
-import org.example.studiopick.domain.user.UserSignupRequestDto;
+import org.example.studiopick.application.user.dto.UserSignupRequestDto;
+import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
+import org.example.studiopick.domain.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +46,10 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+    }
+
+    public boolean validateEmail(String email) {
+        return !userRepository.existsByEmail(email);  // true: 사용 가능 / false: 이미 존재
     }
 
     // 정규식 조건 메서드

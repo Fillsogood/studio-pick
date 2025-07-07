@@ -3,9 +3,8 @@ package org.example.studiopick.common.validator;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.common.exception.InvalidParameterException;
 import org.example.studiopick.common.exception.UserNotFoundException;
-import org.example.studiopick.domain.common.enums.UserStatus;
-import org.example.studiopick.domain.user.User;
-import org.example.studiopick.domain.user.UserRepository;
+import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
 @Component
