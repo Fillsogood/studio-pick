@@ -10,8 +10,8 @@ import org.example.studiopick.domain.reservation.ReservationDomainService;
 import org.example.studiopick.domain.reservation.ReservationRepository;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.studio.StudioRepository;
-import org.example.studiopick.domain.user.User;
-import org.example.studiopick.domain.user.UserRepository;
+import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,8 +71,8 @@ public class ReservationService {
     return new ReservationResponse(
         saved.getId(),
         saved.getTotalAmount(),
-        saved.getStatus(),
-            refundAmount);
+        saved.getStatus()
+    );
   }
 
   public AvailableTimesResponse getAvailableTimes(Long studioId, LocalDate date) {

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.user.User;
+import org.example.studiopick.domain.user.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -86,6 +86,8 @@ public class Reservation extends BaseEntity {
     public void complete() {
         this.status = ReservationStatus.COMPLETED;
     }
+
+    public void refund() { this.status = ReservationStatus.REFUNDED; }
     
     public boolean isConfirmed() {
         return this.status == ReservationStatus.CONFIRMED;

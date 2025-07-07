@@ -2,10 +2,15 @@ package org.example.studiopick.web.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.domain.user.UserService;
-import org.example.studiopick.domain.user.UserSignupRequestDto;
+import org.example.studiopick.application.user.dto.EmailValidateRequestDto;
+import org.example.studiopick.application.user.dto.PhoneValidateRequestDto;
+import org.example.studiopick.application.user.dto.UserSignupRequestDto;
+import org.example.studiopick.application.user.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,4 +24,22 @@ public class UserController {
         userService.signup(requestDto);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
+    // 이메일 중복검사 API
+    @PostMapping("/validate/email")
+    public ResponseEntity<String> validateEmail(@RequestBody @Valid EmailValidateRequestDto dto) {
+        boolean available = userService.validateEmail(dto.getEmail());
+
+        if (!available) {
+            return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
+        }
+
+        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+    }
+    // 휴대폰 번호 중복 검사 API
+    @PostMapping("/api/auth/validate/phone")
+    public ResponseEntity<String> validatePhone(@Valid @RequestBody PhoneValidateRequestDto requestDto) {
+        userService.validatePhone(requestDto.getPhone());
+        return ResponseEntity.ok("사용 가능한 휴대폰번호입니다.");
+    }
+
 }
