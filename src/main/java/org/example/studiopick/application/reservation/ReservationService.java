@@ -9,7 +9,6 @@ import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
 import org.example.studiopick.domain.reservation.ReservationRepository;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.studio.StudioOperatingHoursRepository;
 import org.example.studiopick.domain.studio.StudioRepository;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.user.UserRepository;
@@ -72,8 +71,8 @@ public class ReservationService {
     return new ReservationResponse(
         saved.getId(),
         saved.getTotalAmount(),
-        saved.getStatus()
-    );
+        saved.getStatus(),
+            refundAmount);
   }
 
   public AvailableTimesResponse getAvailableTimes(Long studioId, LocalDate date) {
