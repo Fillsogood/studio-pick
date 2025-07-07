@@ -71,8 +71,8 @@ public class ReservationService {
     return new ReservationResponse(
         saved.getId(),
         saved.getTotalAmount(),
-        saved.getStatus(),
-            refundAmount);
+        saved.getStatus()
+    );
   }
 
   public AvailableTimesResponse getAvailableTimes(Long studioId, LocalDate date) {

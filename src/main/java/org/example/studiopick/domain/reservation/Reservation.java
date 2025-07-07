@@ -86,6 +86,8 @@ public class Reservation extends BaseEntity {
     public void complete() {
         this.status = ReservationStatus.COMPLETED;
     }
+
+    public void refund() { this.status = ReservationStatus.REFUNDED; }
     
     public boolean isConfirmed() {
         return this.status == ReservationStatus.CONFIRMED;
