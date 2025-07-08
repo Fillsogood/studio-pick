@@ -129,9 +129,8 @@ public class Reservation extends BaseEntity {
         if (!isWithinCancellationPeriod()) {
             throw new IllegalStateException("예약 시작 24시간 전까지만 취소 가능합니다.");
         }
-        this.status = ReservationStatus.CANCELLED;
+        this.status = ReservationStatus.PENDING;
         this.cancelldReason = reason;
-        this.cancelledAt = LocalDateTime.now();
     }
 
 }

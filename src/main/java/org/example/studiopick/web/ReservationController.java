@@ -55,10 +55,14 @@ public class ReservationController {
   public ApiResponse<UserReservationListResponse> getReservations(
       @RequestParam Long userId,
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) String status,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) Long studioId
   ) {
     UserReservationListResponse response = reservationService
-        .getUserReservations(userId, page, size);
+        .getUserReservations(userId, page, size, status, startDate, endDate, studioId);
 
     return new ApiResponse<>(true, response, null);
   }

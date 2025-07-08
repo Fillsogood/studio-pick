@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Optional;
+
 
 public interface JpaReservationRepository extends JpaRepository<Reservation, Long>, ReservationRepository {
 
@@ -32,5 +32,20 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
   );
 
   Page<Reservation> findByUserIdOrderByReservationDateDesc(Long userId, Pageable pageable);
+
+  // 상태별 필터링
+  Page<Reservation> findByUserIdAndStatusOrderByReservationDateDesc(Long userId, ReservationStatus status, Pageable pageable);
+
+  // 날짜 범위 필터링
+  Page<Reservation> findByUserIdAndReservationDateBetweenOrderByReservationDateDesc(Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+  // 상태 + 날짜 범위 필터링
+  Page<Reservation> findByUserIdAndStatusAndReservationDateBetweenOrderByReservationDateDesc(Long userId, ReservationStatus status, LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+  // 스튜디오별 필터링
+  Page<Reservation> findByUserIdAndStudioIdOrderByReservationDateDesc(Long userId, Long studioId, Pageable pageable);
+
+  // 모든 필터 조합
+  Page<Reservation> findByUserIdAndStatusAndReservationDateBetweenAndStudioIdOrderByReservationDateDesc(Long userId, ReservationStatus status, LocalDate startDate, LocalDate endDate, Long studioId, Pageable pageable);
 
 }
