@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum PaymentMethod {
     CARD("card"),
     KAKAOPAY("kakaopay"),
-    NAVERPAY("naverpay");
+    TOSSPAY("tosspay");
 
     private final String value;
 

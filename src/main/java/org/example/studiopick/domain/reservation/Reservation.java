@@ -110,8 +110,7 @@ public class Reservation extends BaseEntity {
 
     // 취소 가능 여부 체크
     public boolean isCancellable() {
-        return this.status == ReservationStatus.CONFIRMED ||
-            this.status == ReservationStatus.PENDING;
+        return this.status == ReservationStatus.CONFIRMED;  // CONFIRMED만 취소 가능
     }
 
     // 취소 가능 시간 체크 (24시간 전)
@@ -129,8 +128,24 @@ public class Reservation extends BaseEntity {
         if (!isWithinCancellationPeriod()) {
             throw new IllegalStateException("예약 시작 24시간 전까지만 취소 가능합니다.");
         }
-        this.status = ReservationStatus.PENDING;
+        this.status = ReservationStatus.CANCEL_REQUESTED;
         this.cancelldReason = reason;
     }
 
+    // 스튜디오에서 취소 승인
+    public void approveCancellation() {
+        if (this.status != ReservationStatus.CANCEL_REQUESTED) {
+            throw new IllegalStateException("취소 요청 상태가 아닙니다.");
+        }
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
+    // 스튜디오에서 취소 거부
+    public void rejectCancellation() {
+        if (this.status != ReservationStatus.CANCEL_REQUESTED) {
+            throw new IllegalStateException("취소 요청 상태가 아닙니다.");
+        }
+        this.status = ReservationStatus.CONFIRMED;  // 다시 확정 상태로
+    }
 }
