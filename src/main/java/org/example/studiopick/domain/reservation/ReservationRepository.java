@@ -22,6 +22,4 @@ public interface ReservationRepository {
       Long userId,
       Pageable pageable
   );
-
-  Optional<Reservation> findById(Long id);
 }
