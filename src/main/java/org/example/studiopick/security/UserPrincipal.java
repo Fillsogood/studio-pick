@@ -4,54 +4,83 @@ import lombok.Getter;
 import org.example.studiopick.domain.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 @Getter
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements OAuth2User, UserDetails {
 
     private final User user;
+    private Map<String, Object> attributes;
 
     public UserPrincipal(User user) {
         this.user = user;
     }
 
-    // 권한 반환 (ROLE_접두사 필수)
+    // OAuth2User용 create 메서드
+    public static UserPrincipal create(User user, Map<String, Object> attributes) {
+        UserPrincipal userPrincipal = new UserPrincipal(user);
+        userPrincipal.setAttributes(attributes);
+        return userPrincipal;
+    }
+
+    // 일반 로그인용 create
+    public static UserPrincipal create(User user) {
+        return new UserPrincipal(user);
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    // OAuth2User 필수
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    // OAuth2User 필수
+    @Override
+    public String getName() {
+        return String.valueOf(user.getId());
+    }
+
+    // Spring Security 권한 정보
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(() -> "ROLE_" + user.getRole().name()); // 예: ROLE_USER
+        return Collections.singleton(() -> "ROLE_" + user.getRole().name());
     }
 
-    // 로그인 ID로 사용할 값 (email)
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.getEmail(); // 로그인 ID
     }
 
-    // 로그인 시 비교할 비밀번호
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return user.getPassword(); // 비밀번호
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // 계정 만료 여부: false면 로그인 불가
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // 계정 잠김 여부
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // 자격 증명(비밀번호) 만료 여부
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus().name().equals("ACTIVE"); // UserStatus.ACTIVE 상태만 로그인 허용
+        return user.getStatus().name().equals("ACTIVE");
     }
 }
