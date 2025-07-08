@@ -22,15 +22,15 @@ public class UserService {
 
         // 중복 검사
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 이메일 입니다.");
         }
 
         if (userRepository.findByPhone(dto.getPhone()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 휴대폰 번호 입니다.");
         }
 
         if (userRepository.findByNickname(dto.getNickname()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 닉네임 입니다.");
         }
 
         // User 엔티티 생성
@@ -52,7 +52,12 @@ public class UserService {
         return !userRepository.existsByEmail(email);  // true: 사용 가능 / false: 이미 존재
     }
 
-    // 정규식 조건 메서드
+    public boolean validatePhone(String phone) {
+        return !userRepository.existsByPhone(phone); // true: 사용 가능 / false: 이미 있음
+    }
+
+
+    // 패스워드 형식 검사 메서드
     private boolean isValidPassword(String password) {
         String pattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()])[A-Za-z\\d!@#$%^&*()]{8,}$";
         return password != null && password.matches(pattern);

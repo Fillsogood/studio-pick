@@ -2,9 +2,10 @@ package org.example.studiopick.web.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.user.service.UserService;
 import org.example.studiopick.application.user.dto.EmailValidateRequestDto;
+import org.example.studiopick.application.user.dto.PhoneValidateRequestDto;
 import org.example.studiopick.application.user.dto.UserSignupRequestDto;
+import org.example.studiopick.application.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,4 +35,11 @@ public class UserController {
 
         return ResponseEntity.ok("사용 가능한 이메일입니다.");
     }
+    // 휴대폰 번호 중복 검사 API
+    @PostMapping("/api/auth/validate/phone")
+    public ResponseEntity<String> validatePhone(@Valid @RequestBody PhoneValidateRequestDto requestDto) {
+        userService.validatePhone(requestDto.getPhone());
+        return ResponseEntity.ok("사용 가능한 휴대폰번호입니다.");
+    }
+
 }

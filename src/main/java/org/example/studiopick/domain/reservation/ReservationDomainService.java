@@ -2,6 +2,7 @@ package org.example.studiopick.domain.reservation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
+import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -11,7 +12,7 @@ import java.time.LocalTime;
 @RequiredArgsConstructor
 public class ReservationDomainService {
 
-  private final ReservationRepository reservationRepository;
+  private final JpaReservationRepository reservationRepository;
 
   public void validateOverlapping(Long studioId, LocalDate date, ReservationStatus status, LocalTime start, LocalTime end) {
     boolean exists = reservationRepository.existsOverlappingReservation(studioId, date, status, start, end);
