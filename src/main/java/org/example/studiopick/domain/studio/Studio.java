@@ -1,14 +1,12 @@
 package org.example.studiopick.domain.studio;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.user.entity.User;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +35,13 @@ public class Studio extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StudioStatus status = StudioStatus.PENDING;
-    
+
+    @Column(name = "weekday_price", nullable = false)
+    private BigDecimal weekdayPrice;
+
+    @Column(name = "weekend_price", nullable = false)
+    private BigDecimal weekendPrice;
+
     @OneToOne(mappedBy = "studio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StudioCommission commission;
     
@@ -45,13 +49,15 @@ public class Studio extends BaseEntity {
     private List<StudioOperatingHours> operatingHours = new ArrayList<>();
     
     @Builder
-    public Studio(User owner, String name, String description, String phone, String location, StudioStatus status) {
+    public Studio(User owner, String name, String description, String phone, String location, StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice) {
         this.owner = owner;
         this.name = name;
         this.description = description;
         this.phone = phone;
         this.location = location;
         this.status = status != null ? status : StudioStatus.PENDING;
+        this.weekdayPrice = weekdayPrice != null ? weekdayPrice : BigDecimal.ZERO;
+        this.weekendPrice = weekendPrice != null ? weekendPrice : BigDecimal.ZERO;
     }
     
     public void updateBasicInfo(String name, String description, String phone, String location) {

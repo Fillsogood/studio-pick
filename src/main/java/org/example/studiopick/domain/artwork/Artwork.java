@@ -1,10 +1,7 @@
 package org.example.studiopick.domain.artwork;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.ArtworkStatus;
 import org.example.studiopick.domain.studio.Studio;
@@ -42,6 +39,9 @@ public class Artwork extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ArtworkStatus status = ArtworkStatus.PUBLIC;
+
+    @Column(name = "display_order", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer order;
     
     @Builder
     public Artwork(User user, Studio studio, String title, String description, String imageUrl, 
@@ -103,5 +103,14 @@ public class Artwork extends BaseEntity {
     
     public boolean isReported() {
         return this.status == ArtworkStatus.REPORTED;
+    }
+
+    // 순서 변경을 위한 도메인 메서드
+    public void changeOrder(Integer newOrder) {
+        if (newOrder != null && newOrder >= 0) {
+            this.order = newOrder;
+        } else {
+            throw new IllegalArgumentException("순서는 0 이상의 숫자여야 합니다.");
+        }
     }
 }
