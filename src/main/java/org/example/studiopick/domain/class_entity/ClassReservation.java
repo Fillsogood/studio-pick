@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.ClassReservationStatus;
-import org.example.studiopick.domain.user.User;
+import org.example.studiopick.domain.user.entity.User;
 
 @Entity
 @Table(name = "\"ClassReservation\"")

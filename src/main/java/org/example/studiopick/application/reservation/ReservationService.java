@@ -13,6 +13,10 @@ import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.user.UserRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
+import org.example.studiopick.domain.studio.StudioRepository;
+import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.repository.UserRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

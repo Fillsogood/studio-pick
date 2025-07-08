@@ -1,4 +1,4 @@
-package org.example.studiopick.domain.user;
+package org.example.studiopick.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
