@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Optional;
 
 public interface JpaReservationRepository extends JpaRepository<Reservation, Long>, ReservationRepository {
 
@@ -31,4 +32,5 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
   );
 
   Page<Reservation> findByUserIdOrderByReservationDateDesc(Long userId, Pageable pageable);
+
 }
