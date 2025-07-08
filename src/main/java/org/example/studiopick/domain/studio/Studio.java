@@ -31,6 +31,15 @@ public class Studio extends BaseEntity {
     
     @Column(name = "location", length = 255)
     private String location;
+
+    @Column(name = "hourly_base_rate", nullable = false)
+    private Long hourlyBaseRate = 30000L;  // 기본값
+
+    @Column(name = "per_person_rate", nullable = false)
+    private Long perPersonRate = 5000L;    // 기본값
+
+    @Column(name = "max_people")
+    private Integer maxPeople = 10;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

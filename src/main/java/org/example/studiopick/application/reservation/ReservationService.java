@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -57,7 +58,7 @@ public class ReservationService {
     reservationDomainService.validateOverlapping(
         command.studioId(),
         command.reservationDate(),
-        ReservationStatus.CONFIRMED,
+        ReservationStatus.PENDING,
         command.startTime(),
         command.endTime()
     );
@@ -65,6 +66,8 @@ public class ReservationService {
     User user = jpauserRepository.findById(command.userId())
         .orElseThrow(() -> new IllegalArgumentException("해당 User id를 찾을 수 없습니다."));
 
+    // 요금 계산 (예시)
+    Long totalAmount = calculateTotalAmount(studio, command.startTime(), command.endTime(), command.peopleCount());
     // Studio 엔티티 주입
     Reservation reservation = Reservation.builder()
         .studio(studio)
@@ -72,9 +75,9 @@ public class ReservationService {
         .reservationDate(command.reservationDate())
         .startTime(command.startTime())
         .endTime(command.endTime())
-        .status(ReservationStatus.CONFIRMED)
+        .status(ReservationStatus.PENDING)
         .peopleCount(command.peopleCount())
-        .totalAmount(command.totalAmount())
+        .totalAmount(totalAmount)
         .build();
 
     Reservation saved = jpaReservationRepository.save(reservation);
@@ -84,6 +87,27 @@ public class ReservationService {
         saved.getTotalAmount(),
         saved.getStatus()
     );
+  }
+
+  /**
+   * 예약 총 금액 계산
+   * @param studio 스튜디오 정보
+   * @param startTime 시작 시간
+   * @param endTime 종료 시간
+   * @param peopleCount 인원 수
+   * @return 총 금액
+   */
+  private Long calculateTotalAmount(Studio studio, LocalTime startTime, LocalTime endTime, Short peopleCount) {
+    // 사용 시간 계산
+    long hours = Duration.between(startTime, endTime).toHours();
+
+    // 기본 요금 × 시간
+    long baseAmount = studio.getHourlyBaseRate() * hours;
+
+    // 인원 수 × 인당 요금 × 시간
+    long personAmount = peopleCount * studio.getPerPersonRate() * hours;
+
+    return baseAmount + personAmount;
   }
 
   /**
@@ -263,6 +287,23 @@ public class ReservationService {
         saved.getStatus(),
         LocalDateTime.now()
     );
+  }
+
+  /**
+   * 결제 완료 시 예약 확정 처리
+   * @param reservationId 예약 ID
+   */
+  @Transactional
+  public void confirmReservationPayment(Long reservationId) {
+    Reservation reservation = jpaReservationRepository.findById(reservationId)
+        .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+    if (reservation.getStatus() != ReservationStatus.PENDING) {
+      throw new IllegalStateException("예약 상태가 PENDING이 아닙니다.");
+    }
+
+    reservation.confirm();
+    jpaReservationRepository.save(reservation);
   }
 }
 

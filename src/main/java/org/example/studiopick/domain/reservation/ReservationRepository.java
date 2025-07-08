@@ -5,17 +5,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 public interface ReservationRepository {
-  boolean existsOverlappingReservation(Long studioId, LocalDate date, ReservationStatus status, LocalTime start, LocalTime end);
 
+    List<Reservation> findByStudioIdAndReservationDateAndStatus(
+        Long studioId, LocalDate reservationDate, ReservationStatus reservationStatus
+    );
 
-  List<Reservation> findByStudioIdAndReservationDateAndStatus(Long studioId, LocalDate reservationDate, ReservationStatus reservationStatus);
-
-  Page<Reservation> findByUserIdOrderByReservationDateDesc(
-      Long userId,
-      Pageable pageable
-  );
+    Page<Reservation> findByUserIdOrderByReservationDateDesc(
+        Long userId,
+        Pageable pageable
+    );
 }
+

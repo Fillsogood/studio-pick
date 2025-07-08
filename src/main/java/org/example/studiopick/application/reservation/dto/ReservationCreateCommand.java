@@ -9,6 +9,5 @@ public record ReservationCreateCommand(
     LocalDate reservationDate,
     LocalTime startTime,
     LocalTime endTime,
-    Short peopleCount,
-    Long totalAmount
+    Short peopleCount
 ) {}
