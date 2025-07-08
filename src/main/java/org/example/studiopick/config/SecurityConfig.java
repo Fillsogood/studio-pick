@@ -22,51 +22,53 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final CustomUserDetailsService customUserDetailsService;
-  private final JwtProvider jwtProvider;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtProvider jwtProvider;
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            "/api/auth/register",
-                            "/api/auth/validate/**",
-                            "/api/auth/login",
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**"
-                    ).permitAll()
-                    .anyRequest().authenticated()
-            )
-            .formLogin(login -> login.disable())
-            .httpBasic(basic -> basic.disable())
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/validate/**",
+                                "/api/auth/login",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/api/auth/oauth/**",
+                                "/oauth2/**" // OAuth2 리디렉션 경로 허용
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(login -> login.disable())
+                .httpBasic(basic -> basic.disable())
 
-            // 401 Unauthorized 설정 추가
-            .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint((request, response, authException) -> {
-                      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "잘못된 이메일 또는 비밀번호입니다.");
-                    })
-            )
+                // 401 Unauthorized 핸들링
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "잘못된 이메일 또는 비밀번호입니다.");
+                        })
+                )
 
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
-  }
+        return http.build();
+    }
 
-  @Bean
-  public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    return new JwtAuthenticationFilter(jwtProvider, customUserDetailsService);
-  }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtProvider, customUserDetailsService);
+    }
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-    return config.getAuthenticationManager();
-  }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 }
