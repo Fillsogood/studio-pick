@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.studiopick.infrastructure.mybatis.ArtworkMapper">
+
+    <select id="findAllSorted" resultType="org.example.studiopick.common.dto.artwork.ArtworkFeedDto">
+        SELECT
+        a.id, a.title, a.description, a.image_url AS imageUrl, a.hashtags,
+        u.nickname AS artistNickname, s.name AS studioName,
+        a.like_count AS likeCount, a.is_public AS isPublic, a.created_at AS createdAt
+        FROM artwork a
+        JOIN "user" u ON a.user_id = u.id
+        JOIN studio s ON a.studio_id = s.id
+        WHERE a.is_public = true
+        <if test="hashtags != null and hashtags != ''">
+            AND a.hashtags ILIKE '%' || #{hashtags} || '%'
+        </if>
+        <choose>
+            <when test='"popular".equals(sort)'>
+                ORDER BY a.like_count DESC
+            </when>
+            <when test='"latest".equals(sort)'>
+                ORDER BY a.created_at DESC
+            </when>
+            <otherwise>
+                ORDER BY a.created_at DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+</mapper>
