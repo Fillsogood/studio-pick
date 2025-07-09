@@ -12,9 +12,11 @@ import org.example.studiopick.domain.user.entity.SocialAccount;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.domain.user.repository.SocialAccountRepository;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.s3.S3Uploader;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -27,6 +29,7 @@ public class UserService {
     private final JpaUserRepository userRepository;
     private final SocialAccountRepository socialAccountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final S3Uploader s3Uploader;
 
     @Transactional
     public void signup(UserSignupRequestDto dto) {
@@ -151,4 +154,17 @@ public class UserService {
 
         user.updatePassword(passwordEncoder.encode(newPassword));
     }
+
+    @Transactional
+    public String uploadProfileImage(Long userId, MultipartFile image) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        String imageUrl = s3Uploader.upload(image, "profile"); // "profile" 폴더에 저장
+        user.updateProfileImage(imageUrl);
+        userRepository.save(user);
+
+        return imageUrl;
+    }
+
 }
