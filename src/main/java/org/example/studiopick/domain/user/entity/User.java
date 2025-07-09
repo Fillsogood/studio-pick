@@ -101,6 +101,7 @@ public class User extends BaseEntity {
         this.role = role;
     }
 
+<<<<<<< Updated upstream
     // 관리자용 업데이트 메서드
     public void updateName(String name){
         if(name != null && !name.isEmpty()){this.name = name;}
@@ -143,4 +144,10 @@ public class User extends BaseEntity {
     public boolean isAdmin() {
         return this.role == UserRole.ADMIN;
     }
+=======
+    public boolean isStudioOwner() {
+        return Boolean.TRUE.equals(this.isStudioOwner);
+    }
+
+>>>>>>> Stashed changes
 }
