@@ -58,12 +58,15 @@ public class Studio extends BaseEntity {
     private List<StudioOperatingHours> operatingHours = new ArrayList<>();
     
     @Builder
-    public Studio(User owner, String name, String description, String phone, String location, StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice) {
+    public Studio(User owner, String name, String description, String phone, String location, StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice
+    ,Long hourlyBaseRate, Long perPersonRate) {
         this.owner = owner;
         this.name = name;
         this.description = description;
         this.phone = phone;
         this.location = location;
+        this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;  // 추가
+        this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;      // 추가
         this.status = status != null ? status : StudioStatus.PENDING;
         this.weekdayPrice = weekdayPrice != null ? weekdayPrice : BigDecimal.ZERO;
         this.weekendPrice = weekendPrice != null ? weekendPrice : BigDecimal.ZERO;
@@ -94,5 +97,70 @@ public class Studio extends BaseEntity {
     
     public boolean isActive() {
         return this.status == StudioStatus.APPROVED;
+    }
+
+    // 🆕 관리자용 개별 업데이트 메서드들
+    public void updateName(String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name;
+        }
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
+    public void updatePhone(String phone) {
+        if (phone != null && !phone.trim().isEmpty()) {
+            this.phone = phone;
+        }
+    }
+
+    public void updateLocation(String location) {
+        if (location != null && !location.trim().isEmpty()) {
+            this.location = location;
+        }
+    }
+
+    public void updateHourlyBaseRate(Long hourlyBaseRate) {
+        if (hourlyBaseRate != null && hourlyBaseRate >= 0) {
+            this.hourlyBaseRate = hourlyBaseRate;
+        }
+    }
+
+    public void updatePerPersonRate(Long perPersonRate) {
+        if (perPersonRate != null && perPersonRate >= 0) {
+            this.perPersonRate = perPersonRate;
+        }
+    }
+
+    // 🆕 관리자용 상태 변경 메서드들
+    public void updateStatus(StudioStatus status) {
+        this.status = status;
+    }
+
+    public void reject() {
+        this.status = StudioStatus.REJECTED;
+    }
+
+    public void suspend() {
+        this.status = StudioStatus.SUSPENDED;
+    }
+
+    public void activate() {
+        this.status = StudioStatus.ACTIVE;
+    }
+
+    // 🆕 상태 확인 메서드들
+    public boolean isPending() {
+        return this.status == StudioStatus.PENDING;
+    }
+
+    public boolean isSuspended() {
+        return this.status == StudioStatus.SUSPENDED;
+    }
+
+    public boolean isRejected() {
+        return this.status == StudioStatus.REJECTED;
     }
 }

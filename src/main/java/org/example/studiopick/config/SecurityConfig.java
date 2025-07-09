@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -41,8 +43,11 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/auth/oauth/**",
-                                "/oauth2/**" // OAuth2 리디렉션 경로 허용
+                                "/oauth2/**", // OAuth2 리디렉션 경로 허용
+                                "/api/studios/search",    // 스튜디오 검색 공개
+                                "/api/studios/{id}"       // 스튜디오 상세 공개
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login.disable())
@@ -52,6 +57,9 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "잘못된 이메일 또는 비밀번호입니다.");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {  // 🆕 추가
+                          response.sendError(HttpServletResponse.SC_FORBIDDEN, "접근 권한이 없습니다.");
                         })
                 )
 

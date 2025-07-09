@@ -7,6 +7,7 @@ import org.example.studiopick.domain.common.enums.ArtworkStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 
+// Artwork 엔티티 - 작품 피드용
 @Entity
 @Table(name = "\"Artwork\"")
 @Getter
