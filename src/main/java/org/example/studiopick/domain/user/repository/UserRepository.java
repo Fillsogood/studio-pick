@@ -34,4 +34,14 @@ public interface UserRepository {
 
   // 추가 중복 확인
   boolean existsByNickname(String nickname);
+
+  // 복합 조건 검색용 (AdminUserService에서 사용)
+  Page<User> findByRoleAndStatusAndNameContainingIgnoreCaseOrderByCreatedAtDesc(
+      UserRole role, UserStatus status, String name, Pageable pageable);
+
+  Page<User> findByRoleAndNameContainingIgnoreCaseOrderByCreatedAtDesc(
+      UserRole role, String name, Pageable pageable);
+
+  Page<User> findByStatusAndNameContainingIgnoreCaseOrderByCreatedAtDesc(
+      UserStatus status, String name, Pageable pageable);
 }

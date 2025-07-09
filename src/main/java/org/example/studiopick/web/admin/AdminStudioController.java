@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.AdminStudioService;
-import org.example.studiopick.application.admin.dto.*;
+import org.example.studiopick.application.admin.dto.studio.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

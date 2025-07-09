@@ -1,4 +1,4 @@
-package org.example.studiopick.application.admin.dto;
+package org.example.studiopick.application.admin.dto.studio;
 
 public record AdminStudioOwnerInfo(
     Long id,

@@ -9,6 +9,7 @@ import org.example.studiopick.domain.common.enums.ClassStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.domain.user.repository.UserRepository;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.classes.ClassRepository;
 import org.example.studiopick.infrastructure.classes.ClassReservationRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class ClassServiceImpl implements ClassService {
 
   private final ClassRepository classRepository;
   private final ClassReservationRepository classReservationRepository;
-  private final UserRepository userRepository;
+  private final JpaUserRepository userRepository;
 
   @Override
   public ClassListResponse getClassList(Long studioId, String status, String date) {
