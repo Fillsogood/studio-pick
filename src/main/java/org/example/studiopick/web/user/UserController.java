@@ -8,9 +8,11 @@ import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
 import org.example.studiopick.application.user.service.UserService;
 import org.example.studiopick.security.UserPrincipal;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,6 +63,20 @@ public class UserController {
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "비밀번호가 변경되었습니다."
+        ));
+    }
+
+    @PostMapping(value = "/profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadProfileImage(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestPart("image") MultipartFile image
+    ) {
+        String imageUrl = userService.uploadProfileImage(userPrincipal.getUserId(), image);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "프로필 이미지가 업로드되었습니다",
+                "data", Map.of("imageUrl", imageUrl)
         ));
     }
 

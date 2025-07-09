@@ -42,6 +42,9 @@ public class User extends BaseEntity {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
@@ -58,8 +61,8 @@ public class User extends BaseEntity {
                 Boolean isStudioOwner, UserStatus status, UserRole role) {
         this.email = email;
         this.password = password;
-        this.name = name != null ? name : "소셜회원"; // ✅ 기본값
-        this.phone = phone != null ? phone : "00000000000"; // ✅ 기본값
+        this.name = name != null ? name : "소셜회원"; // 기본값
+        this.phone = phone != null ? phone : "00000000000"; // 기본값
         this.nickname = nickname;
         this.isStudioOwner = isStudioOwner != null ? isStudioOwner : false;
         this.status = status != null ? status : UserStatus.ACTIVE;
@@ -99,6 +102,10 @@ public class User extends BaseEntity {
 
     public void changeRole(UserRole role) {
         this.role = role;
+    }
+
+    public void updateProfileImage(String imageUrl){
+        this.profileImageUrl = imageUrl;
     }
 
     // 관리자용 업데이트 메서드
