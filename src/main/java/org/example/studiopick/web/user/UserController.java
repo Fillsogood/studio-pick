@@ -2,6 +2,7 @@ package org.example.studiopick.web.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.user.dto.ChangePasswordRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileResponseDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
@@ -48,4 +49,19 @@ public class UserController {
                 "data", updated
         ));
     }
+
+    @PutMapping("/password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Valid @RequestBody ChangePasswordRequestDto requestDto
+    ) {
+        Long userId = userPrincipal.getUserId();
+        userService.changePassword(userId, requestDto.getCurrentPassword(), requestDto.getNewPassword());
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "비밀번호가 변경되었습니다."
+        ));
+    }
+
 }
