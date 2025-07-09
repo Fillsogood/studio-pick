@@ -3,14 +3,15 @@ package org.example.studiopick.common.validator;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.common.exception.InvalidParameterException;
 import org.example.studiopick.common.exception.UserNotFoundException;
-import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class UserValidator {
 
-  private final JpaUserRepository userRepository;
+  private final UserRepository userRepository;
 
   public void validateUserId(Long userId) {
     if (userId == null || userId <= 0) {
@@ -18,9 +19,9 @@ public class UserValidator {
     }
   }
 
-  public void findAndValidateUser(Long userId) {
+  public User findAndValidateUser(Long userId) {
     validateUserId(userId);  // 기존 검증 재사용
-    userRepository.findById(userId)
+    return userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException(userId));
   }
 }
