@@ -1,5 +1,7 @@
 package org.example.studiopick.web.user;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Tag(name = "인증", description = "회원가입, 로그인, 로그아웃 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -29,7 +32,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    // 회원가입
+    @Operation(summary = "회원가입", description = "이메일과 비밀번호로 새 계정을 생성합니다")
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody @Valid UserSignupRequestDto requestDto) {
         userService.signup(requestDto);
@@ -60,7 +63,7 @@ public class AuthController {
         return ResponseEntity.ok("사용 가능한 휴대폰번호입니다.");
     }
 
-    // 이메일 로그인
+    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다")
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDto> login(@RequestBody UserLoginRequestDto requestDto) {
         Authentication authentication = authenticationManager.authenticate(

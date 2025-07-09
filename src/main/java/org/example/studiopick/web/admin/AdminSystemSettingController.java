@@ -1,6 +1,8 @@
 package org.example.studiopick.web.admin;
 
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Tag(name = "관리자 - 시스템 설정", description = "시스템 설정 관리 API (관리자 전용)")
+@SecurityRequirement(name = "Bearer Authentication")
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/settings")
@@ -23,10 +27,7 @@ public class AdminSystemSettingController {
 
   private final AdminSystemSettingService adminSystemSettingService;
 
-  /**
-   * 전체 시스템 설정 조회
-   * GET /api/admin/settings
-   */
+  @Operation(summary = "전체 시스템 설정 조회", description = "모든 시스템 설정을 카테고리와 키 순으로 정렬하여 조회합니다")
   @GetMapping
   public ResponseEntity<ApiResponse<SystemSettingListResponse>> getAllSettings() {
     log.info("전체 시스템 설정 조회 요청");
@@ -84,10 +85,7 @@ public class AdminSystemSettingController {
     return ResponseEntity.ok(apiResponse);
   }
 
-  /**
-   * 설정값 업데이트
-   * PUT /api/admin/settings/{settingKey}
-   */
+  @Operation(summary = "시스템 설정 업데이트", description = "특정 설정의 값과 설명을 업데이트합니다. 수정 불가능한 설정은 변경할 수 없습니다.")
   @PutMapping("/{settingKey}")
   public ResponseEntity<ApiResponse<SystemSettingResponse>> updateSetting(
       @PathVariable String settingKey,

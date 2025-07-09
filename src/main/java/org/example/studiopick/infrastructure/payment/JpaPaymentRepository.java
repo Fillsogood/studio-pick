@@ -131,4 +131,30 @@ public interface JpaPaymentRepository extends JpaRepository<Payment, Long>{
   Page<Payment> findByPaidAtBetweenAndMethodAndStatusOrderByPaidAtDesc(
       LocalDateTime startDate, LocalDateTime endDate, 
       PaymentMethod method, PaymentStatus status, Pageable pageable);
+
+  // ===== 사용자별 결제 내역 조회 =====
+  
+  /**
+   * 사용자별 결제 내역 조회
+   */
+  @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.id = :userId ORDER BY p.paidAt DESC")
+  Page<Payment> findByUserIdOrderByPaidAtDesc(@Param("userId") Long userId, Pageable pageable);
+  
+  /**
+   * 사용자별 + 상태별 결제 내역 조회
+   */
+  @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.id = :userId AND p.status = :status ORDER BY p.paidAt DESC")
+  Page<Payment> findByUserIdAndStatusOrderByPaidAtDesc(@Param("userId") Long userId, @Param("status") PaymentStatus status, Pageable pageable);
+  
+  /**
+   * 사용자별 + 기간별 결제 내역 조회
+   */
+  @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.id = :userId AND p.paidAt BETWEEN :startDate AND :endDate ORDER BY p.paidAt DESC")
+  Page<Payment> findByUserIdAndPaidAtBetweenOrderByPaidAtDesc(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, Pageable pageable);
+  
+  /**
+   * 사용자별 + 기간별 + 상태별 결제 내역 조회
+   */
+  @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.id = :userId AND p.paidAt BETWEEN :startDate AND :endDate AND p.status = :status ORDER BY p.paidAt DESC")
+  Page<Payment> findByUserIdAndPaidAtBetweenAndStatusOrderByPaidAtDesc(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, @Param("status") PaymentStatus status, Pageable pageable);
 }
