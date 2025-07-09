@@ -1,6 +1,7 @@
 package org.example.studiopick.application.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.user.dto.UserProfileResponseDto;
 import org.example.studiopick.application.user.dto.UserSignupRequestDto;
 import org.example.studiopick.domain.common.enums.SocialProvider;
 import org.example.studiopick.domain.common.enums.UserRole;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -100,4 +102,22 @@ public class UserService {
 
         return newUser;
     }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponseDto getUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        return UserProfileResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phone(user.getPhone())
+                .nickname(user.getNickname())
+                .isStudioOwner(user.isStudioOwner())
+                .status(user.getStatus().name())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
+
 }
