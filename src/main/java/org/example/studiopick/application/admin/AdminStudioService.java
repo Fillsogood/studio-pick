@@ -3,6 +3,7 @@ package org.example.studiopick.application.admin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.dto.studio.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.common.enums.UserRole;
@@ -29,15 +30,16 @@ public class AdminStudioService {
   private final JpaUserRepository jpaUserRepository;
   private final PasswordEncoder passwordEncoder;
   private final PaginationValidator paginationValidator;
+  private final SystemSettingUtils settingUtils;
 
   /**
    * 스튜디오 계정 목록 조회 (페이징, 필터링)
    */
-  public AdminStudioListResponse getStudioAccounts(int page, int size, String status, String keyword) {
+  public AdminStudioListResponse getStudioAccounts(int page, Integer size, String status, String keyword) {
     // 입력값 검증
-    paginationValidator.validatePaginationParameters(page, size);
-
-    Pageable pageable = PageRequest.of(page - 1, size);
+    int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
+    paginationValidator.validatePaginationParameters(page, pageSize);
+    Pageable pageable = PageRequest.of(page - 1, pageSize);
     Page<Studio> studiosPage;
 
     // 필터링 조건에 따른 조회

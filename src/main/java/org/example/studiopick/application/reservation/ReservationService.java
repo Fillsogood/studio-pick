@@ -2,12 +2,12 @@ package org.example.studiopick.application.reservation;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.reservation.dto.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.common.validator.UserValidator;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
-
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
@@ -38,9 +38,12 @@ public class ReservationService {
   private final JpaUserRepository jpauserRepository;
   private final UserValidator userValidator;
   private final PaginationValidator paginationValidator;
+  private final SystemSettingUtils settingUtils;
 
   /**
    * 스튜디오 예약 생성
+   * - 시스템 설정 기반 검증
+   * - 도메인 서비스를 통한 비즈니스 규칙 검증
    * - 예약 시간 중복 검증
    * - 스튜디오/사용자 존재 확인
    * - 동시성 처리 (락 사용)
@@ -55,6 +58,10 @@ public class ReservationService {
     Studio studio = jpaStudioRepository.findByIdWithLock(studioId)
         .orElseThrow(() -> new IllegalArgumentException("해당 Studio id를 찾을 수 없습니다."));
 
+    // 1. 도메인 서비스를 통한 비즈니스 규칙 검증
+    validateReservationRules(command);
+
+    // 2. 예약 시간 중복 검증
     reservationDomainService.validateOverlapping(
         command.studioId(),
         command.reservationDate(),
@@ -63,12 +70,15 @@ public class ReservationService {
         command.endTime()
     );
 
+    // 3. 사용자 존재 확인
     User user = jpauserRepository.findById(command.userId())
         .orElseThrow(() -> new IllegalArgumentException("해당 User id를 찾을 수 없습니다."));
 
-    // 요금 계산 (예시)
+    // 4. 요금 계산 및 최소 금액 검증
     Long totalAmount = calculateTotalAmount(studio, command.startTime(), command.endTime(), command.peopleCount());
-    // Studio 엔티티 주입
+    validateMinimumAmount(totalAmount);
+
+    // 5. 예약 생성
     Reservation reservation = Reservation.builder()
         .studio(studio)
         .user(user)
@@ -87,6 +97,46 @@ public class ReservationService {
         saved.getTotalAmount(),
         saved.getStatus()
     );
+  }
+
+  /**
+   * 예약 생성 규칙 검증 (도메인 서비스 활용)
+   */
+  private void validateReservationRules(ReservationCreateCommand command) {
+    // 1. 인원 수 검증 (Short -> int 변환)
+    if (!reservationDomainService.isValidPeopleCount(command.peopleCount().intValue())) {
+      int maxPeople = settingUtils.getIntegerSetting("reservation.max.people", 20);
+      throw new IllegalArgumentException("예약 인원은 1명 이상 " + maxPeople + "명 이하여야 합니다.");
+    }
+
+    // 2. 미래 날짜 검증
+    if (!reservationDomainService.isValidAdvanceReservation(command.reservationDate())) {
+      int maxAdvanceDays = settingUtils.getIntegerSetting("reservation.advance.days", 90);
+      throw new IllegalArgumentException("예약은 최대 " + maxAdvanceDays + "일 후까지만 가능합니다.");
+    }
+
+    // 3. 과거 날짜 검증
+    if (command.reservationDate().isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("과거 날짜로는 예약할 수 없습니다.");
+    }
+
+    // 4. 예약 시간 길이 검증
+    if (!reservationDomainService.isValidReservationDuration(command.startTime(), command.endTime())) {
+      int minHours = settingUtils.getIntegerSetting("reservation.min.hours", 1);
+      int maxHours = settingUtils.getIntegerSetting("reservation.max.hours", 8);
+      throw new IllegalArgumentException("예약 시간은 " + minHours + "시간 이상 " + maxHours + "시간 이하여야 합니다.");
+    }
+  }
+
+  /**
+   * 최소 결제 금액 검증 (시스템 설정 기반)
+   */
+  private void validateMinimumAmount(Long totalAmount) {
+    int minAmount = settingUtils.getIntegerSetting("payment.min.amount", 10000);
+
+    if (totalAmount < minAmount) {
+      throw new IllegalArgumentException("최소 결제 금액은 " + minAmount + "원 입니다.");
+    }
   }
 
   /**
@@ -111,9 +161,9 @@ public class ReservationService {
   }
 
   /**
-   * 예약 가능 시간 조회
+   * 예약 가능 시간 조회 (시스템 설정 기반 운영시간)
    * - 해당 날짜의 예약된 시간 조회
-   * - 전체 운영시간에서 예약된 시간 제외
+   * - 시스템 설정의 운영시간에서 예약된 시간 제외
    * @param studioId 스튜디오 ID
    * @param date 조회할 날짜
    * @return 예약 가능/불가능 시간 목록
@@ -130,9 +180,12 @@ public class ReservationService {
         .map(r -> r.getStartTime().toString())
         .toList();
 
-    // 3. 예: 오전 9시 ~ 오후 6시 기준 가용 시간 생성
-    LocalTime start = LocalTime.of(9, 0);
-    LocalTime end = LocalTime.of(18, 0);
+    // 3. 시스템 설정에서 운영시간 조회
+    int startHour = settingUtils.getIntegerSetting("studio.operating.start.hour", 9);
+    int endHour = settingUtils.getIntegerSetting("studio.operating.end.hour", 18);
+
+    LocalTime start = LocalTime.of(startHour, 0);
+    LocalTime end = LocalTime.of(endHour, 0);
 
     List<String> allTimes = new ArrayList<>();
     LocalTime cursor = start;
@@ -163,8 +216,8 @@ public class ReservationService {
    * @param studioId 스튜디오 ID (선택적)
    * @return 필터링된 예약 내역 목록
    */
-  public UserReservationListResponse getUserReservations(Long userId, int page, int size, 
-                                                          String status, LocalDate startDate, LocalDate endDate, Long studioId) {
+  public UserReservationListResponse getUserReservations(Long userId, int page, int size,
+                                                         String status, LocalDate startDate, LocalDate endDate, Long studioId) {
 
     // 입력값 검증
     paginationValidator.validatePaginationParameters(page, size);
@@ -243,7 +296,6 @@ public class ReservationService {
    * @param reservation 예약 엔티티
    * @return 사용자 예약 응답 DTO
    */
-
   private UserReservationResponse toUserReservationResponse(Reservation reservation) {
     return new UserReservationResponse(
         reservation.getId(),
@@ -257,16 +309,16 @@ public class ReservationService {
   }
 
   /**
-   * 예약 취소 요청
+   * 예약 취소 요청 (도메인 서비스 활용)
    * - 본인 예약 확인
-   * - 24시간 전 취소 정책 적용
-   * - 취소 승인 대기 상태로 변경 (PENDING)
+   * - 시스템 설정 기반 취소 가능 시간 검증
+   * - 취소 승인 대기 상태로 변경
    * @param id 예약 ID
-   * @param request 취소 요청 정보 (사용자 ID, 취소 사유(reason())
+   * @param request 취소 요청 정보 (사용자 ID, 취소 사유)
    * @return 취소 처리 결과
    */
-  public ReservationCancelResponse cancleReservation(Long id, ReservationCancelRequest request) {
-    // 1.예약 조회 및 존재 확인
+  public ReservationCancelResponse cancelReservation(Long id, ReservationCancelRequest request) {
+    // 1. 예약 조회 및 존재 확인
     Reservation reservation = jpaReservationRepository.findById(id)
         .orElseThrow(()-> new IllegalArgumentException("예약 Id를 찾을 수 없습니다."));
 
@@ -275,13 +327,20 @@ public class ReservationService {
       throw new IllegalArgumentException("본인의 예약만 취소할 수 있습니다.");
     }
 
-    // 3. 취소
-    reservation.cancel(request.reason());
+    // 3. 취소 가능 시간 검증 (도메인 서비스 활용)
+    LocalDateTime reservationDateTime = reservation.getReservationDate().atTime(reservation.getStartTime());
+    if (!reservationDomainService.isWithinCancellationPeriod(reservationDateTime)) {
+      int cancelHours = settingUtils.getIntegerSetting("reservation.cancel.hours", 24);
+      throw new IllegalStateException("예약 시작 " + cancelHours + "시간 전까지만 취소 가능합니다.");
+    }
 
-    // 4. 저장
+    // 4. 취소 처리
+    reservation.cancelWithoutValidation(request.reason());
+
+    // 5. 저장
     Reservation saved = jpaReservationRepository.save(reservation);
 
-    // 5. 응답 생성
+    // 6. 응답 생성
     return new ReservationCancelResponse(
         saved.getId(),
         saved.getStatus(),
@@ -306,4 +365,3 @@ public class ReservationService {
     jpaReservationRepository.save(reservation);
   }
 }
-

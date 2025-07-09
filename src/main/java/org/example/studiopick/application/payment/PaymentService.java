@@ -1,7 +1,7 @@
 package org.example.studiopick.application.payment;
 
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.payment.dto.*;
@@ -14,6 +14,7 @@ import org.example.studiopick.infrastructure.payment.JpaPaymentRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

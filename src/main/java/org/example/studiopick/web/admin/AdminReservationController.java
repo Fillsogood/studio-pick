@@ -26,7 +26,7 @@ public class AdminReservationController {
   @GetMapping
   public ResponseEntity<ApiResponse<AdminReservationListResponse>> getAllReservations(
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String startDate,
       @RequestParam(required = false) String endDate,

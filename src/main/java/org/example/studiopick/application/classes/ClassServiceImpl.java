@@ -2,6 +2,7 @@ package org.example.studiopick.application.classes;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.classes.dto.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.class_entity.ClassEntity;
 import org.example.studiopick.domain.class_entity.ClassReservation;
 import org.example.studiopick.domain.common.enums.ClassReservationStatus;
@@ -25,11 +26,14 @@ public class ClassServiceImpl implements ClassService {
   private final ClassRepository classRepository;
   private final ClassReservationRepository classReservationRepository;
   private final JpaUserRepository userRepository;
+  private final SystemSettingUtils settingUtils;
 
   @Override
   public ClassListResponse getClassList(Long studioId, String status, String date) {
     LocalDate parsedDate = LocalDate.parse(date);
     ClassStatus classStatus = ClassStatus.valueOf(status.toUpperCase());
+
+    int defaultMaxParticipants = settingUtils.getIntegerSetting("class.default.max.participants", 8);
 
     List<ClassListDto> result = classRepository
         .findByStudioIdAndStatusAndDate(studioId, classStatus, parsedDate)
@@ -43,7 +47,7 @@ public class ClassServiceImpl implements ClassService {
             c.getStartTime(),
             c.getEndTime(),
             c.getStudio().getName(),
-            8, // maxParticipants, 예시
+            defaultMaxParticipants,
             c.getReservations().size() // currentParticipants
         )).toList();
 
@@ -56,6 +60,9 @@ public class ClassServiceImpl implements ClassService {
         .orElseThrow(() -> new IllegalArgumentException("클래스를 찾을 수 없습니다."));
 
     Studio studio = ce.getStudio();
+
+    int defaultMaxParticipants = settingUtils.getIntegerSetting("class.default.max.participants", 8);
+
     return new ClassDetailDto(
         ce.getId(),
         ce.getTitle(),
@@ -67,10 +74,19 @@ public class ClassServiceImpl implements ClassService {
         ce.getInstructor(),
         studio.getName(),
         studio.getLocation(),
-        8, // TODO: 실제 최대 인원
+        defaultMaxParticipants,
         (int) ce.getReservations().stream().filter(r -> r.getStatus() == ClassReservationStatus.CONFIRMED).count(),
-        List.of("점토", "도구") // ★ 예시로 넣은 준비물
+        getDefaultSupplies() //  별도 메서드로 분리
     );
+  }
+
+  private List<String> getDefaultSupplies() {
+    // 시스템 설정에서 기본 준비물 조회하거나, 빈 리스트 반환
+    String suppliesConfig = settingUtils.getStringSetting("class.default.supplies", "");
+    if (suppliesConfig.isEmpty()) {
+      return List.of(); // 빈 목록 반환
+    }
+    return List.of(suppliesConfig.split(",")); // 콤마로 구분된 문자열을 리스트로 변환
   }
 
   @Override

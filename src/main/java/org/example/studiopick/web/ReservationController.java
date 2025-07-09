@@ -76,7 +76,7 @@ public class ReservationController {
       @RequestBody ReservationCancelRequest request
   ) {
     ReservationCancelResponse response = reservationService
-        .cancleReservation(id, request);
+        .cancelReservation(id, request);
 
     return new ApiResponse<>(true, response, "예약이 취소되었습니다.");
   }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.AdminSalesService;
 import org.example.studiopick.application.admin.dto.sales.*;
 import org.example.studiopick.common.dto.ApiResponse;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminSalesController {
-
+  private final SystemSettingUtils settingUtils;
   private final AdminSalesService adminSalesService;
 
   /**
@@ -68,15 +69,18 @@ public class AdminSalesController {
   @GetMapping("/studios")
   public ResponseEntity<ApiResponse<AdminStudioSalesResponse>> getStudioSalesAnalysis(
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) String startDate,
       @RequestParam(required = false) String endDate
   ) {
     log.info("스튜디오별 매출 분석 요청: page={}, size={}, startDate={}, endDate={}",
         page, size, startDate, endDate);
 
+    int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
+
+
     AdminStudioSalesResponse response = adminSalesService.getStudioSalesAnalysis(
-        page, size, startDate, endDate);
+        page, pageSize, startDate, endDate);
 
     ApiResponse<AdminStudioSalesResponse> apiResponse = new ApiResponse<>(
         true,
@@ -139,7 +143,7 @@ public class AdminSalesController {
   @GetMapping("/details")
   public ResponseEntity<ApiResponse<AdminSalesDetailResponse>> getSalesDetails(
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) String startDate,
       @RequestParam(required = false) String endDate,
       @RequestParam(required = false) String method,
@@ -148,8 +152,10 @@ public class AdminSalesController {
     log.info("매출 상세 내역 조회 요청: page={}, size={}, startDate={}, endDate={}, method={}, status={}",
         page, size, startDate, endDate, method, status);
 
+    int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
+
     AdminSalesDetailResponse response = adminSalesService.getSalesDetails(
-        page, size, startDate, endDate, method, status);
+        page, pageSize, startDate, endDate, method, status);
 
     ApiResponse<AdminSalesDetailResponse> apiResponse = new ApiResponse<>(
         true,

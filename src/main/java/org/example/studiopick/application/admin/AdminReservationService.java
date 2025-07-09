@@ -3,6 +3,7 @@ package org.example.studiopick.application.admin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.dto.reservation.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
@@ -24,18 +25,19 @@ public class AdminReservationService {
 
   private final JpaReservationRepository reservationRepository;
   private final PaginationValidator paginationValidator;
+  private final SystemSettingUtils settingUtils;
 
   /**
    * 전체 예약 목록 조회 (페이징, 필터링)
    */
   public AdminReservationListResponse getAllReservations(
-      int page, int size, String status, String startDate, String endDate,
+      int page, Integer size, String status, String startDate, String endDate,
       Long userId, Long studioId) {
 
     // 입력값 검증
-    paginationValidator.validatePaginationParameters(page, size);
-
-    Pageable pageable = PageRequest.of(page - 1, size);
+    int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
+    paginationValidator.validatePaginationParameters(page, pageSize);
+    Pageable pageable = PageRequest.of(page - 1, pageSize);
     Page<Reservation> reservationsPage;
 
     // 날짜 파싱
@@ -317,7 +319,7 @@ public class AdminReservationService {
         reservation.getPeopleCount(),
         reservation.getTotalAmount(),
         reservation.getStatus().getValue(),
-        reservation.getCancelldReason(),
+        reservation.getCancelledReason(),
         reservation.getCancelledAt(),
         reservation.getCreatedAt(),
         reservation.getUpdatedAt()

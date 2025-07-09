@@ -2,6 +2,7 @@ package org.example.studiopick.domain.studio;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.user.entity.User;
@@ -56,20 +57,35 @@ public class Studio extends BaseEntity {
     
     @OneToMany(mappedBy = "studio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudioOperatingHours> operatingHours = new ArrayList<>();
-    
+
     @Builder
-    public Studio(User owner, String name, String description, String phone, String location, StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice
-    ,Long hourlyBaseRate, Long perPersonRate) {
+    public Studio(User owner, String name, String description, String phone, String location,
+                  StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice,
+                  Long hourlyBaseRate, Long perPersonRate, Integer maxPeople,
+                  SystemSettingUtils settingUtils) { // 추가
         this.owner = owner;
         this.name = name;
         this.description = description;
         this.phone = phone;
         this.location = location;
-        this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;  // 추가
-        this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;      // 추가
         this.status = status != null ? status : StudioStatus.PENDING;
         this.weekdayPrice = weekdayPrice != null ? weekdayPrice : BigDecimal.ZERO;
         this.weekendPrice = weekendPrice != null ? weekendPrice : BigDecimal.ZERO;
+
+        // 시스템 설정에서 기본값 조회
+        if (settingUtils != null) {
+            this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate :
+                settingUtils.getIntegerSetting("studio.default.hourly.rate", 30000).longValue();
+            this.perPersonRate = perPersonRate != null ? perPersonRate :
+                settingUtils.getIntegerSetting("studio.default.per.person.rate", 5000).longValue();
+            this.maxPeople = maxPeople != null ? maxPeople :
+                settingUtils.getIntegerSetting("studio.default.max.people", 10);
+        } else {
+            // 폴백 기본값
+            this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;
+            this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;
+            this.maxPeople = maxPeople != null ? maxPeople : 10;
+        }
     }
     
     public void updateBasicInfo(String name, String description, String phone, String location) {
