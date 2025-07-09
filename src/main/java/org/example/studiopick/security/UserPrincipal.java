@@ -40,7 +40,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         this.attributes = attributes;
     }
 
-    // ✅ 여기에 추가됨
+    // 여기에 추가됨
     public Long getUserId() {
         return user.getId();
     }
