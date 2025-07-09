@@ -1,5 +1,6 @@
 package org.example.studiopick.infrastructure.studio;
 
+import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StudioRepository extends JpaRepository<Studio, Long>, JpaSpecificationExecutor<Studio> {
@@ -23,4 +25,6 @@ public interface StudioRepository extends JpaRepository<Studio, Long>, JpaSpecif
       @Param("keyword") String keyword,
       @Param("location") String location
   );
+
+  Optional<Studio> findByIdAndStatus(Long id, StudioStatus status);
 }

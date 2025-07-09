@@ -143,4 +143,5 @@ public class User extends BaseEntity {
     public boolean isAdmin() {
         return this.role == UserRole.ADMIN;
     }
+
 }
