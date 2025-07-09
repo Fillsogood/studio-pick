@@ -36,6 +36,9 @@ public class ClassEntity extends BaseEntity {
     
     @Column(name = "date")
     private LocalDate date;
+
+    @Column(name = "instructor", length = 50)
+    private String instructor;
     
     @Column(name = "start_time")
     private LocalTime startTime;
@@ -52,12 +55,13 @@ public class ClassEntity extends BaseEntity {
     
     @Builder
     public ClassEntity(Studio studio, String title, String description, BigDecimal price, 
-                      LocalDate date, LocalTime startTime, LocalTime endTime, ClassStatus status) {
+                      LocalDate date, String instructor, LocalTime startTime, LocalTime endTime, ClassStatus status) {
         this.studio = studio;
         this.title = title;
         this.description = description;
         this.price = price;
         this.date = date;
+        this.instructor = instructor;
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status != null ? status : ClassStatus.OPEN;
