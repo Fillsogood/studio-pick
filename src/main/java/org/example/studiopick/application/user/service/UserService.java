@@ -2,6 +2,8 @@ package org.example.studiopick.application.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.user.dto.UserProfileResponseDto;
+import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
+import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
 import org.example.studiopick.application.user.dto.UserSignupRequestDto;
 import org.example.studiopick.domain.common.enums.SocialProvider;
 import org.example.studiopick.domain.common.enums.UserRole;
@@ -9,7 +11,6 @@ import org.example.studiopick.domain.common.enums.UserStatus;
 import org.example.studiopick.domain.user.entity.SocialAccount;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.domain.user.repository.SocialAccountRepository;
-import org.example.studiopick.domain.user.repository.UserRepository;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -117,6 +118,21 @@ public class UserService {
                 .isStudioOwner(user.isStudioOwner())
                 .status(user.getStatus().name())
                 .createdAt(user.getCreatedAt())
+                .build();
+    }
+
+    @Transactional
+    public UserProfileUpdateResponseDto updateUserProfile(Long userId, UserProfileUpdateRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        user.updateProfile(dto.getName(), dto.getPhone(), dto.getNickname());
+
+        return UserProfileUpdateResponseDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .phone(user.getPhone())
+                .nickname(user.getNickname())
                 .build();
     }
 
