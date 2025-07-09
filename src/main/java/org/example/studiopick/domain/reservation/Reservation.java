@@ -48,6 +48,9 @@ public class Reservation extends BaseEntity {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    @Column(name = "paid_at") // DB 컬럼명과 맞춰야 함
+    private LocalDateTime paidAt;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
