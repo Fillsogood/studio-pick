@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.dto.*;
 import org.example.studiopick.domain.artwork.Artwork;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
+import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationRepository;
 import org.example.studiopick.domain.studio.Studio;
@@ -177,5 +178,34 @@ public class StudioServiceImpl implements StudioService {
         ))
         .collect(Collectors.toList());
   }
+
+  @Override
+  public StudioApplicationResponse applyStudio(StudioApplicationRequest request) {
+    Studio studio = Studio.builder()
+        .name(request.name())
+        .description(request.description())
+        .location(request.location())
+        .phone(request.phone())
+        .status(StudioStatus.PENDING)
+        .build();
+
+    Studio saved = studioRepository.save(studio);
+    return new StudioApplicationResponse(saved.getId(), saved.getStatus().name().toLowerCase());
+  }
+
+  @Override
+  public StudioApplicationDetailResponse getApplicationStatus(Long studioId) {
+    Studio studio = studioRepository.findByIdAndStatus(studioId, StudioStatus.PENDING)
+        .orElseThrow(() -> new IllegalArgumentException("승인 대기 중인 스튜디오를 찾을 수 없습니다."));
+
+    return new StudioApplicationDetailResponse(
+        studio.getId(),
+        studio.getName(),
+        studio.getStatus().name().toLowerCase(),
+        studio.getCreatedAt(),  // BaseEntity 기준
+        "서류 검토 중입니다"
+    );
+  }
+
 }
 

@@ -8,7 +8,6 @@ import org.example.studiopick.domain.common.enums.ClassReservationStatus;
 import org.example.studiopick.domain.common.enums.ClassStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
-import org.example.studiopick.domain.user.repository.UserRepository;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.classes.ClassRepository;
 import org.example.studiopick.infrastructure.classes.ClassReservationRepository;
