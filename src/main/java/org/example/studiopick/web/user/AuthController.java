@@ -1,9 +1,12 @@
 package org.example.studiopick.web.user;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.token.service.TokenService;
 import org.example.studiopick.application.user.dto.JwtTokenResponseDto;
 import org.example.studiopick.application.user.dto.UserLoginRequestDto;
+import org.example.studiopick.common.util.JwtUtil;
 import org.example.studiopick.infrastructure.oauth.KakaoOAuthClient;
 import org.example.studiopick.security.JwtProvider;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,8 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final KakaoOAuthClient kakaoOAuthClient;
+    private final TokenService tokenService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDto> login(@RequestBody UserLoginRequestDto requestDto) {
@@ -50,4 +55,26 @@ public class AuthController {
         // 이후 사용자 정보 요청, 로그인 처리 등 구현 예정
         return ResponseEntity.ok("AccessToken: " + accessToken);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 요청입니다"
+            ));
+        }
+
+        String accessToken = authHeader.substring(7);
+        long expiration = jwtUtil.getExpiration(accessToken);
+        tokenService.blacklistToken(accessToken, expiration);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "로그아웃되었습니다"
+        ));
+    }
+
 }
