@@ -1,4 +1,4 @@
-package org.example.studiopick.application.admin.dto;
+package org.example.studiopick.application.admin.dto.studio;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

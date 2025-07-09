@@ -2,7 +2,7 @@ package org.example.studiopick.application.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.admin.dto.*;
+import org.example.studiopick.application.admin.dto.studio.*;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.common.enums.UserRole;
