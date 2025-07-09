@@ -1,12 +1,18 @@
 package org.example.studiopick.web;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.payment.PaymentService;
 import org.example.studiopick.application.payment.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -75,6 +81,23 @@ public class PaymentController {
             @PathVariable Long reservationId
     ) {
         PaymentInfoResponse response = paymentService.getPaymentByReservation(reservationId);
+        return new ApiResponse<>(true, response, null);
+    }
+    
+    /**
+     * 사용자별 결제 내역 조회
+     */
+    @GetMapping("/user/{userId}")
+    public ApiResponse<UserPaymentHistoryListResponse> getUserPaymentHistory(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        UserPaymentHistoryListResponse response = paymentService.getUserPaymentHistory(
+                userId, page, size, status, startDate, endDate);
         return new ApiResponse<>(true, response, null);
     }
 }

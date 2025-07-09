@@ -17,8 +17,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.example.studiopick.application.reservation.dto.PaginationResponse;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
 
 @Slf4j
 @Service
@@ -29,6 +37,7 @@ public class PaymentService {
     private final JpaPaymentRepository paymentRepository;
     private final JpaReservationRepository reservationRepository;
     private final ReservationService reservationService;
+    private final JpaUserRepository userRepository;
 
     @Value("${toss.payments.test-client-key}")
     private String clientKey;
@@ -269,6 +278,95 @@ public class PaymentService {
             payment.getPaidAt(),
             payment.getFailureCode(),
             payment.getFailureReason()
+        );
+    }
+
+    /**
+     * 사용자별 결제 내역 조회
+     */
+    public UserPaymentHistoryListResponse getUserPaymentHistory(Long userId, int page, int size,
+                                                                String status, LocalDate startDate, LocalDate endDate) {
+        // 1. 입력값 검증
+        if (page < 1) {
+            throw new IllegalArgumentException("페이지 번호는 1 이상이어야 합니다.");
+        }
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException("페이지 크기는 1 이상 100 이하여야 합니다.");
+        }
+        
+        // 2. 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Payment> paymentsPage = getFilteredUserPayments(userId, status, startDate, endDate, pageable);
+        
+        List<UserPaymentHistoryResponse> payments = paymentsPage.getContent()
+                .stream()
+                .map(this::toUserPaymentHistoryResponse)
+                .toList();
+                
+        return new UserPaymentHistoryListResponse(
+                payments,
+                new PaginationResponse(page, paymentsPage.getTotalElements())
+        );
+    }
+    
+    /**
+     * 필터 조건에 따른 사용자 결제 내역 조회
+     */
+    private Page<Payment> getFilteredUserPayments(Long userId, String status, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        PaymentStatus paymentStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("잘못된 결제 상태입니다: " + status);
+            }
+        }
+        
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59) : null;
+        
+        // 상태 + 기간
+        if (paymentStatus != null && startDateTime != null && endDateTime != null) {
+            return paymentRepository.findByUserIdAndPaidAtBetweenAndStatusOrderByPaidAtDesc(
+                    userId, startDateTime, endDateTime, paymentStatus, pageable);
+        }
+        // 상태만
+        else if (paymentStatus != null) {
+            return paymentRepository.findByUserIdAndStatusOrderByPaidAtDesc(userId, paymentStatus, pageable);
+        }
+        // 기간만
+        else if (startDateTime != null && endDateTime != null) {
+            return paymentRepository.findByUserIdAndPaidAtBetweenOrderByPaidAtDesc(
+                    userId, startDateTime, endDateTime, pageable);
+        }
+        // 필터 없음
+        else {
+            return paymentRepository.findByUserIdOrderByPaidAtDesc(userId, pageable);
+        }
+    }
+    
+    /**
+     * Payment 엔티티를 UserPaymentHistoryResponse DTO로 변환
+     */
+    private UserPaymentHistoryResponse toUserPaymentHistoryResponse(Payment payment) {
+        Reservation reservation = payment.getReservation();
+        return new UserPaymentHistoryResponse(
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getPaymentKey(),
+                reservation.getId(),
+                reservation.getStudio().getName(),
+                reservation.getReservationDate().toString(),
+                reservation.getStartTime() + " - " + reservation.getEndTime(),
+                payment.getAmount(),
+                payment.getMethod(),
+                payment.getStatus(),
+                payment.getPaidAt(),
+                payment.getFailureReason()
         );
     }
 

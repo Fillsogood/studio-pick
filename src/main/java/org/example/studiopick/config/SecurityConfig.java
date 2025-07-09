@@ -45,7 +45,9 @@ public class SecurityConfig {
                                 "/api/auth/oauth/**",
                                 "/oauth2/**", // OAuth2 리디렉션 경로 허용
                                 "/api/studios/search",    // 스튜디오 검색 공개
-                                "/api/studios/{id}"       // 스튜디오 상세 공개
+                                "/api/studios/{id}",       // 스튜디오 상세 공개
+                                "/api/payments/request",
+                                "/api/payments/confirm"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
