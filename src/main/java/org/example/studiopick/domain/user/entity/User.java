@@ -100,4 +100,47 @@ public class User extends BaseEntity {
     public void changeRole(UserRole role) {
         this.role = role;
     }
+
+    // 관리자용 업데이트 메서드
+    public void updateName(String name){
+        if(name != null && !name.isEmpty()){this.name = name;}
+    }
+
+    public void updatePhone(String phone){
+        if(phone != null && !phone.isEmpty()){this.phone = phone;}
+    }
+
+    public void updatePassword(String password){
+        if(password != null && !password.isEmpty()){this.password = password;}
+    }
+
+    //관리자용 상태 변경 메서드
+    public void activate() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public void suspend() {
+        this.status = UserStatus.LOCKED;
+    }
+
+    public void deactivate() {
+        this.status = UserStatus.INACTIVE;
+    }
+
+    // 상태 확인 메서드들
+    public boolean isActive() {
+        return this.status == UserStatus.ACTIVE;
+    }
+
+    public boolean isSuspended() {
+        return this.status == UserStatus.LOCKED;
+    }
+
+    public boolean isStudioOwner() {
+        return this.role == UserRole.STUDIO_OWNER || this.isStudioOwner;
+    }
+
+    public boolean isAdmin() {
+        return this.role == UserRole.ADMIN;
+    }
 }

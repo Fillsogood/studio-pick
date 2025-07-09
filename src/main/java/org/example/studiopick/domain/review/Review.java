@@ -10,6 +10,7 @@ import org.example.studiopick.domain.common.enums.ReviewStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 
+// Review 엔티티 - 전통적인 리뷰용
 @Entity
 @Table(name = "\"Review\"")
 @Getter

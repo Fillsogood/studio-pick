@@ -9,6 +9,7 @@ import org.example.studiopick.domain.user.entity.SocialAccount;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.domain.user.repository.SocialAccountRepository;
 import org.example.studiopick.domain.user.repository.UserRepository;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final JpaUserRepository userRepository;
     private final SocialAccountRepository socialAccountRepository;
     private final PasswordEncoder passwordEncoder;
 
