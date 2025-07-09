@@ -40,9 +40,14 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+<<<<<<< Updated upstream
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 
+=======
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation group: 'it.ozimov', name: 'embedded-redis', version: '0.7.2'
+>>>>>>> Stashed changes
 }
 
 tasks.named('test') {

@@ -2,6 +2,7 @@ package org.example.studiopick.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.token.service.TokenService;
 import org.example.studiopick.security.CustomUserDetailsService;
 import org.example.studiopick.security.JwtAuthenticationFilter;
 import org.example.studiopick.security.JwtProvider;
@@ -24,6 +25,7 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtProvider jwtProvider;
+    private final TokenService tokenService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -59,7 +61,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtProvider, customUserDetailsService);
+        return new JwtAuthenticationFilter(jwtProvider, customUserDetailsService, tokenService);
     }
 
     @Bean
