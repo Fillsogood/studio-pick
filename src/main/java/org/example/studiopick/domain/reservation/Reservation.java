@@ -77,6 +77,11 @@ public class Reservation extends BaseEntity {
             this.peopleCount = peopleCount;
         }
     }
+
+    public void updateCancelInfo(String reason) {
+        this.cancelldReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+    }
     
     public void changeStatus(ReservationStatus status) {
         this.status = status;
