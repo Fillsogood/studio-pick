@@ -27,7 +27,7 @@ public class AdminUserController {
   @GetMapping
   public ResponseEntity<ApiResponse<AdminUserListResponse>> getUserAccounts(
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) String role,
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String keyword

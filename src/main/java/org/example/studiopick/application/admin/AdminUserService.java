@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.dto.studio.AdminPaginationResponse;
 import org.example.studiopick.application.admin.dto.user.*;
+import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
@@ -28,15 +29,16 @@ public class AdminUserService {
   private final JpaUserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final PaginationValidator paginationValidator;
+  private final SystemSettingUtils settingUtils;
 
   /**
    * 사용자 계정 목록 조회 (페이징, 필터링)
    */
-  public AdminUserListResponse getUserAccounts(int page, int size, String role, String status, String keyword) {
+  public AdminUserListResponse getUserAccounts(int page, Integer size, String role, String status, String keyword) {
     // 입력값 검증
-    paginationValidator.validatePaginationParameters(page, size);
-
-    Pageable pageable = PageRequest.of(page - 1, size);
+    int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
+    paginationValidator.validatePaginationParameters(page, pageSize);
+    Pageable pageable = PageRequest.of(page - 1, pageSize);
     Page<User> usersPage;
 
     // 필터링 조건에 따른 조회
