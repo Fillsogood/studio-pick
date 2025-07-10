@@ -33,6 +33,14 @@ public class Artwork extends BaseEntity {
     
     @Column(name = "hashtags", length = 255)
     private String hashtags;
+
+    // [추가] 촬영일자
+    @Column(name = "shooting_date")
+    private String shootingDate;
+
+    // [추가] 촬영장소
+    @Column(name = "shooting_location", length = 255)
+    private String shootingLocation;
     
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = true;
@@ -52,7 +60,8 @@ public class Artwork extends BaseEntity {
     
     @Builder
     public Artwork(User user, Studio studio, String title, String description, String imageUrl, 
-                   String hashtags, Boolean isPublic, ArtworkStatus status) {
+                   String hashtags, Boolean isPublic, ArtworkStatus status,
+                   String shootingDate, String shootingLocation) {
         this.user = user;
         this.studio = studio;
         this.title = title;
@@ -61,6 +70,8 @@ public class Artwork extends BaseEntity {
         this.hashtags = hashtags;
         this.isPublic = isPublic != null ? isPublic : true;
         this.status = status != null ? status : ArtworkStatus.PUBLIC;
+        this.shootingDate = shootingDate;               // [추가]
+        this.shootingLocation = shootingLocation;       // [추가]
     }
     
     public void updateBasicInfo(String title, String description, String hashtags) {
@@ -119,5 +130,17 @@ public class Artwork extends BaseEntity {
         } else {
             throw new IllegalArgumentException("순서는 0 이상의 숫자여야 합니다.");
         }
+
+    }
+
+    public void update(String title, String description, String hashtags,
+                       String shootingDate, String shootingLocation, String imageUrl, Boolean isPublic) {
+        this.title = title;
+        this.description = description;
+        this.hashtags = hashtags;
+        this.shootingDate = shootingDate;
+        this.shootingLocation = shootingLocation;
+        this.imageUrl = imageUrl;
+        this.isPublic = isPublic != null && isPublic;
     }
 }
