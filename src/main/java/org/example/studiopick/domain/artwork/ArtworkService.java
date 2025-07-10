@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.common.dto.artwork.*;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.infrastructure.artwork.ArtworkRepository;
-import org.example.studiopick.infrastructure.mybatis.ArtworkMapper;
+import org.example.studiopick.infrastructure.artwork.mybatis.ArtworkMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

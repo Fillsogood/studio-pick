@@ -6,10 +6,10 @@ import org.example.studiopick.domain.artwork.Artwork;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.reservation.Reservation;
-import org.example.studiopick.domain.reservation.ReservationRepository;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.infrastructure.studio.StudioOperatingHoursRepository;
-import org.example.studiopick.infrastructure.studio.StudioRepository;
+import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
+import org.example.studiopick.infrastructure.studio.JpaStudioOperatingHoursRepository;
+import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.example.studiopick.infrastructure.artwork.ArtworkRepository;
 import org.example.studiopick.infrastructure.studio.StudioCommissionRepository;
 import org.springframework.data.domain.Page;
@@ -25,18 +25,18 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class StudioServiceImpl implements StudioService {
-  private final StudioRepository studioRepository;
-  private final StudioOperatingHoursRepository hoursRepository;
+  private final JpaStudioRepository jpaStudioRepository;
+  private final JpaStudioOperatingHoursRepository hoursRepository;
   private final StudioCommissionRepository commissionRepository;
   private final ArtworkRepository artworkRepository;
-  private final ReservationRepository reservationRepository;
+  private final JpaReservationRepository reservationRepository;
 
   @Override
   public StudioListResponse searchStudios(String category, String location, String price, int page, int limit) {
     Pageable pageable = PageRequest.of(page - 1, limit);
 
-    // 현재는 모든 스튜디오 다 가져오는 방식 (필터는 추후에 QueryDSL 또는 Specification 도입 시 적용)
-    Page<Studio> studios = studioRepository.findAll(pageable);
+    // 현재는 모든 스튜디오 다 가져오는 방식
+    Page<Studio> studios = jpaStudioRepository.findAll(pageable);
 
     List<StudioListDto> content = studios.getContent().stream().map(studio ->
         new StudioListDto(
@@ -61,7 +61,7 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public List<StudioSearchDto> searchByKeyword(String keyword, String location, String price) {
-    List<Studio> studios = studioRepository.searchStudios(keyword, location);
+    List<Studio> studios = jpaStudioRepository.searchStudios(keyword, location);
 
     return studios.stream()
         .map(s -> new StudioSearchDto(
@@ -82,7 +82,7 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public StudioDetailDto findById(Long studioId) {
-    Studio studio = studioRepository.findById(studioId)
+    Studio studio = jpaStudioRepository.findById(studioId)
         .orElseThrow(() -> new IllegalArgumentException("Studio not found"));
 
     // 운영시간 DTO 변환
@@ -145,7 +145,7 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public PricingDto pricing(Long studioId) {
-    Studio s = studioRepository.findById(studioId)
+    Studio s = jpaStudioRepository.findById(studioId)
         .orElseThrow(() -> new IllegalArgumentException("Studio not found"));
 
     return new PricingDto(
@@ -161,7 +161,7 @@ public class StudioServiceImpl implements StudioService {
     ZonedDateTime limit = now.plusMinutes(30);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
-    return studioRepository.findAll().stream()
+    return jpaStudioRepository.findAll().stream()
         .filter(studio -> {
           List<Reservation> reservations =
               reservationRepository.findByStudioIdAndReservationDateAndStatus(
@@ -189,13 +189,13 @@ public class StudioServiceImpl implements StudioService {
         .status(StudioStatus.PENDING)
         .build();
 
-    Studio saved = studioRepository.save(studio);
+    Studio saved = jpaStudioRepository.save(studio);
     return new StudioApplicationResponse(saved.getId(), saved.getStatus().name().toLowerCase());
   }
 
   @Override
   public StudioApplicationDetailResponse getApplicationStatus(Long studioId) {
-    Studio studio = studioRepository.findByIdAndStatus(studioId, StudioStatus.PENDING)
+    Studio studio = jpaStudioRepository.findByIdAndStatus(studioId, StudioStatus.PENDING)
         .orElseThrow(() -> new IllegalArgumentException("승인 대기 중인 스튜디오를 찾을 수 없습니다."));
 
     return new StudioApplicationDetailResponse(

@@ -1,4 +1,4 @@
-package org.example.studiopick.infrastructure.mybatis;
+package org.example.studiopick.infrastructure.artwork.mybatis;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

@@ -100,10 +100,6 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.COMPLETED;
     }
 
-    public void refund() {
-        this.status = ReservationStatus.REFUNDED;
-    }
-
     public boolean isConfirmed() {
         return this.status == ReservationStatus.CONFIRMED;
     }
@@ -143,6 +139,14 @@ public class Reservation extends BaseEntity {
     public void cancelWithoutValidation(String reason) {
         this.status = ReservationStatus.CANCEL_REQUESTED;
         this.cancelledReason = reason;
+    }
+
+    public void refund() {
+        if (this.status == ReservationStatus.CANCEL_REQUESTED) {
+            this.status = ReservationStatus.REFUNDED;
+        } else {
+            throw new IllegalStateException("현재 상태에서는 환불 처리할 수 없습니다.");
+        }
     }
 
     // 스튜디오에서 취소 승인
