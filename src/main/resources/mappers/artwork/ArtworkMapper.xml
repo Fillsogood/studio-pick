@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.example.studiopick.infrastructure.mybatis.ArtworkMapper">
+<mapper namespace="org.example.studiopick.infrastructure.artwork.mybatis.ArtworkMapper">
 
     <select id="findAllSorted" resultType="org.example.studiopick.common.dto.artwork.ArtworkFeedDto">
         SELECT

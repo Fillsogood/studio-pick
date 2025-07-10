@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.studiopick.infrastructure.reservation.mybatis.ReservationSearchMapper">
+
+    <!-- 관리자용 예약 검색 -->
+    <select id="searchReservations" resultType="org.example.studiopick.application.admin.dto.reservation.AdminReservationResponse">
+        SELECT 
+            r.id,
+            u.name as userName,
+            u.email as userEmail,
+            s.name as studioName,
+            r.reservation_date as reservationDate,
+            r.start_time as startTime,
+            r.end_time as endTime,
+            r.people_count as peopleCount,
+            r.total_amount as totalAmount,
+            r.status,
+            r.created_at as createdAt,
+            r.updated_at as updatedAt
+        FROM "Reservation" r
+        INNER JOIN "User" u ON r.user_id = u.id
+        INNER JOIN "Studio" s ON r.studio_id = s.id
+        <where>
+            <if test="criteria.status != null and criteria.status != ''">
+                AND r.status = #{criteria.status}
+            </if>
+            <if test="criteria.startDate != null and criteria.endDate != null">
+                AND r.reservation_date BETWEEN #{criteria.startDate} AND #{criteria.endDate}
+            </if>
+            <if test="criteria.userId != null">
+                AND r.user_id = #{criteria.userId}
+            </if>
+            <if test="criteria.studioId != null">
+                AND r.studio_id = #{criteria.studioId}
+            </if>
+            <if test="criteria.searchKeyword != null and criteria.searchKeyword != ''">
+                AND (
+                    LOWER(u.name) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                    OR LOWER(s.name) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                )
+            </if>
+        </where>
+        ORDER BY ${criteria.orderBy}
+        LIMIT #{criteria.limit} OFFSET #{criteria.offset}
+    </select>
+
+    <!-- 관리자용 예약 검색 총 개수 -->
+    <select id="countReservations" resultType="long">
+        SELECT COUNT(*)
+        FROM "Reservation" r
+        INNER JOIN "User" u ON r.user_id = u.id
+        INNER JOIN "Studio" s ON r.studio_id = s.id
+        <where>
+            <if test="criteria.status != null and criteria.status != ''">
+                AND r.status = #{criteria.status}
+            </if>
+            <if test="criteria.startDate != null and criteria.endDate != null">
+                AND r.reservation_date BETWEEN #{criteria.startDate} AND #{criteria.endDate}
+            </if>
+            <if test="criteria.userId != null">
+                AND r.user_id = #{criteria.userId}
+            </if>
+            <if test="criteria.studioId != null">
+                AND r.studio_id = #{criteria.studioId}
+            </if>
+            <if test="criteria.searchKeyword != null and criteria.searchKeyword != ''">
+                AND (
+                    LOWER(u.name) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                    OR LOWER(s.name) LIKE LOWER(CONCAT('%', #{criteria.searchKeyword}, '%'))
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 사용자용 예약 검색 -->
+    <select id="searchUserReservations" resultType="org.example.studiopick.application.reservation.dto.UserReservationResponse">
+        SELECT 
+            r.id,
+            s.name as studioName,
+            r.reservation_date::text as date,
+            r.start_time::text as startTime,
+            r.end_time::text as endTime,
+            LOWER(r.status) as status,
+            r.total_amount as totalAmount
+        FROM "Reservation" r
+        INNER JOIN "Studio" s ON r.studio_id = s.id
+        <where>
+            AND r.user_id = #{criteria.userId}
+            <if test="criteria.status != null and criteria.status != ''">
+                AND r.status = #{criteria.status}
+            </if>
+            <if test="criteria.startDate != null and criteria.endDate != null">
+                AND r.reservation_date BETWEEN #{criteria.startDate} AND #{criteria.endDate}
+            </if>
+            <if test="criteria.studioId != null">
+                AND r.studio_id = #{criteria.studioId}
+            </if>
+        </where>
+        ORDER BY ${criteria.orderBy}
+        LIMIT #{criteria.limit} OFFSET #{criteria.offset}
+    </select>
+
+    <!-- 사용자용 예약 검색 총 개수 -->
+    <select id="countUserReservations" resultType="long">
+        SELECT COUNT(*)
+        FROM "Reservation" r
+        <where>
+            AND r.user_id = #{criteria.userId}
+            <if test="criteria.status != null and criteria.status != ''">
+                AND r.status = #{criteria.status}
+            </if>
+            <if test="criteria.startDate != null and criteria.endDate != null">
+                AND r.reservation_date BETWEEN #{criteria.startDate} AND #{criteria.endDate}
+            </if>
+            <if test="criteria.studioId != null">
+                AND r.studio_id = #{criteria.studioId}
+            </if>
+        </where>
+    </select>
+
+</mapper>

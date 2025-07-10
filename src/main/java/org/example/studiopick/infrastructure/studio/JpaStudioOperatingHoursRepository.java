@@ -1,8 +1,12 @@
 package org.example.studiopick.infrastructure.studio;
 
 import org.example.studiopick.domain.studio.StudioOperatingHours;
-import org.example.studiopick.domain.studio.StudioOperatingHoursRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface JpaStudioOperatingHoursRepository extends JpaRepository<StudioOperatingHours, Long> , StudioOperatingHoursRepository {
+import java.util.List;
+
+@Repository
+public interface JpaStudioOperatingHoursRepository extends JpaRepository<StudioOperatingHours, Long> {
+  List<StudioOperatingHours> findByStudioId(Long studioId);
 }

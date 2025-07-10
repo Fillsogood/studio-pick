@@ -61,8 +61,7 @@ public class Studio extends BaseEntity {
     @Builder
     public Studio(User owner, String name, String description, String phone, String location,
                   StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice,
-                  Long hourlyBaseRate, Long perPersonRate, Integer maxPeople,
-                  SystemSettingUtils settingUtils) { // 추가
+                  Long hourlyBaseRate, Long perPersonRate, Integer maxPeople) {
         this.owner = owner;
         this.name = name;
         this.description = description;
@@ -72,19 +71,26 @@ public class Studio extends BaseEntity {
         this.weekdayPrice = weekdayPrice != null ? weekdayPrice : BigDecimal.ZERO;
         this.weekendPrice = weekendPrice != null ? weekendPrice : BigDecimal.ZERO;
 
-        // 시스템 설정에서 기본값 조회
+        // 기본값 설정 (SystemSettingUtils 없이)
+        this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;
+        this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;
+        this.maxPeople = maxPeople != null ? maxPeople : 10;
+    }
+    
+    /**
+     * 시스템 설정 기반 초기화를 위한 별도 메서드
+     */
+    public void initializeWithSystemSettings(SystemSettingUtils settingUtils) {
         if (settingUtils != null) {
-            this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate :
-                settingUtils.getIntegerSetting("studio.default.hourly.rate", 30000).longValue();
-            this.perPersonRate = perPersonRate != null ? perPersonRate :
-                settingUtils.getIntegerSetting("studio.default.per.person.rate", 5000).longValue();
-            this.maxPeople = maxPeople != null ? maxPeople :
-                settingUtils.getIntegerSetting("studio.default.max.people", 10);
-        } else {
-            // 폴백 기본값
-            this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;
-            this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;
-            this.maxPeople = maxPeople != null ? maxPeople : 10;
+            if (this.hourlyBaseRate == 30000L) {  // 기본값인 경우만 변경
+                this.hourlyBaseRate = settingUtils.getIntegerSetting("studio.default.hourly.rate", 30000).longValue();
+            }
+            if (this.perPersonRate == 5000L) {  // 기본값인 경우만 변경
+                this.perPersonRate = settingUtils.getIntegerSetting("studio.default.per.person.rate", 5000).longValue();
+            }
+            if (this.maxPeople == 10) {  // 기본값인 경우만 변경
+                this.maxPeople = settingUtils.getIntegerSetting("studio.default.max.people", 10);
+            }
         }
     }
     

@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
 
+  // 상태 변경 불가능 등 상태 관련 에러
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException e) {
+    ApiResponse<Void> response = new ApiResponse<>(false, null, e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
   // DTO @Valid 검증 실패 (비밀번호 형식 등)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
