@@ -10,7 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @MapperScan({
         "org.example.studiopick.infrastructure.reservation.mybatis",
         "org.example.studiopick.infrastructure.statistics",
-        "org.example.studiopick.infrastructure.artwork.mybatis"
+        "org.example.studiopick.infrastructure.artwork.mybatis",
+        "org.example.studiopick.infrastructure.customer.mapper"
 })
 public class StudioPickApplication {
 

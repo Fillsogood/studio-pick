@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.studiopick.infrastructure.customer.mapper.CustomerMapper">
+
+    <select id="findFrequentCustomers"
+            resultType="org.example.studiopick.application.customer.dto.FrequentCustomerDto">
+        SELECT
+        u.id AS userId,
+        u.name,
+        u.phone,
+        MAX(r.reservation_date) AS lastVisitDate,
+        COUNT(r.id) AS visitCount
+        FROM user u
+        JOIN reservation r ON u.id = r.user_id
+        WHERE u.status = 'ACTIVE'
+        <if test="keyword != null and keyword != ''">
+            AND (u.name ILIKE CONCAT('%', #{keyword}, '%') OR u.phone ILIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        GROUP BY u.id, u.name, u.phone
+        ORDER BY lastVisitDate DESC
+    </select>
+
+</mapper>
