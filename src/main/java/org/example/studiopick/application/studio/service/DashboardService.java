@@ -2,9 +2,7 @@ package org.example.studiopick.application.studio.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.dto.DashboardResponseDto;
-import org.example.studiopick.domain.user.repository.UserRepository;
-import org.example.studiopick.domain.studio.repository.DashboardClassRepository;
-import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
+import org.example.studiopick.infrastructure.statistics.DashboardStatsMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,9 +12,7 @@ import java.time.YearMonth;
 @RequiredArgsConstructor
 public class DashboardService {
 
-    private final JpaReservationRepository reservationRepository;
-    private final UserRepository userRepository;
-    private final DashboardClassRepository classRepository;
+    private final DashboardStatsMapper dashboardStatsMapper;
 
     public DashboardResponseDto getStudioDashboard(Long studioId) {
         LocalDate today = LocalDate.now();
@@ -24,35 +20,22 @@ public class DashboardService {
         LocalDate monthStart = currentMonth.atDay(1);
         LocalDate monthEnd = currentMonth.atEndOfMonth();
 
-//        // 예약 수
-//        long todayReservationCount = reservationRepository.countByReservationDateBetween(today, today);
-//        long monthReservationCount = reservationRepository.countByReservationDateBetween(monthStart, monthEnd);
-//
-//        // 매출
-//        long todayRevenue = reservationRepository
-//                .sumTotalAmountByReservationDate(today) != null ?
-//                reservationRepository.sumTotalAmountByReservationDate(today) : 0L;
-//
-//        long monthRevenue = reservationRepository
-//                .sumTotalAmountByReservationDateBetween(monthStart, monthEnd) != null ?
-//                reservationRepository.sumTotalAmountByReservationDateBetween(monthStart, monthEnd) : 0L;
-//
-//        // 신규 고객 (이번 달 가입)
-//        long newCustomerCount = userRepository.countByCreatedAtBetween(monthStart.atStartOfDay(), monthEnd.atTime(23, 59, 59));
-//
-//        // 클래스 수
-//        long classCount = classRepository.countByStudioId(studioId);
-//
-//        return DashboardResponseDto.builder()
-//                .todayReservationCount(todayReservationCount)
-//                .monthReservationCount(monthReservationCount)
-//                .todayRevenue(todayRevenue)
-//                .monthRevenue(monthRevenue)
-//                .newCustomerCount(newCustomerCount)
-//                .classCount(classCount)
-//                .build();
-//    }
-        return null;
+        // 통계 조회
+        long todayReservationCount = dashboardStatsMapper.countTodayReservations(studioId, today);
+        long monthReservationCount = dashboardStatsMapper.countMonthReservations(studioId, monthStart, monthEnd);
+        long todayRevenue = dashboardStatsMapper.sumTodayRevenue(studioId, today);
+        long monthRevenue = dashboardStatsMapper.sumMonthRevenue(studioId, monthStart, monthEnd);
+        long newCustomerCount = dashboardStatsMapper.countNewCustomers(
+                monthStart.atStartOfDay(), monthEnd.atTime(23, 59, 59));
+        long classCount = dashboardStatsMapper.countClassesByStudioId(studioId);
+
+        return DashboardResponseDto.builder()
+                .todayReservationCount(todayReservationCount)
+                .monthReservationCount(monthReservationCount)
+                .todayRevenue(todayRevenue)
+                .monthRevenue(monthRevenue)
+                .newCustomerCount(newCustomerCount)
+                .classCount(classCount)
+                .build();
     }
 }
-
