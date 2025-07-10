@@ -61,4 +61,11 @@ public interface ReservationRepository {
   @Query("SELECT SUM(r.totalAmount) FROM Reservation r WHERE r.reservationDate BETWEEN :start AND :end")
   Long sumTotalAmountByReservationDateBetween(LocalDate startDate, LocalDate endDate);
 
+  Page<Reservation> findByStudioIdAndReservationDateAndStatus(
+          Long studioId,
+          LocalDate reservationDate,
+          ReservationStatus status,
+          Pageable pageable
+  );
+
 }
