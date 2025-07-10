@@ -3,6 +3,7 @@ package org.example.studiopick.domain.reservation;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -46,4 +47,18 @@ public interface ReservationRepository {
   // 스튜디오별 조회
   Page<Reservation> findByStudioIdOrderByReservationDateDesc(Long studioId, Pageable pageable);
   Page<Reservation> findByStudioIdAndStatusOrderByReservationDateDesc(Long studioId, ReservationStatus status, Pageable pageable);
+
+  // 이번 달 예약 수
+  long countByReservationDateBetween(LocalDate startDate, LocalDate endDate);
+
+  // 오늘 매출 합계
+  // 전체 Reservation 중 날짜가 같은 것의 totalAmount를 SUM
+  @Query("SELECT SUM(r.totalAmount) FROM Reservation r WHERE r.reservationDate = :date")
+  Long sumTotalAmountByReservationDate(LocalDate date);
+
+  // 이번 달 매출 합계
+  // 특정 기간 내 totalAmount의 SUM
+  @Query("SELECT SUM(r.totalAmount) FROM Reservation r WHERE r.reservationDate BETWEEN :start AND :end")
+  Long sumTotalAmountByReservationDateBetween(LocalDate startDate, LocalDate endDate);
+
 }
