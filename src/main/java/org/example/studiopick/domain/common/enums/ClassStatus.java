@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ClassStatus {
     OPEN("open"),
-    CLOSED("closed");
+    CLOSED("closed"),
+    REPORTED("reported");
 
     private final String value;
 
