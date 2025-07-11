@@ -35,9 +35,4 @@ public interface ReservationService {
      * 예약 취소
      */
     ReservationCancelResponse cancelReservation(Long id, ReservationCancelRequest request);
-    
-    /**
-     * 결제 완료 시 예약 확정
-     */
-    void confirmReservationPayment(Long reservationId);
 }

@@ -84,6 +84,11 @@ public class Payment extends BaseEntity {
         this.status = PaymentStatus.REFUNDED;
     }
     
+    public void partialCancel(BigDecimal cancelAmount) {
+        this.status = PaymentStatus.PARTIAL_CANCELED;
+        // 부분 취소 금액을 별도로 추적하고 싶다면 필드 추가 가능
+    }
+    
     // 토스페이먼츠 연동을 위한 메서드들
     public void updateOrderId(String orderId) {
         this.orderId = orderId;
@@ -116,5 +121,13 @@ public class Payment extends BaseEntity {
     
     public boolean isRefunded() {
         return this.status == PaymentStatus.REFUNDED;
+    }
+    
+    public boolean isPartialCancelled() {
+        return this.status == PaymentStatus.PARTIAL_CANCELED;
+    }
+    
+    public boolean isCancellable() {
+        return this.status == PaymentStatus.DONE || this.status == PaymentStatus.PAID;
     }
 }
