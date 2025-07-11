@@ -147,6 +147,9 @@ public class TossPaymentsService {
         }
     }
 
+    /**
+     * 전액 결제 취소
+     */
     public TossPaymentCancelResponse cancelPayment(String paymentKey, String cancelReason) {
         WebClient webClient = createWebClient();
 
@@ -161,12 +164,68 @@ public class TossPaymentsService {
                 .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(
+                    httpStatus -> httpStatus.is4xxClientError(),
+                    clientResponse -> {
+                        log.error("결제 취소 실패 - 4xx 오류: {}", clientResponse.statusCode());
+                        return clientResponse.bodyToMono(String.class)
+                            .map(body -> new RuntimeException("결제 취소 실패: " + body));
+                    }
+                )
                 .bodyToMono(TossPaymentCancelResponse.class)
                 .block();
 
         } catch (Exception e) {
             log.error("토스페이먼츠 결제 취소 실패: paymentKey={}, error={}", paymentKey, e.getMessage());
             throw new RuntimeException("결제 취소 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 부분 결제 취소 (환불 금액 지정 가능)
+     */
+    public TossPaymentCancelResponse cancelPaymentPartial(String paymentKey, TossPaymentCancelRequest request) {
+        WebClient webClient = createWebClient();
+
+        try {
+            log.info("부분 결제 취소 요청: paymentKey={}, amount={}, reason={}", 
+                paymentKey, request.cancelAmount(), request.cancelReason());
+
+            return webClient.post()
+                .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(
+                    httpStatus -> httpStatus.is4xxClientError(),
+                    clientResponse -> {
+                        log.error("부분 결제 취소 실패 - 4xx 오류: {}", clientResponse.statusCode());
+                        return clientResponse.bodyToMono(String.class)
+                            .map(body -> {
+                                log.error("응답 본문: {}", body);
+                                return new RuntimeException("부분 결제 취소 실패: " + body);
+                            });
+                    }
+                )
+                .onStatus(
+                    httpStatus -> httpStatus.is5xxServerError(),
+                    clientResponse -> {
+                        log.error("부분 결제 취소 실패 - 5xx 오류: {}", clientResponse.statusCode());
+                        return clientResponse.bodyToMono(String.class)
+                            .map(body -> new RuntimeException("토스페이먼츠 서버 오류: " + body));
+                    }
+                )
+                .bodyToMono(TossPaymentCancelResponse.class)
+                .block();
+
+        } catch (Exception e) {
+            log.error("토스페이먼츠 부분 결제 취소 실패: paymentKey={}, error={}", paymentKey, e.getMessage(), e);
+            
+            // ✅ JSON 파싱 에러 특별 처리
+            if (e.getMessage().contains("JSON decoding error") || e.getMessage().contains("Cannot deserialize")) {
+                throw new RuntimeException("토스페이먼츠 응답 파싱 중 오류가 발생했습니다. 서버 개발팀에 문의하세요.", e);
+            }
+            
+            throw new RuntimeException("부분 결제 취소 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
 }

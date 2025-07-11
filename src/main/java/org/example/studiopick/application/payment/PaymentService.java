@@ -5,7 +5,7 @@ package org.example.studiopick.application.payment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.payment.dto.*;
-import org.example.studiopick.application.reservation.ReservationService;
+import org.example.studiopick.application.reservation.ReservationStatusService;
 import org.example.studiopick.domain.common.enums.PaymentMethod;
 import org.example.studiopick.domain.common.enums.PaymentStatus;
 import org.example.studiopick.domain.payment.Payment;
@@ -36,8 +36,8 @@ public class PaymentService {
     private  final TossPaymentsService tossPaymentsService;
     private final JpaPaymentRepository paymentRepository;
     private final JpaReservationRepository reservationRepository;
-    private final ReservationService reservationService;
     private final JpaUserRepository userRepository;
+    private final ReservationStatusService reservationStatusService;
 
     @Value("${toss.payments.test-client-key}")
     private String clientKey;
@@ -172,7 +172,7 @@ public class PaymentService {
             log.info("결제 정보 업데이트 완료: paymentKey={}", command.paymentKey());
 
             // ✅ 9. 예약 상태 업데이트 (CONFIRMED로)
-            reservationService.confirmReservationPayment(payment.getReservation().getId());
+            reservationStatusService.confirmReservationPayment(payment.getReservation().getId());
             log.info("예약 상태 업데이트 완료: reservationId={}", payment.getReservation().getId());
 
             return new PaymentConfirmResponse(
@@ -225,7 +225,7 @@ public class PaymentService {
     }
 
     /**
-     * 결제 취소 - 기존과 동일
+     * 결제 취소
      */
     @Transactional
     public PaymentCancelResponse cancelPayment(String paymentKey, PaymentCancelCommand command) {
@@ -234,13 +234,21 @@ public class PaymentService {
         Payment payment = paymentRepository.findByPaymentKey(paymentKey)
             .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
 
-        // 2. 토스페이먼츠 결제 취소 호출
+        // 2. 취소 가능 상태 확인
+        if (payment.getStatus() != PaymentStatus.DONE) {
+            throw new IllegalStateException("취소할 수 없는 결제 상태입니다: " + payment.getStatus());
+        }
+
+        // 3. 토스페이먼츠 결제 취소 호출
         TossPaymentCancelResponse tossResponse = tossPaymentsService.cancelPayment(
             paymentKey, command.cancelReason());
 
-        // 3. 결제 상태 업데이트
+        // 4. 결제 상태 업데이트
         payment.cancel();
         paymentRepository.save(payment);
+
+        log.info("결제 취소 완료: paymentKey={}, amount={}, reason={}", 
+            paymentKey, command.cancelAmount(), command.cancelReason());
 
         return new PaymentCancelResponse(
             paymentKey,
@@ -251,7 +259,9 @@ public class PaymentService {
         );
     }
 
-    // ✅ 기타 메서드들은 기존과 동일
+    /**
+     * 기타 메서드들은 기존과 동일
+     */
     public PaymentInfoResponse getPaymentInfo(String paymentKey) {
         Payment payment = paymentRepository.findByPaymentKey(paymentKey)
             .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));

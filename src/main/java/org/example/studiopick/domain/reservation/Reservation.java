@@ -118,7 +118,7 @@ public class Reservation extends BaseEntity {
 
     // 취소 가능 여부 체크
     public boolean isCancellable() {
-        return this.status == ReservationStatus.CONFIRMED;  // CONFIRMED만 취소 가능
+        return this.status == ReservationStatus.CONFIRMED || this.status == ReservationStatus.PENDING;  // CONFIRMED나 PENDING 모두 취소 가능
     }
 
 

@@ -2,6 +2,7 @@ package org.example.studiopick.application.reservation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.studiopick.application.refund.RefundService;
 import org.example.studiopick.application.reservation.dto.*;
 import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
@@ -53,6 +54,9 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserValidator userValidator;
     private final PaginationValidator paginationValidator;
     private final SystemSettingUtils settingUtils;
+    
+    // RefundService 주입 (순환 의존성 해결)
+    private final RefundService refundService;
 
     @Override
     public UserReservationDetailResponse getReservationDetail(Long reservationId, Long userId) {
@@ -227,42 +231,65 @@ public class ReservationServiceImpl implements ReservationService {
             throw new IllegalStateException("취소할 수 없는 예약 상태입니다: " + reservation.getStatus());
         }
 
-        // 4. 취소 가능 시간 검증 (도메인 서비스 활용)
+        // 4. 취소 가능 시간 검증
+        // ✅ 12시간 이내에는 취소 자체가 불가능
         LocalDateTime reservationDateTime = reservation.getReservationDate().atTime(reservation.getStartTime());
-        if (!reservationDomainService.isWithinCancellationPeriod(reservationDateTime)) {
-            int cancelHours = settingUtils.getIntegerSetting("reservation.cancel.hours", 24);
-            throw new IllegalStateException("예약 시작 " + cancelHours + "시간 전까지만 취소 가능합니다.");
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 예약 시작 시간이 이미 지났다면 취소 불가
+        if (reservationDateTime.isBefore(now)) {
+            throw new IllegalStateException("이미 시작된 예약은 취소할 수 없습니다.");
+        }
+        
+        // 12시간 이내에는 취소 불가 (환불도 불가하므로)
+        long hoursUntilReservation = Duration.between(now, reservationDateTime).toHours();
+        if (hoursUntilReservation < 12) {
+            throw new IllegalStateException("예약 시작 12시간 전까지만 취소 가능합니다. (현재 " + hoursUntilReservation + "시간 전)");
         }
 
-        // 5. 취소 수수료 계산
+        // 5. 원래 예약 상태 저장 (취소 전에 미리 저장)
+        ReservationStatus originalStatus = reservation.getStatus();
+        
+        // 6. 취소 수수료 계산
         RefundInfo refundInfo = calculateRefundAmount(reservation, reservationDateTime);
 
-        if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
-            try {
-                processRefund(reservation, refundInfo, request.reason());
-
-                // ✅ 환불 성공 시 상태 변경
-                reservation.refund();  // 또는 reservation.completeCancel() 등
-                jpaReservationRepository.save(reservation); // 상태 변경 저장
-
-                log.info("자동 환불 처리 완료: reservationId={}, refundAmount={}",
-                    id, refundInfo.refundAmount());
-            } catch (Exception e) {
-                log.error("환불 처리 실패: reservationId={}, error={}", id, e.getMessage());
-                // 환불 실패 시에도 reservation.cancelWithoutValidation()은 이미 처리됨
-            }
-        }
-        // 6. 예약 취소 처리
+        // 7. 예약 취소 처리
         reservation.cancelWithoutValidation(request.reason());
         Reservation saved = jpaReservationRepository.save(reservation);
 
-        // 7. 자동 환불 처리 (결제가 완료된 경우)
+        // 8. 자동 환불 처리 (원래 상태가 CONFIRMED였던 경우만)
+        if (originalStatus == ReservationStatus.CONFIRMED) {
+            try {
+                // 환불 처리 (항상 환불 금액이 존재함)
+                refundService.processRefundForReservation(reservation, refundInfo, request.reason());
+                
+                // 환불 성공 시 예약 상태를 REFUNDED로 변경
+                saved.refund();
+                saved = jpaReservationRepository.save(saved);
+                
+                log.info("자동 환불 처리 완료: reservationId={}, refundAmount={}",
+                    id, refundInfo.refundAmount());
+                    
+            } catch (Throwable e) {  // 모든 예외를 잡아서 트랜잭션 롤백 방지
+                // ✅ JSON 파싱 에러 특별 처리
+                if (e.getMessage() != null && 
+                    (e.getMessage().contains("JSON decoding error") || 
+                     e.getMessage().contains("Cannot deserialize") ||
+                     e.getMessage().contains("LocalDateTime"))) {
+                    log.error("환불 처리 실패 - 토스페이먼츠 응답 파싱 오류: reservationId={}, error={}", 
+                        id, "토스페이먼츠 API 응답 형식 변경으로 인한 파싱 실패: " + e.getMessage());
+                } else {
+                    log.error("환불 처리 실패 - 예약 취소는 유지: reservationId={}, error={}", id, e.getMessage());
+                }
+                // 환불 실패해도 예약 취소는 유지 (관리자가 수동 처리 가능)
+                // 예외를 다시 던지지 않아 트랜잭션 롤백 방지
+            }
+        }
 
+        log.info("예약 취소 요청 완료: reservationId={}, userId={}, reason={}, refundAmount={}, finalStatus={}", 
+                id, request.userId(), request.reason(), refundInfo.refundAmount(), saved.getStatus());
 
-        log.info("예약 취소 요청 완료: reservationId={}, userId={}, reason={}, refundAmount={}", 
-                id, request.userId(), request.reason(), refundInfo.refundAmount());
-
-        // 8. 응답 생성
+        // 9. 응답 생성
         return new ReservationCancelResponse(
             saved.getId(),
             saved.getStatus(),
@@ -270,88 +297,43 @@ public class ReservationServiceImpl implements ReservationService {
         );
     }
 
-    @Override
-    @Transactional
-    public void confirmReservationPayment(Long reservationId) {
-        Reservation reservation = jpaReservationRepository.findById(reservationId)
-            .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
-
-        if (reservation.getStatus() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("예약 상태가 PENDING이 아닙니다.");
-        }
-
-        reservation.confirm();
-        jpaReservationRepository.save(reservation);
-        
-        log.info("예약 결제 확정 완료: reservationId={}", reservationId);
-    }
-
     // Private helper methods
     
     /**
-     * 취소 수수료 및 환불 금액 계산
+     * ✅ 새로운 비즈니스 룰에 따른 취소 수수료 및 환불 금액 계산
+     * - 24시간 전까지 : 전액환불
+     * - 12시간 전까지 : 50% 환불
+     * - 12시간 이내 : 취소 불가 (이 메서드에 도달하지 않음)
      */
     private RefundInfo calculateRefundAmount(Reservation reservation, LocalDateTime reservationDateTime) {
         BigDecimal originalAmount = BigDecimal.valueOf(reservation.getTotalAmount());
         
-        // 취소 수수료 정책 살정
+        // 현재 시각과 예약 시각 간의 시간 차이 계산
         LocalDateTime now = LocalDateTime.now();
         long hoursUntilReservation = Duration.between(now, reservationDateTime).toHours();
         
-        // 시스템 설정에서 취소 수수료 정책 조회
-        int freeCancelHours = settingUtils.getIntegerSetting("reservation.free.cancel.hours", 48);
-        int earlyFeePercent = settingUtils.getIntegerSetting("reservation.early.cancel.fee.percent", 10);
-        int lateFeePercent = settingUtils.getIntegerSetting("reservation.late.cancel.fee.percent", 30);
-        
         BigDecimal cancellationFee;
+        BigDecimal refundAmount;
         String feePolicy;
         
-        if (hoursUntilReservation >= freeCancelHours) {
-            // 무료 취소 기간
+        if (hoursUntilReservation >= 24) {
+            // 24시간 전까지 - 전액환불
             cancellationFee = BigDecimal.ZERO;
-            feePolicy = freeCancelHours + "시간 전 취소 - 무료";
-        } else if (hoursUntilReservation >= 24) {
-            // 조기 취소 수수료
-            cancellationFee = originalAmount.multiply(BigDecimal.valueOf(earlyFeePercent)).divide(BigDecimal.valueOf(100));
-            feePolicy = "24시간 전 취소 - " + earlyFeePercent + "% 수수료";
+            refundAmount = originalAmount;
+            feePolicy = "24시간 전 취소 - 전액환불";
+            
         } else {
-            // 당일 취소 수수료
-            cancellationFee = originalAmount.multiply(BigDecimal.valueOf(lateFeePercent)).divide(BigDecimal.valueOf(100));
-            feePolicy = "24시간 이내 취소 - " + lateFeePercent + "% 수수료";
+            // 12시간 이상 24시간 미만 - 50% 환불
+            // (이 로직에 도달하는 경우는 12시간 이상이 보장됨)
+            refundAmount = originalAmount.multiply(BigDecimal.valueOf(0.5));
+            cancellationFee = originalAmount.subtract(refundAmount);
+            feePolicy = "12시간 전 취소 - 50% 환불";
         }
         
+        log.info("환불 정책 적용: reservationId={}, hoursUntil={}, policy={}, refundAmount={}", 
+            reservation.getId(), hoursUntilReservation, feePolicy, refundAmount);
+        
         return RefundInfo.of(originalAmount, cancellationFee, feePolicy);
-    }
-    
-    /**
-     * 실제 환불 처리 (결제 서비스와 연동)
-     */
-    private void processRefund(Reservation reservation, RefundInfo refundInfo, String reason) {
-        try {
-            // 1. 결제 정보 조회
-            // Payment payment = paymentRepository.findByReservationId(reservation.getId())
-            //     .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
-            
-            // 2. 토스페이먼츠 환불 요청
-            // PaymentCancelCommand cancelCommand = new PaymentCancelCommand(
-            //     refundInfo.refundAmount(),
-            //     "예약 취소: " + reason
-            // );
-            
-            // 3. 환불 처리
-            // paymentService.cancelPayment(payment.getPaymentKey(), cancelCommand);
-            
-            // 4. 예약 상태를 REFUNDED로 변경
-            reservation.refund();
-            jpaReservationRepository.save(reservation);
-            
-            log.info("환불 처리 완료: reservationId={}, refundAmount={}, fee={}", 
-                reservation.getId(), refundInfo.refundAmount(), refundInfo.cancellationFee());
-                
-        } catch (Exception e) {
-            log.error("환불 처리 실패: reservationId={}", reservation.getId(), e);
-            throw new RuntimeException("환불 처리에 실패했습니다: " + e.getMessage(), e);
-        }
     }
 
     // 기존 helper methods
