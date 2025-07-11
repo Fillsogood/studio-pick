@@ -150,5 +150,13 @@ public class User extends BaseEntity {
     public boolean isAdmin() {
         return this.role == UserRole.ADMIN;
     }
+    
+    /**
+     * 화면에 표시할 사용자 이름을 반환
+     * nickname이 있으면 nickname, 없으면 name 반환
+     */
+    public String getDisplayName() {
+        return this.nickname != null && !this.nickname.isEmpty() ? this.nickname : this.name;
+    }
 
 }
