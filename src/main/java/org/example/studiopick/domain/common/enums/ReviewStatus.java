@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ReviewStatus {
     VISIBLE("visible"),
     HIDDEN("hidden"),
-    DELETED("deleted");
+    DELETED("deleted"),
+    REPORTED("reported");
 
     private final String value;
 
