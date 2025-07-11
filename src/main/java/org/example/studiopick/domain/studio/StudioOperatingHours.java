@@ -46,4 +46,6 @@ public class StudioOperatingHours extends BaseEntity {
     public boolean isValidTime() {
         return openTime != null && closeTime != null && openTime.isBefore(closeTime);
     }
+
+    public void setStudio(Studio studio) {this.studio = studio;}
 }

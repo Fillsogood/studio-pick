@@ -46,9 +46,6 @@ public class Studio extends BaseEntity {
     @Column(name = "status", nullable = false)
     private StudioStatus status = StudioStatus.PENDING;
 
-    @Column(name = "weekday_price", nullable = false)
-    private BigDecimal weekdayPrice;
-
     @Column(name = "weekend_price", nullable = false)
     private BigDecimal weekendPrice;
 
@@ -58,9 +55,12 @@ public class Studio extends BaseEntity {
     @OneToMany(mappedBy = "studio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudioOperatingHours> operatingHours = new ArrayList<>();
 
+    @OneToMany(mappedBy = "studio", cascade = CascadeType.ALL)
+    private List<StudioImage> images = new ArrayList<>();
+
     @Builder
     public Studio(User owner, String name, String description, String phone, String location,
-                  StudioStatus status, BigDecimal weekdayPrice, BigDecimal weekendPrice,
+                  StudioStatus status, BigDecimal weekendPrice,
                   Long hourlyBaseRate, Long perPersonRate, Integer maxPeople) {
         this.owner = owner;
         this.name = name;
@@ -68,7 +68,6 @@ public class Studio extends BaseEntity {
         this.phone = phone;
         this.location = location;
         this.status = status != null ? status : StudioStatus.PENDING;
-        this.weekdayPrice = weekdayPrice != null ? weekdayPrice : BigDecimal.ZERO;
         this.weekendPrice = weekendPrice != null ? weekendPrice : BigDecimal.ZERO;
 
         // 기본값 설정 (SystemSettingUtils 없이)
@@ -121,6 +120,11 @@ public class Studio extends BaseEntity {
         return this.status == StudioStatus.APPROVED;
     }
 
+    public void addImage(StudioImage image) {
+        image.setStudio(this);
+        images.add(image);
+    }
+
     // 🆕 관리자용 개별 업데이트 메서드들
     public void updateName(String name) {
         if (name != null && !name.trim().isEmpty()) {
@@ -149,6 +153,11 @@ public class Studio extends BaseEntity {
             this.hourlyBaseRate = hourlyBaseRate;
         }
     }
+
+    public void updateWeekendPrice(BigDecimal weekendPrice) {
+            this.weekendPrice = weekendPrice;
+        }
+    
 
     public void updatePerPersonRate(Long perPersonRate) {
         if (perPersonRate != null && perPersonRate >= 0) {
@@ -184,5 +193,24 @@ public class Studio extends BaseEntity {
 
     public boolean isRejected() {
         return this.status == StudioStatus.REJECTED;
+    }
+
+    // 스튜디오 관리
+    public void updateInfo(String description, String phone, Long hourlyBaseRate, BigDecimal weekend, Long perPersonRate, Integer maxPeople) {
+        this.description = description;
+        this.phone = phone;
+        this.hourlyBaseRate = hourlyBaseRate;
+        this.weekendPrice = weekend;
+        this.perPersonRate = perPersonRate;
+        this.maxPeople = maxPeople;
+    }
+
+    public void updateMaxPeople(Integer maxPeople) {
+        this.maxPeople = maxPeople;
+    }
+
+    public void addOperatingHour(StudioOperatingHours operatingHour) {
+        operatingHour.setStudio(this);  // 양방향 설정
+        this.operatingHours.add(operatingHour);
     }
 }

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface JpaStudioOperatingHoursRepository extends JpaRepository<StudioOperatingHours, Long> {
   List<StudioOperatingHours> findByStudioId(Long studioId);
+  void deleteByStudioId(Long studioId);
 }

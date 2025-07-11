@@ -14,4 +14,7 @@ public interface StudioService {
   List<StudioSearchDto> searchByKeyword(String keyword, String location, String sort);
   StudioApplicationResponse applyStudio(StudioApplicationRequest request);
   StudioApplicationDetailResponse getApplicationStatus(Long studioId);
+  StudioCreateResponse createStudio(StudioCreateRequest request);
+  void updateStudio(Long studioId, StudioUpdateRequest request);
+  void deactivateStudio(Long studioId);
 }
