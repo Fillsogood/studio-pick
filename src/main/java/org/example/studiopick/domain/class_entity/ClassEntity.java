@@ -99,6 +99,23 @@ public class ClassEntity extends BaseEntity {
         return this.status == ClassStatus.CLOSED;
     }
     
+    public void report() {
+        this.status = ClassStatus.REPORTED;
+    }
+    
+    public void restore() {
+        this.status = ClassStatus.OPEN;
+    }
+    
+    public boolean isReported() {
+        return this.status == ClassStatus.REPORTED;
+    }
+    
+    public boolean isAvailableForReservation() {
+        return this.status == ClassStatus.OPEN && this.date != null && 
+               this.date.isAfter(LocalDate.now().minusDays(1));
+    }
+    
     public boolean isValidTimeRange() {
         return startTime != null && endTime != null && startTime.isBefore(endTime);
     }

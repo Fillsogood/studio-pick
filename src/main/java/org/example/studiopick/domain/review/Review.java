@@ -87,6 +87,22 @@ public class Review extends BaseEntity {
         return this.status == ReviewStatus.DELETED;
     }
     
+    public void report() {
+        this.status = ReviewStatus.REPORTED;
+    }
+    
+    public void restore() {
+        this.status = ReviewStatus.VISIBLE;
+    }
+    
+    public boolean isReported() {
+        return this.status == ReviewStatus.REPORTED;
+    }
+    
+    public boolean isPubliclyVisible() {
+        return this.status == ReviewStatus.VISIBLE;
+    }
+    
     public boolean isValidRating() {
         return rating != null && rating >= 1 && rating <= 5;
     }
