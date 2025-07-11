@@ -1,21 +1,15 @@
 package org.example.studiopick.application.studio.dto;
 
-import org.example.studiopick.domain.common.enums.StudioStatus;
-
 import java.math.BigDecimal;
 import java.util.List;
 
-public record StudioDetailDto(
-    Long id,
-    String name,
+public record StudioUpdateRequest(
     String description,
     String phone,
-    List<String> images,
-    String location,
-    StudioStatus status,
     Long hourlyBaseRate,
     BigDecimal weekendPrice,
     Integer maxPeople,
     Long perPersonRate,
-    List<OperatingHoursDto> operatingHours
+    List<OperatingHoursDto> operatingHours,
+    List<StudioImageUpdateDto> images // 이미지 순서 및 대표 여부 수정
 ) {}

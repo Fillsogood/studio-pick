@@ -7,6 +7,7 @@ import org.example.studiopick.application.studio.dto.StudioApplicationRequest;
 import org.example.studiopick.application.studio.dto.StudioApplicationResponse;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,9 @@ public class StudioApplicationController {
   /**
    * 스튜디오 운영 신청
    */
-  @PostMapping
-  public ResponseEntity<ApiResponse<StudioApplicationResponse>> applyStudio(
-      @RequestBody StudioApplicationRequest request
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiResponse<StudioApplicationResponse>> apply(
+      @ModelAttribute StudioApplicationRequest request
   ) {
     StudioApplicationResponse response = studioService.applyStudio(request);
     return ResponseEntity.status(HttpStatus.CREATED)

@@ -7,36 +7,40 @@ import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.studio.Studio;
+import org.example.studiopick.domain.studio.StudioImage;
+import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioOperatingHoursRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.example.studiopick.infrastructure.artwork.ArtworkRepository;
-import org.example.studiopick.infrastructure.studio.StudioCommissionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StudioServiceImpl implements StudioService {
-  private final JpaStudioRepository jpaStudioRepository;
+  private final JpaStudioRepository studioRepository;
   private final JpaStudioOperatingHoursRepository hoursRepository;
-  private final StudioCommissionRepository commissionRepository;
   private final ArtworkRepository artworkRepository;
   private final JpaReservationRepository reservationRepository;
+  private final FileUploader fileUploader;
 
   @Override
   public StudioListResponse searchStudios(String category, String location, String price, int page, int limit) {
     Pageable pageable = PageRequest.of(page - 1, limit);
 
     // 현재는 모든 스튜디오 다 가져오는 방식
-    Page<Studio> studios = jpaStudioRepository.findAll(pageable);
+    Page<Studio> studios = studioRepository.findAll(pageable);
 
     List<StudioListDto> content = studios.getContent().stream().map(studio ->
         new StudioListDto(
@@ -61,7 +65,7 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public List<StudioSearchDto> searchByKeyword(String keyword, String location, String price) {
-    List<Studio> studios = jpaStudioRepository.searchStudios(keyword, location);
+    List<Studio> studios = studioRepository.searchStudios(keyword, location);
 
     return studios.stream()
         .map(s -> new StudioSearchDto(
@@ -82,38 +86,22 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public StudioDetailDto findById(Long studioId) {
-    Studio studio = jpaStudioRepository.findById(studioId)
+    Studio studio = studioRepository.findById(studioId)
         .orElseThrow(() -> new IllegalArgumentException("Studio not found"));
 
     // 운영시간 DTO 변환
-    List<OperatingHoursDto> hours = hoursRepository.findByStudioId(studioId).stream()
+    List<OperatingHoursDto> operatingHours = hoursRepository.findByStudioId(studioId).stream()
         .map(h -> new OperatingHoursDto(h.getWeekday(), h.getOpenTime(), h.getCloseTime()))
         .collect(Collectors.toList());
 
-    // 이미지 URL만 추출
-    List<String> images = artworkRepository.findByStudioId(studioId).stream()
-        .map(Artwork::getImageUrl)
+    List<String> images = studio.getImages().stream()
+        .sorted(Comparator.comparingInt(StudioImage::getDisplayOrder))
+        .map(StudioImage::getImageUrl)
         .collect(Collectors.toList());
 
-    // 부가서비스: 더미 데이터 (프론트에서 선택 기반)
-    List<String> facilities = List.of("wifi", "parking", "tools");
-
-    // 가격 DTO 구성
-    PricingDto pricing = new PricingDto(
-        studio.getWeekdayPrice(),
-        studio.getWeekendPrice()
-    );
-
     return new StudioDetailDto(
-        studio.getId(),
-        studio.getName(),
-        studio.getDescription(),
-        studio.getPhone(),
-        studio.getLocation(),
-        images,
-        pricing,
-        hours,
-        facilities
+        studio.getId(), studio.getName(), studio.getDescription(), studio.getPhone(), images, studio.getLocation(), studio.getStatus(),
+        studio.getHourlyBaseRate(), studio.getWeekendPrice(), studio.getMaxPeople(), studio.getPerPersonRate(), operatingHours
     );
   }
 
@@ -145,12 +133,13 @@ public class StudioServiceImpl implements StudioService {
 
   @Override
   public PricingDto pricing(Long studioId) {
-    Studio s = jpaStudioRepository.findById(studioId)
+    Studio s = studioRepository.findById(studioId)
         .orElseThrow(() -> new IllegalArgumentException("Studio not found"));
 
     return new PricingDto(
-        s.getWeekdayPrice(),
-        s.getWeekendPrice()
+        s.getHourlyBaseRate(),
+        s.getWeekendPrice(),
+        s.getPerPersonRate()
     );
   }
 
@@ -161,7 +150,7 @@ public class StudioServiceImpl implements StudioService {
     ZonedDateTime limit = now.plusMinutes(30);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
-    return jpaStudioRepository.findAll().stream()
+    return studioRepository.findAll().stream()
         .filter(studio -> {
           List<Reservation> reservations =
               reservationRepository.findByStudioIdAndReservationDateAndStatus(
@@ -180,6 +169,7 @@ public class StudioServiceImpl implements StudioService {
   }
 
   @Override
+  @Transactional
   public StudioApplicationResponse applyStudio(StudioApplicationRequest request) {
     Studio studio = Studio.builder()
         .name(request.name())
@@ -189,13 +179,27 @@ public class StudioServiceImpl implements StudioService {
         .status(StudioStatus.PENDING)
         .build();
 
-    Studio saved = jpaStudioRepository.save(studio);
-    return new StudioApplicationResponse(saved.getId(), saved.getStatus().name().toLowerCase());
+    studioRepository.save(studio);
+
+    int index = 0;
+    for (MultipartFile file : request.images()) {
+      String url = fileUploader.upload(file); // 실제 구현에 따라 다름
+
+      StudioImage image = StudioImage.builder()
+          .imageUrl(url)
+          .isThumbnail(index == 0)
+          .displayOrder(index++)
+          .build();
+
+      studio.addImage(image); // 양방향 설정
+    }
+
+    return new StudioApplicationResponse(studio.getId(), studio.getStatus().name().toLowerCase());
   }
 
   @Override
   public StudioApplicationDetailResponse getApplicationStatus(Long studioId) {
-    Studio studio = jpaStudioRepository.findByIdAndStatus(studioId, StudioStatus.PENDING)
+    Studio studio = studioRepository.findByIdAndStatus(studioId, StudioStatus.PENDING)
         .orElseThrow(() -> new IllegalArgumentException("승인 대기 중인 스튜디오를 찾을 수 없습니다."));
 
     return new StudioApplicationDetailResponse(
@@ -205,6 +209,97 @@ public class StudioServiceImpl implements StudioService {
         studio.getCreatedAt(),  // BaseEntity 기준
         "서류 검토 중입니다"
     );
+  }
+
+  @Override
+  @Transactional
+  public StudioCreateResponse createStudio(StudioCreateRequest request) {
+    Studio studio = studioRepository.findById(request.studioId())
+        .orElseThrow(() -> new IllegalArgumentException("스튜디오를 찾을 수 없습니다."));
+    if (studio.getStatus() != StudioStatus.PENDING) {
+      throw new IllegalStateException("해당 스튜디오는 생성할 수 없는 상태입니다.");
+    }
+
+    // 신청 정보에 추가적인 정보 반영
+    studio.updateInfo(
+        request.description(),
+        request.phone(),
+        request.hourlyBaseRate(),
+        request.weekendPrice(),
+        request.perPersonRate(),
+        request.maxPeople()
+    );
+
+    // 운영 시간 저장
+    List<StudioOperatingHours> newHours = request.operatingHours().stream()
+        .map(dto -> StudioOperatingHours.builder()
+            .studio(studio)
+            .weekday(dto.weekday())
+            .openTime(dto.openTime())
+            .closeTime(dto.closeTime())
+            .build())
+        .toList();
+
+    hoursRepository.saveAll(newHours);
+
+    // 대표 이미지 설정
+    for (StudioImage image : studio.getImages()) {
+      boolean isThumbnail = image.getId().equals(request.thumbnailId());
+      image.setThumbnail(isThumbnail);
+    }
+
+    studio.changeStatus(StudioStatus.ACTIVE); // 활성화 처리
+
+    return new StudioCreateResponse(studio.getId(), studio.getName(), studio.getStatus().name().toLowerCase());
+  }
+
+  @Override
+  @Transactional
+  public void updateStudio(Long studioId, StudioUpdateRequest request) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 스튜디오를 찾을 수 없습니다."));
+
+    if (request.description() != null) studio.updateDescription(request.description());
+    if (request.phone() != null) studio.updatePhone(request.phone());
+    if (request.hourlyBaseRate() != null) studio.updateHourlyBaseRate(request.hourlyBaseRate());
+    if (request.weekendPrice() != null) studio.updateWeekendPrice(request.weekendPrice());
+    if (request.maxPeople() != null) studio.updateMaxPeople(request.maxPeople());
+    if (request.perPersonRate() != null) studio.updatePerPersonRate(request.perPersonRate());
+
+
+    // 운영 시간 수정
+    if (request.operatingHours() != null) {
+      hoursRepository.deleteByStudioId(studioId);
+      for (OperatingHoursDto dto : request.operatingHours()) {
+        studio.addOperatingHour(StudioOperatingHours.builder()
+            .studio(studio)
+            .weekday(dto.weekday())
+            .openTime(dto.openTime())
+            .closeTime(dto.closeTime())
+            .build());
+      }
+    }
+
+    // 이미지 순서 및 대표 이미지 수정
+    if (request.images() != null) {
+      for (StudioImageUpdateDto dto : request.images()) {
+        StudioImage image = studio.getImages().stream()
+            .filter(i -> i.getId().equals(dto.imageId()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("해당 이미지가 존재하지 않습니다."));
+
+        image.updateImageOrder(dto.displayOrder(), dto.isThumbnail());
+      }
+    }
+  }
+
+  @Override
+  @Transactional
+  public void deactivateStudio(Long studioId) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new IllegalArgumentException("해당 스튜디오가 존재하지 않습니다."));
+
+    studio.changeStatus(StudioStatus.INACTIVE); // 또는 SUSPENDED
   }
 
 }

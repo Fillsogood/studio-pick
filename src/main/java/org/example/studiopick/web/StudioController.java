@@ -3,6 +3,7 @@ package org.example.studiopick.web;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.StudioService;
 import org.example.studiopick.application.studio.dto.*;
+import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,5 +79,30 @@ public class StudioController {
   public ResponseEntity<ApiSuccessResponse<AvailableStudiosResponse>> getAvailableNow() {
     AvailableStudiosResponse response = new AvailableStudiosResponse(studioService.availableNow());
     return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+  }
+
+  // 스튜디오 개설
+  @PostMapping
+  public ResponseEntity<ApiResponse<StudioCreateResponse>> createStudio(
+      @ModelAttribute StudioCreateRequest request
+  ) {
+    StudioCreateResponse response = studioService.createStudio(request);
+    return ResponseEntity.ok(new ApiResponse<>(true, response, "스튜디오가 성공적으로 개설되었습니다"));
+  }
+
+  // 스튜디오 편집(정보수정)
+  @PatchMapping("/{id}")
+  public ResponseEntity<ApiSuccessResponse<Void>> updateStudio(
+      @PathVariable Long id,
+      @RequestBody StudioUpdateRequest request
+  ) {
+    studioService.updateStudio(id, request);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "스튜디오 정보가 수정되었습니다."));
+  }
+
+  @PatchMapping("/{id}/deactivate")
+  public ResponseEntity<ApiSuccessResponse<Void>> deactivateStudio(@PathVariable Long id) {
+    studioService.deactivateStudio(id);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "스튜디오가 비활성화되었습니다."));
   }
 }
