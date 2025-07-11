@@ -10,7 +10,10 @@ import org.example.studiopick.domain.common.enums.ReviewStatus;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 
-// Review 엔티티 - 전통적인 리뷰용
+import java.util.ArrayList;
+import java.util.List;
+
+// Review 엔티티 - 전통적인 리뷰용(스튜디오)
 @Entity
 @Table(name = "\"Review\"")
 @Getter
@@ -34,7 +37,10 @@ public class Review extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ReviewStatus status = ReviewStatus.VISIBLE;
-    
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewImage> images = new ArrayList<>();
+
     @Builder
     public Review(User user, Studio studio, Short rating, String comment, ReviewStatus status) {
         this.user = user;
