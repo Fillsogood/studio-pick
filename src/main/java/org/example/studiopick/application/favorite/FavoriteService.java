@@ -5,7 +5,7 @@ import org.example.studiopick.common.favorite.FavoriteCreateDto;
 import org.example.studiopick.common.favorite.FavoriteResponseDto;
 import org.example.studiopick.domain.common.enums.FavoriteType;
 import org.example.studiopick.domain.favorite.Favorite;
-import org.example.studiopick.domain.payment.FavoriteRepository;
+import org.example.studiopick.domain.favorite.FavoriteRepository;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.studio.repository.StudioRepository;
 import org.example.studiopick.domain.user.entity.User;

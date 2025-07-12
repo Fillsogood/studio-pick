@@ -1,7 +1,6 @@
-package org.example.studiopick.domain.payment;
+package org.example.studiopick.domain.favorite;
 
 import org.example.studiopick.domain.common.enums.FavoriteType;
-import org.example.studiopick.domain.favorite.Favorite;
 import org.example.studiopick.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
