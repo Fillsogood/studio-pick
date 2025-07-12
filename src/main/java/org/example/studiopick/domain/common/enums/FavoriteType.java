@@ -13,4 +13,13 @@ public enum FavoriteType {
         this.value = value;
     }
 
+    public static FavoriteType from(String value) {
+        for (FavoriteType type : FavoriteType.values()) {
+            if (type.getValue().equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("지원하지 않는 즐겨찾기 타입입니다: " + value);
+    }
+
 }
