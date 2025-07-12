@@ -48,4 +48,6 @@ public class StudioOperatingHours extends BaseEntity {
     }
 
     public void setStudio(Studio studio) {this.studio = studio;}
+
+
 }
