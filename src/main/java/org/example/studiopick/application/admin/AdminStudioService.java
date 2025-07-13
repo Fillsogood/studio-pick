@@ -8,6 +8,7 @@ import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
+import org.example.studiopick.domain.common.enums.OperationType;
 import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
@@ -221,31 +222,20 @@ public class AdminStudioService {
 
     StudioStatus oldStatus = studio.getStatus();
     StudioStatus newStatus = parseStudioStatus(command.status());
+    User owner = studio.getOwner(); // ✅ owner 변수 선언 추가
 
     try {
       // 스튜디오 상태 변경
       studio.updateStatus(newStatus);
 
-      // 사용자 계정 상태도 함께 변경
-      User owner = studio.getOwner();
-      switch (newStatus) {
-        case ACTIVE -> owner.activate();
-        case SUSPENDED -> {
-          if (owner.getStatus() == UserStatus.LOCKED) {
-            // LOCKED를 정지 상태로 사용
-          } else {
-            owner.changeStatus(UserStatus.LOCKED);
-          }
-        }
-        case REJECTED -> owner.changeStatus(UserStatus.LOCKED);
-        // PENDING은 사용자 상태 변경 없음
-      }
+      // 운영 타입별 사용자 권한 처리
+      String grantedPermissions = processUserPermissionsByOperationType(owner, studio, newStatus);
 
       jpaStudioRepository.save(studio);
       jpaUserRepository.save(owner);
 
-      log.info("스튜디오 상태 변경 완료: studioId={}, {} -> {}, reason={}",
-          studioId, oldStatus, newStatus, command.reason());
+      log.info("스튜디오 상태 변경 완료: studioId={}, type={}, {} -> {}, reason={}",
+          studioId, studio.getOperationType(), oldStatus, newStatus, command.reason());
 
       return new AdminStudioStatusResponse(
           studio.getId(),
@@ -304,6 +294,42 @@ public class AdminStudioService {
         pendingStudios,
         suspendedStudios
     );
+  }
+
+  /**
+   * 운영 타입별 사용자 권한 처리
+   */
+  private String processUserPermissionsByOperationType(User owner, Studio studio, StudioStatus newStatus) {
+    String grantedPermissions = "";
+    
+    switch (newStatus) {
+      case ACTIVE -> {
+        // 승인 시 운영 타입별 권한 부여
+        owner.promoteToStudioOwner(); // 기본 STUDIO_OWNER 권한 부여
+        
+        switch (studio.getOperationType()) {
+          case SPACE_RENTAL -> {
+            grantedPermissions = "공간 대여 운영 권한 (예약 관리, 요금 설정, 운영시간 관리)";
+            log.info("공간 대여 권한 부여: userId={}, studioId={}", owner.getId(), studio.getId());
+          }
+          case CLASS_WORKSHOP -> {
+            grantedPermissions = "공방 체험 운영 권한 (클래스 개설, 예약 관리, 강사 활동)";
+            log.info("공방 체험 권한 부여: userId={}, studioId={}", owner.getId(), studio.getId());
+          }
+        }
+        owner.activate();
+      }
+      case SUSPENDED -> {
+        owner.changeStatus(UserStatus.LOCKED);
+        grantedPermissions = "권한 정지 (서비스 이용 불가)";
+      }
+      case REJECTED -> {
+        // 거부 시에는 권한 변경하지 않음 (일반 사용자 유지)
+        grantedPermissions = "없음 (신청 거부)";
+      }
+    }
+    
+    return grantedPermissions;
   }
 
   // Private helper methods

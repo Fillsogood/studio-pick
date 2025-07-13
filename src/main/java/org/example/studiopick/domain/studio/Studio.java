@@ -5,6 +5,7 @@ import lombok.*;
 import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.StudioStatus;
+import org.example.studiopick.domain.common.enums.OperationType;
 import org.example.studiopick.domain.user.entity.User;
 
 import java.math.BigDecimal;
@@ -49,6 +50,21 @@ public class Studio extends BaseEntity {
     @Column(name = "weekend_price", nullable = false)
     private BigDecimal weekendPrice;
 
+    // 운영 타입 추가
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation_type", nullable = false)
+    private OperationType operationType = OperationType.SPACE_RENTAL;
+    
+    // 공방 체험 관련 정보
+    @Column(name = "instructor_name", length = 50)
+    private String instructorName;
+    
+    @Column(name = "instructor_career", length = 500)
+    private String instructorCareer;
+    
+    @Column(name = "available_classes", length = 1000)
+    private String availableClasses;
+
     @OneToOne(mappedBy = "studio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StudioCommission commission;
     
@@ -61,7 +77,9 @@ public class Studio extends BaseEntity {
     @Builder
     public Studio(User owner, String name, String description, String phone, String location,
                   StudioStatus status, BigDecimal weekendPrice,
-                  Long hourlyBaseRate, Long perPersonRate, Integer maxPeople) {
+                  Long hourlyBaseRate, Long perPersonRate, Integer maxPeople,
+                  OperationType operationType, String instructorName, 
+                  String instructorCareer, String availableClasses) {
         this.owner = owner;
         this.name = name;
         this.description = description;
@@ -74,6 +92,12 @@ public class Studio extends BaseEntity {
         this.hourlyBaseRate = hourlyBaseRate != null ? hourlyBaseRate : 30000L;
         this.perPersonRate = perPersonRate != null ? perPersonRate : 5000L;
         this.maxPeople = maxPeople != null ? maxPeople : 10;
+        
+        // 운영 타입 관련 필드 설정
+        this.operationType = operationType != null ? operationType : OperationType.SPACE_RENTAL;
+        this.instructorName = instructorName;
+        this.instructorCareer = instructorCareer;
+        this.availableClasses = availableClasses;
     }
     
     /**
@@ -212,5 +236,23 @@ public class Studio extends BaseEntity {
     public void addOperatingHour(StudioOperatingHours operatingHour) {
         operatingHour.setStudio(this);  // 양방향 설정
         this.operatingHours.add(operatingHour);
+    }
+    
+    // 운영 타입 확인 메서드들
+    public boolean isSpaceRental() {
+        return this.operationType == OperationType.SPACE_RENTAL;
+    }
+    
+    public boolean isClassWorkshop() {
+        return this.operationType == OperationType.CLASS_WORKSHOP;
+    }
+    
+    // 공방 정보 업데이트
+    public void updateWorkshopInfo(String instructorName, String instructorCareer, String availableClasses) {
+        if (this.operationType == OperationType.CLASS_WORKSHOP) {
+            this.instructorName = instructorName;
+            this.instructorCareer = instructorCareer;
+            this.availableClasses = availableClasses;
+        }
     }
 }
