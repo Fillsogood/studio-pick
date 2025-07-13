@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.payment.PaymentService;
 import org.example.studiopick.application.payment.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -85,17 +87,19 @@ public class PaymentController {
     }
     
     /**
-     * 사용자별 결제 내역 조회
+     * 내 결제 내역 조회
      */
-    @GetMapping("/user/{userId}")
-    public ApiResponse<UserPaymentHistoryListResponse> getUserPaymentHistory(
-            @PathVariable Long userId,
+    @GetMapping("/my")
+    public ApiResponse<UserPaymentHistoryListResponse> getMyPaymentHistory(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
         UserPaymentHistoryListResponse response = paymentService.getUserPaymentHistory(
                 userId, page, size, status, startDate, endDate);
         return new ApiResponse<>(true, response, null);

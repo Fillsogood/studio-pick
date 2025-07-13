@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.favorite.FavoriteService;
+import org.example.studiopick.application.user.service.UserService;
 import org.example.studiopick.common.favorite.FavoriteCreateDto;
 import org.example.studiopick.common.favorite.FavoriteResponseDto;
 import org.example.studiopick.security.UserPrincipal;
@@ -22,19 +23,26 @@ import org.springframework.web.bind.annotation.*;
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
+    private final UserService userService;
 
     @PostMapping
     @Operation(summary = "즐겨찾기 추가")
     public FavoriteResponseDto addFavorite(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                            @Valid @RequestBody FavoriteCreateDto dto) {
-        return favoriteService.addFavorite(userPrincipal.getUser(), dto);
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        var user = userService.getById(userId);
+        return favoriteService.addFavorite(user, dto);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "즐겨찾기 삭제")
     public void deleteFavorite(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                @PathVariable Long id) {
-        favoriteService.deleteFavorite(userPrincipal.getUser(), id);
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        var user = userService.getById(userId);
+        favoriteService.deleteFavorite(user, id);
     }
 
     @GetMapping
@@ -42,6 +50,9 @@ public class FavoriteController {
     public Page<FavoriteResponseDto> getFavorites(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                   @RequestParam String type,
                                                   Pageable pageable) {
-        return favoriteService.getFavorites(userPrincipal.getUser(), type, pageable);
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        var user = userService.getById(userId);
+        return favoriteService.getFavorites(user, type, pageable);
     }
 }

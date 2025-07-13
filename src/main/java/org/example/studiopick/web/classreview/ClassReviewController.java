@@ -4,9 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.classreview.dto.*;
 import org.example.studiopick.application.classreview.service.ClassReviewReplyService;
 import org.example.studiopick.application.classreview.service.ClassReviewService;
-import org.example.studiopick.application.review.dto.ReviewReplyRequest;
-import org.example.studiopick.application.review.dto.ReviewReplyResponse;
-import org.example.studiopick.application.review.dto.ReviewWithReplyDto;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.example.studiopick.security.UserPrincipal;
@@ -26,9 +23,11 @@ public class ClassReviewController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<ClassReviewResponse>> createReview(
-      @RequestParam Long userId,
+      @AuthenticationPrincipal UserPrincipal userPrincipal,
       @ModelAttribute ClassReviewCreateRequest request
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     ClassReviewResponse response = classReviewService.createReview(userId, request);
     return ResponseEntity.ok(new ApiResponse<>(true, response, "리뷰가 등록되었습니다."));
   }
@@ -36,9 +35,11 @@ public class ClassReviewController {
   @PatchMapping("/{reviewId}")
   public ResponseEntity<ApiSuccessResponse<Void>> updateReview(
       @PathVariable Long reviewId,
-      @RequestParam Long userId,
+      @AuthenticationPrincipal UserPrincipal userPrincipal,
       @ModelAttribute ClassReviewUpdateRequest request
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     classReviewService.updateReview(reviewId, userId, request);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "리뷰가 수정되었습니다."));
   }
@@ -46,8 +47,10 @@ public class ClassReviewController {
   @DeleteMapping("/{reviewId}")
   public ResponseEntity<ApiSuccessResponse<Void>> deleteReview(
       @PathVariable Long reviewId,
-      @RequestParam Long userId
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     classReviewService.deleteReview(reviewId, userId);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "리뷰가 삭제되었습니다."));
   }

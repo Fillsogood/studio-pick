@@ -23,7 +23,10 @@ public class ArtworkLikeController {
             @PathVariable Long artworkId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
-        User user = userService.getById(userPrincipal.getId());
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        User user = userService.getById(userId);
+        
         artworkLikeService.toggleLike(artworkId, user);
         return ResponseEntity.ok().build();
     }

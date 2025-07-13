@@ -26,6 +26,7 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<Map<String, Object>> getUserProfile(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        // 토큰에서 직접 사용자 ID 추출 (DB 조회 없음)
         Long userId = userPrincipal.getUserId();
         UserProfileResponseDto profile = userService.getUserProfile(userId);
 
@@ -42,6 +43,7 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody UserProfileUpdateRequestDto requestDto
     ) {
+        // 토큰에서 직접 사용자 ID 추출
         Long userId = userPrincipal.getUserId();
         UserProfileUpdateResponseDto updated = userService.updateUserProfile(userId, requestDto);
 
@@ -57,6 +59,7 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody ChangePasswordRequestDto requestDto
     ) {
+        // 토큰에서 직접 사용자 ID 추출
         Long userId = userPrincipal.getUserId();
         userService.changePassword(userId, requestDto.getCurrentPassword(), requestDto.getNewPassword());
 
@@ -71,7 +74,9 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestPart("image") MultipartFile image
     ) {
-        String imageUrl = userService.uploadProfileImage(userPrincipal.getUserId(), image);
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
+        String imageUrl = userService.uploadProfileImage(userId, image);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -79,5 +84,4 @@ public class UserController {
                 "data", Map.of("imageUrl", imageUrl)
         ));
     }
-
 }

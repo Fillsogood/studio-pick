@@ -3,7 +3,6 @@ package org.example.studiopick.config;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.token.service.TokenService;
-import org.example.studiopick.security.CustomUserDetailsService;
 import org.example.studiopick.security.JwtAuthenticationFilter;
 import org.example.studiopick.security.JwtProvider;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +24,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
     private final JwtProvider jwtProvider;
     private final TokenService tokenService;
 
@@ -40,6 +38,7 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/validate/**",
                                 "/api/auth/login",
+                                "/api/auth/refresh",     // 토큰 재발급 경로 추가
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/auth/oauth/**",
@@ -72,7 +71,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtProvider, customUserDetailsService, tokenService);
+        return new JwtAuthenticationFilter(jwtProvider, tokenService);
     }
 
     @Bean

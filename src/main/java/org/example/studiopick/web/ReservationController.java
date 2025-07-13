@@ -9,11 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.reservation.ReservationService;
 import org.example.studiopick.application.reservation.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -43,12 +44,12 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity<ApiResponse<ReservationResponse>> createReservation(
         @Valid @RequestBody ReservationCreateCommand command,
-        Authentication authentication
+        @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        // 사용자 ID 검증 (요청한 사용자와 예약하려는 사용자가 동일한지 확인)
-        String email = authentication.getName();
-        log.info("예약 생성 요청: email={}, userId={}, studioId={}, date={}, startTime={}, endTime={}",
-            email, command.userId(), command.studioId(), command.reservationDate(), 
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
+        log.info("예약 생성 요청: userId={}, studioId={}, date={}, startTime={}, endTime={}",
+            userId, command.studioId(), command.reservationDate(), 
             command.startTime(), command.endTime());
 
         ReservationResponse response = reservationService.create(command.studioId(), command);
@@ -77,21 +78,21 @@ public class ReservationController {
     }
 
     /**
-     * 사용자별 예약 목록 조회
+     * 내 예약 목록 조회
      */
-    @Operation(summary = "사용자 예약 목록 조회", description = "본인의 예약 목록을 조회합니다 (필터링 지원)")
-    @GetMapping
-    @PreAuthorize("hasRole('USER') and #userId == authentication.principal.id")
-    public ResponseEntity<ApiResponse<UserReservationListResponse>> getReservations(
-        @RequestParam Long userId,
+    @Operation(summary = "내 예약 목록 조회", description = "본인의 예약 목록을 조회합니다 (필터링 지원)")
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<UserReservationListResponse>> getMyReservations(
+        @AuthenticationPrincipal UserPrincipal userPrincipal,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(required = false) Integer size,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-        @RequestParam(required = false) Long studioId,
-        Authentication authentication
+        @RequestParam(required = false) Long studioId
     ) {
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
         log.info("사용자 예약 목록 조회 요청: userId={}, page={}, size={}, status={}, startDate={}, endDate={}, studioId={}",
             userId, page, size, status, startDate, endDate, studioId);
 
@@ -102,52 +103,42 @@ public class ReservationController {
     }
 
     /**
-     * 예약 취소
-     */
-    @Operation(summary = "예약 취소", description = "본인의 예약을 취소 요청합니다")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "취소 요청 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "취소 불가능한 예약"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
-    })
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<ApiResponse<ReservationCancelResponse>> cancelReservation(
-        @PathVariable Long id,
-        @Valid @RequestBody ReservationCancelRequest request,
-        Authentication authentication
-    ) {
-        log.info("예약 취소 요청: reservationId={}, userId={}, reason={}", 
-            id, request.userId(), request.reason());
-
-        ReservationCancelResponse response = reservationService.cancelReservation(id, request);
-
-        log.info("예약 취소 요청 완료: reservationId={}, status={}", id, response.status());
-
-        return ResponseEntity.ok(new ApiResponse<>(true, response, "예약 취소가 요청되었습니다."));
-    }
-
-    /**
      * 예약 상세 조회
      */
     @Operation(summary = "예약 상세 조회", description = "특정 예약의 상세 정보를 조회합니다")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
-    })
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<UserReservationDetailResponse>> getReservationDetail(
-        @PathVariable Long id,
-        @RequestParam Long userId,
-        Authentication authentication
+    @GetMapping("/{reservationId}")
+    public ResponseEntity<ApiResponse<ReservationDetailResponse>> getReservationDetail(
+        @PathVariable Long reservationId,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        log.info("예약 상세 조회 요청: reservationId={}, userId={}", id, userId);
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
+        log.info("예약 상세 조회 요청: reservationId={}, userId={}", reservationId, userId);
 
-        // 본인 예약만 조회 가능하도록 검증
-        UserReservationDetailResponse response = reservationService.getReservationDetail(id, userId);
-
+        ReservationDetailResponse response = reservationService.getReservationDetail(reservationId, userId);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, response, "예약 상세 정보를 조회했습니다."));
+    }
+
+    /**
+     * 예약 취소
+     */
+    @Operation(summary = "예약 취소", description = "예약을 취소합니다")
+    @PatchMapping("/{reservationId}/cancel")
+    public ResponseEntity<ApiResponse<ReservationCancelResponse>> cancelReservation(
+        @PathVariable Long reservationId,
+        @Valid @RequestBody ReservationCancelCommand command,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
+        log.info("예약 취소 요청: reservationId={}, userId={}, reason={}", 
+            reservationId, userId, command.cancelReason());
+
+        ReservationCancelResponse response = reservationService.cancel(reservationId, userId, command);
+        
+        log.info("예약 취소 완료: reservationId={}", reservationId);
+        
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "예약이 취소되었습니다."));
     }
 }

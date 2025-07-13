@@ -25,7 +25,10 @@ public class ArtworkCommentController {
             @RequestBody ArtworkCommentRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
-        User user = userService.getById(userPrincipal.getId()); // 로그인 유저 정보
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        User user = userService.getById(userId);
+        
         ArtworkCommentResponseDto response =
                 artworkCommentService.createComment(artworkId, user, request.getComment());
 
@@ -47,11 +50,14 @@ public class ArtworkCommentController {
             @RequestBody ArtworkCommentRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
-        User user = userService.getById(userPrincipal.getId());
-        ArtworkCommentResponseDto updated =
-                artworkCommentService.updateComment(artworkId, commentId, user, request.getComment());
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        User user = userService.getById(userId);
+        
+        ArtworkCommentResponseDto response =
+                artworkCommentService.updateComment(commentId, user, request.getComment());
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/api/artworks/{artworkId}/comments/{commentId}")
@@ -60,9 +66,11 @@ public class ArtworkCommentController {
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
-        User user = userService.getById(userPrincipal.getId());
-        artworkCommentService.deleteComment(artworkId, commentId, user);
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        User user = userService.getById(userId);
+        
+        artworkCommentService.deleteComment(commentId, user);
         return ResponseEntity.noContent().build();
     }
-
 }
