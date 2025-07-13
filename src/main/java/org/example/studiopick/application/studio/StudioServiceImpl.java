@@ -2,6 +2,7 @@ package org.example.studiopick.application.studio;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.dto.*;
+import org.example.studiopick.domain.common.enums.OperationType;
 import org.example.studiopick.domain.artwork.Artwork;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
@@ -300,6 +301,177 @@ public class StudioServiceImpl implements StudioService {
         .orElseThrow(() -> new IllegalArgumentException("해당 스튜디오가 존재하지 않습니다."));
 
     studio.changeStatus(StudioStatus.INACTIVE); // 또는 SUSPENDED
+  }
+
+  /**
+   * 공간 대여 신청 처리
+   */
+  @Override
+  @Transactional
+  public StudioApplicationResponse applySpaceRental(SpaceRentalApplicationRequest request) {
+    // TODO: 현재 로그인한 사용자 정보 가져오기 (예: SecurityContext에서)
+    // User currentUser = getCurrentUser();
+    
+    Studio studio = Studio.builder()
+        // .owner(currentUser)
+        .name(request.name())
+        .description(request.description())
+        .location(request.location())
+        .phone(request.phone())
+        .operationType(OperationType.SPACE_RENTAL)
+        .hourlyBaseRate(request.hourlyBaseRate())
+        .weekendPrice(request.weekendPrice())
+        .perPersonRate(request.perPersonRate())
+        .maxPeople(request.maxPeople())
+        .status(StudioStatus.PENDING)
+        .build();
+
+    // 파일 업로드 처리
+    processFileUploads(studio, request.businessLicense(), request.documents(), request.images());
+    
+    studioRepository.save(studio);
+
+    return new StudioApplicationResponse(
+        studio.getId(), 
+        studio.getStatus().name().toLowerCase()
+    );
+  }
+
+  /**
+   * 공방 체험 신청 처리
+   */
+  @Override
+  @Transactional
+  public StudioApplicationResponse applyWorkshop(WorkshopApplicationRequest request) {
+    // TODO: 현재 로그인한 사용자 정보 가져오기
+    // User currentUser = getCurrentUser();
+    
+    Studio studio = Studio.builder()
+        // .owner(currentUser)
+        .name(request.name())
+        .description(request.description())
+        .location(request.location())
+        .phone(request.phone())
+        .operationType(OperationType.CLASS_WORKSHOP)
+        .instructorName(request.instructorName())
+        .instructorCareer(request.instructorCareer())
+        .availableClasses(String.join(",", request.availableClasses()))
+        .maxPeople(request.maxParticipants())
+        .status(StudioStatus.PENDING)
+        .build();
+
+    // 파일 업로드 처리 (공방 전용 파일들 포함)
+    processWorkshopFileUploads(studio, request);
+    
+    studioRepository.save(studio);
+
+    return new StudioApplicationResponse(
+        studio.getId(), 
+        studio.getStatus().name().toLowerCase()
+    );
+  }
+
+  /**
+   * 공간 대여 신청 상태 조회
+   */
+  @Override
+  public StudioApplicationDetailResponse getSpaceRentalApplicationStatus(Long studioId) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new IllegalArgumentException("신청을 찾을 수 없습니다."));
+        
+    if (!studio.isSpaceRental()) {
+      throw new IllegalArgumentException("공간 대여 신청이 아닙니다.");
+    }
+    
+    return new StudioApplicationDetailResponse(
+        studio.getId(),
+        studio.getName(),
+        studio.getStatus().name().toLowerCase(),
+        studio.getCreatedAt(),
+        getStatusMessage(studio.getStatus())
+    );
+  }
+
+  /**
+   * 공방 체험 신청 상태 조회
+   */
+  @Override
+  public StudioApplicationDetailResponse getWorkshopApplicationStatus(Long studioId) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new IllegalArgumentException("신청을 찾을 수 없습니다."));
+        
+    if (!studio.isClassWorkshop()) {
+      throw new IllegalArgumentException("공방 체험 신청이 아닙니다.");
+    }
+    
+    return new StudioApplicationDetailResponse(
+        studio.getId(),
+        studio.getName(),
+        studio.getStatus().name().toLowerCase(),
+        studio.getCreatedAt(),
+        getStatusMessage(studio.getStatus())
+    );
+  }
+
+  /**
+   * 공방 전용 파일 업로드 처리
+   */
+  private void processWorkshopFileUploads(Studio studio, WorkshopApplicationRequest request) {
+    // 기본 파일들 (기존 로직)
+    processFileUploads(studio, request.businessLicense(), request.documents(), request.images());
+    
+    // 강사 자격증 업로드
+    if (request.instructorCertificates() != null) {
+      for (MultipartFile cert : request.instructorCertificates()) {
+        String certUrl = fileUploader.upload(cert);
+        // TODO: 강사 자격증 정보 저장
+      }
+    }
+    
+    // 작품 샘플 업로드
+    if (request.sampleWorks() != null) {
+      for (MultipartFile sample : request.sampleWorks()) {
+        String sampleUrl = fileUploader.upload(sample);
+        // TODO: 작품 샘플 정보 저장
+      }
+    }
+  }
+
+  /**
+   * 기본 파일 업로드 처리
+   */
+  private void processFileUploads(Studio studio, MultipartFile businessLicense, 
+                                 List<MultipartFile> documents, List<MultipartFile> images) {
+    // 사업자등록증 업로드
+    if (businessLicense != null && !businessLicense.isEmpty()) {
+      String licenseUrl = fileUploader.upload(businessLicense);
+      // TODO: 사업자등록증 정보 저장
+    }
+
+    // 스튜디오 이미지 업로드
+    if (images != null) {
+      int order = 0;
+      for (MultipartFile imageFile : images) {
+        String imageUrl = fileUploader.upload(imageFile);
+        
+        StudioImage image = StudioImage.builder()
+            .imageUrl(imageUrl)
+            .isThumbnail(order == 0) // 첫 번째 이미지를 대표 이미지로
+            .displayOrder(order++)
+            .build();
+            
+        studio.addImage(image);
+      }
+    }
+  }
+
+  private String getStatusMessage(StudioStatus status) {
+    return switch (status) {
+      case PENDING -> "관리자 검토 중입니다.";
+      case ACTIVE -> "승인되었습니다.";
+      case REJECTED -> "신청이 거부되었습니다.";
+      default -> "상태를 확인할 수 없습니다.";
+    };
   }
 
 }
