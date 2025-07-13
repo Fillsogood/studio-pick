@@ -6,9 +6,7 @@ import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.common.dto.artwork.ArtworkDetailResponseDto;
 import org.example.studiopick.common.dto.artwork.ArtworkFeedDto;
 import org.example.studiopick.common.dto.artwork.ArtworkUploadRequestDto;
-import org.example.studiopick.domain.artwork.Artwork;
 import org.example.studiopick.domain.artwork.ArtworkService;
-import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +47,11 @@ public class ArtWorkController {
     public ResponseEntity<ApiResponse<ArtworkDetailResponseDto>> getArtworkById(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        User user = userService.getById(userPrincipal.getId());
+        
+        // 토큰에서 직접 사용자 ID 추출하여 User 객체 조회
+        Long userId = userPrincipal.getUserId();
+        var user = userService.getById(userId);
+        
         ArtworkDetailResponseDto detail = artworkService.getArtworkDetail(id, user);
         return ResponseEntity.ok(new ApiResponse<>(true, detail, null));
     }
@@ -82,6 +84,7 @@ public class ArtWorkController {
             @RequestBody ArtworkUploadRequestDto dto,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
+        // 토큰에서 직접 사용자 ID 추출 (DB 조회 없음)
         Long userId = userPrincipal.getUserId();
         Long artworkId = artworkService.saveArtwork(dto, userId); // 저장 후 ID 반환
 
@@ -99,32 +102,8 @@ public class ArtWorkController {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null ||
-                !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
-            throw new IllegalArgumentException("이미지 형식은 jpg, png, webp만 허용됩니다.");
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
         }
     }
-
-    // 4. 작품 수정 API
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateArtwork(
-            @PathVariable Long id,
-            @RequestBody ArtworkUploadRequestDto dto,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-
-        artworkService.updateArtwork(id, userPrincipal.getUserId(), dto);
-        return ResponseEntity.ok(new ApiResponse<>(true, null, "작품이 수정되었습니다."));
-    }
-
-    // 5. 작품 삭제 API
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteArtwork(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-
-        artworkService.deleteArtwork(id, userPrincipal.getUserId());
-        return ResponseEntity.ok(new ApiResponse<>(true, null, "작품이 삭제되었습니다."));
-    }
-
-
 }

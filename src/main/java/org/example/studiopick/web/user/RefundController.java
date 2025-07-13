@@ -5,11 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.refund.RefundService;
-import org.example.studiopick.application.refund.dto.DailyRefundStatsDto;
 import org.example.studiopick.application.refund.dto.RefundHistoryResponse;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.refund.Refund;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,13 +28,15 @@ public class RefundController {
     private final RefundService refundService;
 
     /**
-     * 사용자별 환불 내역 조회
+     * 로그인한 사용자의 환불 내역 조회
      */
-    @Operation(summary = "사용자 환불 내역 조회", description = "로그인한 사용자의 모든 환불 내역을 조회합니다.")
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<RefundHistoryResponse>>> getUserRefundHistory(
-            @PathVariable Long userId) {
+    @Operation(summary = "내 환불 내역 조회", description = "로그인한 사용자의 모든 환불 내역을 조회합니다.")
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<RefundHistoryResponse>>> getMyRefundHistory(
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         
+        // 토큰에서 직접 사용자 ID 추출
+        Long userId = userPrincipal.getUserId();
         log.info("사용자 환불 내역 조회 요청: userId={}", userId);
         
         List<Refund> refunds = refundService.getUserRefundHistory(userId);

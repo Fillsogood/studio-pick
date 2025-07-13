@@ -6,7 +6,9 @@ import org.example.studiopick.application.review.service.ReviewReplyService;
 import org.example.studiopick.application.review.service.ReviewService;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,9 +23,11 @@ public class ReviewController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
-      @RequestParam Long userId,
+      @AuthenticationPrincipal UserPrincipal userPrincipal,
       @ModelAttribute ReviewCreateRequest request
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     ReviewResponse response = reviewService.createReview(userId, request);
     return ResponseEntity.ok(new ApiResponse<>(true, response, "리뷰가 등록되었습니다."));
   }
@@ -32,8 +36,10 @@ public class ReviewController {
   public ResponseEntity<ApiSuccessResponse<Void>> updateReview(
       @PathVariable Long reviewId,
       @RequestBody ReviewUpdateRequest request,
-      @RequestParam Long userId // 인증 처리 전이므로 userId 직접 전달
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     reviewService.updateReview(reviewId, userId, request);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "리뷰가 수정되었습니다."));
   }
@@ -41,15 +47,17 @@ public class ReviewController {
   @DeleteMapping("/{reviewId}")
   public ResponseEntity<ApiSuccessResponse<Void>> deleteReview(
       @PathVariable Long reviewId,
-      @RequestParam Long userId
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
+    // 토큰에서 직접 사용자 ID 추출
+    Long userId = userPrincipal.getUserId();
     reviewService.deleteReview(reviewId, userId);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "리뷰가 삭제되었습니다."));
   }
 
   // 운영자 리뷰 목록 + 답글 조회
-  @GetMapping("/studio/{studioId}")
-  public ApiResponse<List<ReviewWithReplyDto>> getStudioReviewsWithReplies(
+  @GetMapping("/studios/{studioId}")
+  public ApiResponse<List<ReviewWithReplyDto>> getReviewsWithReplies(
       @PathVariable Long studioId
   ) {
     return new ApiResponse<>(true, reviewReplyService.getReviewsWithReplies(studioId), "리뷰 목록을 불러왔습니다.");

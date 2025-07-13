@@ -14,14 +14,26 @@ import java.util.Map;
 public class UserPrincipal implements OAuth2User, UserDetails {
 
     private final User user;
+    private final Long tokenUserId;  // 토큰에서 추출한 사용자 ID
+    private final String tokenEmail; // 토큰에서 추출한 이메일
     private Map<String, Object> attributes;
 
     public Long getId() {
-        return user.getId();
+        return user != null ? user.getId() : tokenUserId;
     }
 
+    // 기존 User 엔티티 기반 생성자
     public UserPrincipal(User user) {
         this.user = user;
+        this.tokenUserId = null;
+        this.tokenEmail = null;
+    }
+
+    // 토큰 정보만으로 생성하는 생성자 (DB 조회 없음)
+    private UserPrincipal(Long userId, String email) {
+        this.user = null;
+        this.tokenUserId = userId;
+        this.tokenEmail = email;
     }
 
     // OAuth2User용 create 메서드
@@ -31,18 +43,23 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         return userPrincipal;
     }
 
-    // 일반 로그인용 create
+    // 일반 로그인용 create (User 엔티티 기반)
     public static UserPrincipal create(User user) {
         return new UserPrincipal(user);
+    }
+
+    // 토큰 정보만으로 생성 (DB 조회 없음)
+    public static UserPrincipal createFromToken(Long userId, String email) {
+        return new UserPrincipal(userId, email);
     }
 
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
     }
 
-    // 여기에 추가됨
+    // 사용자 ID 반환 (컨트롤러에서 사용)
     public Long getUserId() {
-        return user.getId();
+        return user != null ? user.getId() : tokenUserId;
     }
 
     // OAuth2User 필수
@@ -54,23 +71,26 @@ public class UserPrincipal implements OAuth2User, UserDetails {
     // OAuth2User 필수
     @Override
     public String getName() {
-        return String.valueOf(user.getId());
+        return String.valueOf(getUserId());
     }
 
     // Spring Security 권한 정보
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(() -> "ROLE_" + user.getRole().name());
+        if (user != null) {
+            return Collections.singleton(() -> "ROLE_" + user.getRole().name());
+        }
+        return Collections.singleton(() -> "ROLE_USER"); // 기본 권한
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail(); // 로그인 ID
+        return user != null ? user.getEmail() : tokenEmail;
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword(); // 비밀번호
+        return user != null ? user.getPassword() : null;
     }
 
     @Override
@@ -90,6 +110,6 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus().name().equals("ACTIVE");
+        return user != null ? user.getStatus().name().equals("ACTIVE") : true;
     }
 }
