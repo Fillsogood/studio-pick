@@ -10,8 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.auth.dto.*;
 import org.example.studiopick.application.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+
 
 import java.util.Arrays;
 import java.util.Map;
@@ -89,22 +92,25 @@ public class AuthController {
         
         // AuthService를 통한 로그인 처리
         JwtTokenResponseDto tokenResponse = authService.login(requestDto);
-        
-        // Access Token 쿠키 설정
-        Cookie accessTokenCookie = createTokenCookie(
-                ACCESS_TOKEN_COOKIE_NAME, 
-                tokenResponse.getAccessToken(), 
-                (int) (accessTokenExpiration / 1000)
-        );
-        response.addCookie(accessTokenCookie);
 
-        // Refresh Token 쿠키 설정
-        Cookie refreshTokenCookie = createTokenCookie(
-                REFRESH_TOKEN_COOKIE_NAME, 
-                tokenResponse.getRefreshToken(), 
-                (int) (refreshTokenExpiration / 1000)
-        );
-        response.addCookie(refreshTokenCookie);
+        ResponseCookie accessToken = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, tokenResponse.getAccessToken())
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .sameSite("Lax")
+            .maxAge(accessTokenExpiration / 1000)
+            .build();
+
+        ResponseCookie refreshToken = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken())
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .sameSite("Lax")
+            .maxAge(refreshTokenExpiration / 1000)
+            .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
 
         return ResponseEntity.ok(Map.of(
                 "success", true,

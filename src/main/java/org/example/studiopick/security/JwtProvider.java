@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.example.studiopick.domain.common.enums.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,21 +32,22 @@ public class JwtProvider {
         this.secretKey = Keys.hmacShaKeyFor(secretKeyPlain.getBytes());
     }
 
-    public String createAccessToken(String email, Long userId) {
-        return createToken(email, userId, accessTokenExpiration, "ACCESS");
+    public String createAccessToken(String email, Long userId, UserRole role) {
+        return createToken(email, userId, role,accessTokenExpiration, "ACCESS");
     }
 
-    public String createRefreshToken(String email, Long userId) {
-        return createToken(email, userId, refreshTokenExpiration, "REFRESH");
+    public String createRefreshToken(String email, Long userId, UserRole role) {
+        return createToken(email, userId, role, refreshTokenExpiration, "REFRESH");
     }
 
-    private String createToken(String email, Long userId, long expireTime, String tokenType) {
+    private String createToken(String email, Long userId, UserRole role, long expireTime, String tokenType) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expireTime);
 
         return Jwts.builder()
                 .setSubject(email)
                 .claim("userId", userId)  // 사용자 ID 추가
+                .claim("role", role) //권환
                 .claim("tokenType", tokenType)  // 토큰 타입 추가
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
@@ -65,6 +67,20 @@ public class JwtProvider {
         return getClaims(token).get("tokenType", String.class);
     }
 
+    public UserRole getRoleFromToken(String token) {
+        String role = getClaimsFromToken(token).get("role", String.class);
+        if (role == null) throw new IllegalArgumentException("권한 정보가 없습니다");
+        return UserRole.valueOf(role);
+    }
+
+
+    public Claims getClaimsFromToken(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(secretKey)   // ✅ SecretKey 직접 전달
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+    }
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)

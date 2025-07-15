@@ -67,8 +67,8 @@ public class SocialAuthServiceImpl implements SocialAuthService {
             );
             
             // 5. JWT 토큰 생성
-            String accessToken = jwtProvider.createAccessToken(user.getEmail(), user.getId());
-            String refreshToken = jwtProvider.createRefreshToken(user.getEmail(), user.getId());
+            String accessToken = jwtProvider.createAccessToken(user.getEmail(), user.getId(), user.getRole());
+            String refreshToken = jwtProvider.createRefreshToken(user.getEmail(), user.getId(), user.getRole());
             
             log.info("카카오 로그인 성공: userId={}, email={}", user.getId(), user.getEmail());
             

@@ -1,6 +1,7 @@
 package org.example.studiopick.security;
 
 import lombok.Getter;
+import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,41 +17,47 @@ public class UserPrincipal implements OAuth2User, UserDetails {
     private final User user;
     private final Long tokenUserId;  // 토큰에서 추출한 사용자 ID
     private final String tokenEmail; // 토큰에서 추출한 이메일
+    private final UserRole userRole;
     private Map<String, Object> attributes;
+
 
     public Long getId() {
         return user != null ? user.getId() : tokenUserId;
     }
+    public Object getRole() { return user != null ? user.getRole() : userRole; }
+
 
     // 기존 User 엔티티 기반 생성자
-    public UserPrincipal(User user) {
+    public UserPrincipal(User user, UserRole userRole) {
         this.user = user;
-        this.tokenUserId = null;
+      this.userRole = userRole;
+      this.tokenUserId = null;
         this.tokenEmail = null;
     }
 
     // 토큰 정보만으로 생성하는 생성자 (DB 조회 없음)
-    private UserPrincipal(Long userId, String email) {
-        this.user = null;
+    private UserPrincipal(Long userId, String email, UserRole userRole) {
+      this.userRole = userRole;
+      this.user = null;
         this.tokenUserId = userId;
         this.tokenEmail = email;
     }
 
     // OAuth2User용 create 메서드
-    public static UserPrincipal create(User user, Map<String, Object> attributes) {
-        UserPrincipal userPrincipal = new UserPrincipal(user);
+    public static UserPrincipal create(User user,UserRole role, Map<String, Object> attributes) {
+        UserPrincipal userPrincipal = new UserPrincipal(user,role);
         userPrincipal.setAttributes(attributes);
         return userPrincipal;
     }
 
     // 일반 로그인용 create (User 엔티티 기반)
-    public static UserPrincipal create(User user) {
-        return new UserPrincipal(user);
+    public static UserPrincipal create(User user, UserRole role) {
+        return new UserPrincipal(user, role);
     }
 
     // 토큰 정보만으로 생성 (DB 조회 없음)
-    public static UserPrincipal createFromToken(Long userId, String email) {
-        return new UserPrincipal(userId, email);
+    public static UserPrincipal createFromToken(Long userId, String email, UserRole role) {
+        return new UserPrincipal(userId, email, role);
     }
 
     public void setAttributes(Map<String, Object> attributes) {
