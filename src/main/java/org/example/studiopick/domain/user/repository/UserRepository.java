@@ -19,6 +19,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByNickname(String nickname);
   boolean existsByEmail(String email);
   boolean existsByPhone(String phone);
+  boolean existsByNickname(String nickname);
+
+  // 닉네임 중복 검사 (특정 사용자 제외)
+  boolean existsByNicknameAndIdNot(String nickname, Long id);
 
   // 소셜 로그인용
   Optional<User> findBySocialAccountsProviderAndSocialAccountsSocialId(SocialProvider provider, String socialId);
@@ -33,9 +37,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   long countByRole(UserRole role);
   long countByStatus(UserStatus status);
 
-  // 추가 중복 확인
-  boolean existsByNickname(String nickname);
-
   // 복합 조건 검색용 (AdminUserService에서 사용)
   Page<User> findByRoleAndStatusAndNameContainingIgnoreCaseOrderByCreatedAtDesc(
       UserRole role, UserStatus status, String name, Pageable pageable);
@@ -47,5 +48,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
       UserStatus status, String name, Pageable pageable);
 
   long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
-
 }

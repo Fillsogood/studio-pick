@@ -18,19 +18,19 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
 
-    @Column(name = "email", unique = true, nullable = false, length = 30)
+    @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
 
     @Column(name = "password", length = 255)
     private String password;
 
-    @Column(name = "name", nullable = false, length = 7)
+    @Column(name = "name", length = 50)
     private String name;
 
-    @Column(name = "phone", unique = true, nullable = false, length = 11)
+    @Column(name = "phone", unique = true, length = 15)
     private String phone;
 
-    @Column(name = "nickname", unique = true, nullable = false, length = 10)
+    @Column(name = "nickname", unique = true, length = 50)
     private String nickname;
 
     @Column(name = "is_studio_owner", nullable = false)
@@ -58,12 +58,13 @@ public class User extends BaseEntity {
 
     @Builder
     public User(String email, String password, String name, String phone, String nickname,
-                Boolean isStudioOwner, UserStatus status, UserRole role) {
+                String profileImageUrl, Boolean isStudioOwner, UserStatus status, UserRole role) {
         this.email = email;
         this.password = password;
-        this.name = name != null ? name : "소셜회원"; // 기본값
-        this.phone = phone != null ? phone : "00000000000"; // 기본값
+        this.name = name;
+        this.phone = phone;
         this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
         this.isStudioOwner = isStudioOwner != null ? isStudioOwner : false;
         this.status = status != null ? status : UserStatus.ACTIVE;
         this.role = role != null ? role : UserRole.USER;
@@ -74,9 +75,9 @@ public class User extends BaseEntity {
     }
 
     public void updateProfile(String name, String phone, String nickname) {
-        this.name = name;
-        this.phone = phone;
-        this.nickname = nickname;
+        if (name != null) this.name = name;
+        if (phone != null) this.phone = phone;
+        if (nickname != null) this.nickname = nickname;
     }
 
     public void increaseLoginFailCount() {
@@ -104,21 +105,27 @@ public class User extends BaseEntity {
         this.role = role;
     }
 
-    public void updateProfileImage(String imageUrl){
+    public void updateProfileImage(String imageUrl) {
         this.profileImageUrl = imageUrl;
     }
 
     // 관리자용 업데이트 메서드
-    public void updateName(String name){
-        if(name != null && !name.isEmpty()){this.name = name;}
+    public void updateName(String name) {
+        if (name != null && !name.isEmpty()) {
+            this.name = name;
+        }
     }
 
-    public void updatePhone(String phone){
-        if(phone != null && !phone.isEmpty()){this.phone = phone;}
+    public void updatePhone(String phone) {
+        if (phone != null && !phone.isEmpty()) {
+            this.phone = phone;
+        }
     }
 
-    public void updatePassword(String password){
-        if(password != null && !password.isEmpty()){this.password = password;}
+    public void updatePassword(String password) {
+        if (password != null && !password.isEmpty()) {
+            this.password = password;
+        }
     }
 
     //관리자용 상태 변경 메서드
@@ -158,5 +165,4 @@ public class User extends BaseEntity {
     public String getDisplayName() {
         return this.nickname != null && !this.nickname.isEmpty() ? this.nickname : this.name;
     }
-
 }
