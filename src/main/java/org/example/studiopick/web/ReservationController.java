@@ -107,7 +107,7 @@ public class ReservationController {
      */
     @Operation(summary = "예약 상세 조회", description = "특정 예약의 상세 정보를 조회합니다")
     @GetMapping("/{reservationId}")
-    public ResponseEntity<ApiResponse<ReservationDetailResponse>> getReservationDetail(
+    public ResponseEntity<ApiResponse<UserReservationDetailResponse>> getReservationDetail(
         @PathVariable Long reservationId,
         @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
@@ -115,7 +115,7 @@ public class ReservationController {
         Long userId = userPrincipal.getUserId();
         log.info("예약 상세 조회 요청: reservationId={}, userId={}", reservationId, userId);
 
-        ReservationDetailResponse response = reservationService.getReservationDetail(reservationId, userId);
+        UserReservationDetailResponse response = reservationService.getReservationDetail(reservationId, userId);
         
         return ResponseEntity.ok(new ApiResponse<>(true, response, "예약 상세 정보를 조회했습니다."));
     }
@@ -135,7 +135,9 @@ public class ReservationController {
         log.info("예약 취소 요청: reservationId={}, userId={}, reason={}", 
             reservationId, userId, command.cancelReason());
 
-        ReservationCancelResponse response = reservationService.cancel(reservationId, userId, command);
+        // ReservationCancelRequest 생성
+        ReservationCancelRequest request = new ReservationCancelRequest(userId, command.cancelReason());
+        ReservationCancelResponse response = reservationService.cancelReservation(reservationId, request);
         
         log.info("예약 취소 완료: reservationId={}", reservationId);
         

@@ -2,12 +2,16 @@ package org.example.studiopick.infrastructure.oauth;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.studiopick.common.exception.social.SocialLoginException;
+import org.example.studiopick.common.enums.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.ConnectException;
 import java.util.Map;
 
 @Slf4j
@@ -45,19 +49,21 @@ public class KakaoOAuthClient {
                     Map.class
             );
 
-            log.warn("카카오 access token 응답 코드: {}", response.getStatusCode());
-            log.warn("카카오 access token 응답 바디: {}", response.getBody());
+            log.info("카카오 토큰 요청 성공: status={}", response.getStatusCode());
 
             Map<String, Object> body = response.getBody();
             if (body == null || body.get("access_token") == null) {
-                throw new RuntimeException("카카오 액세스 토큰 발급 실패 (응답 없음)");
+                throw new SocialLoginException("KAKAO", ErrorCode.OAUTH_TOKEN_REQUEST_FAILED.getMessage());
             }
 
             return body.get("access_token").toString();
 
+        } catch (ResourceAccessException e) {
+            log.error("카카오 토큰 요청 네트워크 오류", e);
+            throw new SocialLoginException("KAKAO", "카카오 서버 연결에 실패했습니다");
         } catch (Exception e) {
-            log.error("❌ 카카오 access token 요청 실패", e);
-            throw new RuntimeException("카카오 access token 요청 중 예외 발생", e);
+            log.error("카카오 액세스 토큰 요청 실패", e);
+            throw new SocialLoginException("KAKAO", "카카오 액세스 토큰 요청 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -69,13 +75,29 @@ public class KakaoOAuthClient {
 
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<Map> response = restTemplate.exchange(
-                userInfoUrl,
-                HttpMethod.GET,
-                entity,
-                Map.class
-        );
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    userInfoUrl,
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
 
-        return response.getBody();
+            log.info("카카오 사용자 정보 조회 성공: status={}", response.getStatusCode());
+
+            Map<String, Object> body = response.getBody();
+            if (body == null) {
+                throw new SocialLoginException("KAKAO", "카카오 사용자 정보 조회 실패 (응답 없음)");
+            }
+
+            return body;
+
+        } catch (ResourceAccessException e) {
+            log.error("카카오 사용자 정보 요청 네트워크 오류", e);
+            throw new SocialLoginException("KAKAO", "카카오 서버 연결에 실패했습니다");
+        } catch (Exception e) {
+            log.error("카카오 사용자 정보 조회 실패", e);
+            throw new SocialLoginException("KAKAO", "카카오 사용자 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }

@@ -13,6 +13,7 @@ public class UserProfileResponseDto {
     private String name;
     private String phone;
     private String nickname;
+    private String profileImageUrl;
     private boolean isStudioOwner;
     private String status;
     private LocalDateTime createdAt;

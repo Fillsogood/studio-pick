@@ -7,18 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.token.service.TokenService;
-import org.example.studiopick.application.user.dto.*;
-import org.example.studiopick.application.user.service.UserService;
-import org.example.studiopick.common.util.JwtUtil;
-import org.example.studiopick.domain.user.entity.User;
-import org.example.studiopick.infrastructure.oauth.KakaoOAuthClient;
-import org.example.studiopick.security.JwtProvider;
+import org.example.studiopick.application.auth.dto.*;
+import org.example.studiopick.application.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -30,12 +22,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtProvider jwtProvider;
-    private final KakaoOAuthClient kakaoOAuthClient;
-    private final TokenService tokenService;
-    private final JwtUtil jwtUtil;
-    private final UserService userService;
+    private final AuthService authService;
 
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpiration;
@@ -49,67 +36,79 @@ public class AuthController {
 
     @Operation(summary = "회원가입", description = "이메일과 비밀번호로 새 계정을 생성합니다")
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid UserSignupRequestDto requestDto) {
-        userService.signup(requestDto);
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
+    public ResponseEntity<Map<String, Object>> register(@RequestBody @Valid UserSignupRequestDto requestDto) {
+        authService.signup(requestDto);
+        
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "회원가입이 완료되었습니다"
+        ));
     }
 
-    // 이메일 중복 검사
+    @Operation(summary = "이메일 중복 검사", description = "회원가입 시 이메일 중복을 검사합니다")
     @PostMapping("/validate/email")
-    public ResponseEntity<String> validateEmail(@RequestBody @Valid EmailValidateRequestDto dto) {
-        boolean available = userService.validateEmail(dto.getEmail());
+    public ResponseEntity<Map<String, Object>> validateEmail(@RequestBody @Valid EmailValidateRequestDto dto) {
+        boolean available = authService.validateEmail(dto.getEmail());
 
         if (!available) {
-            return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "이미 사용 중인 이메일입니다"
+            ));
         }
 
-        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "사용 가능한 이메일입니다"
+        ));
     }
 
-    // 휴대폰 중복 검사
+    @Operation(summary = "휴대폰 번호 중복 검사", description = "회원가입 시 휴대폰 번호 중복을 검사합니다")
     @PostMapping("/validate/phone")
-    public ResponseEntity<String> validatePhone(@Valid @RequestBody PhoneValidateRequestDto requestDto) {
-        boolean available = userService.validatePhone(requestDto.getPhone());
+    public ResponseEntity<Map<String, Object>> validatePhone(@Valid @RequestBody PhoneValidateRequestDto requestDto) {
+        boolean available = authService.validatePhone(requestDto.getPhone());
 
         if (!available) {
-            return ResponseEntity.badRequest().body("이미 사용 중인 휴대폰번호입니다.");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "이미 사용 중인 휴대폰번호입니다"
+            ));
         }
 
-        return ResponseEntity.ok("사용 가능한 휴대폰번호입니다.");
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "사용 가능한 휴대폰번호입니다"
+        ));
     }
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하여 JWT 토큰을 쿠키에 저장합니다")
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(
-            @RequestBody UserLoginRequestDto requestDto, 
+            @RequestBody @Valid UserLoginRequestDto requestDto, 
             HttpServletResponse response) {
         
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(requestDto.getEmail(), requestDto.getPassword())
-        );
-
-        // 사용자 정보 조회 (ID 가져오기 위함)
-        User user = userService.findByEmail(requestDto.getEmail());
+        // AuthService를 통한 로그인 처리
+        JwtTokenResponseDto tokenResponse = authService.login(requestDto);
         
-        // 토큰 생성 시 사용자 ID도 포함
-        String accessToken = jwtProvider.createAccessToken(requestDto.getEmail(), user.getId());
-        String refreshToken = jwtProvider.createRefreshToken(requestDto.getEmail(), user.getId());
-
-        // Access Token 쿠키 설정 (HttpOnly, Secure)
-        Cookie accessTokenCookie = createTokenCookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, (int) (accessTokenExpiration / 1000));
+        // Access Token 쿠키 설정
+        Cookie accessTokenCookie = createTokenCookie(
+                ACCESS_TOKEN_COOKIE_NAME, 
+                tokenResponse.getAccessToken(), 
+                (int) (accessTokenExpiration / 1000)
+        );
         response.addCookie(accessTokenCookie);
 
-        // Refresh Token 쿠키 설정 (HttpOnly, Secure)
-        Cookie refreshTokenCookie = createTokenCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, (int) (refreshTokenExpiration / 1000));
+        // Refresh Token 쿠키 설정
+        Cookie refreshTokenCookie = createTokenCookie(
+                REFRESH_TOKEN_COOKIE_NAME, 
+                tokenResponse.getRefreshToken(), 
+                (int) (refreshTokenExpiration / 1000)
+        );
         response.addCookie(refreshTokenCookie);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "로그인되었습니다",
-                "data", Map.of(
-                        "email", user.getEmail(),
-                        "userId", user.getId()
-                )
+                "message", "로그인되었습니다"
         ));
     }
 
@@ -129,56 +128,75 @@ public class AuthController {
             ));
         }
 
-        // 1. Refresh Token 유효성 검사
-        if (!jwtProvider.validateToken(refreshToken)) {
+        try {
+            // AuthService를 통한 토큰 재발급
+            String newAccessToken = authService.refreshAccessToken(refreshToken);
+
+            // 새로운 Access Token을 쿠키에 저장
+            Cookie accessTokenCookie = createTokenCookie(
+                    ACCESS_TOKEN_COOKIE_NAME, 
+                    newAccessToken, 
+                    (int) (accessTokenExpiration / 1000)
+            );
+            response.addCookie(accessTokenCookie);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Access Token이 재발급되었습니다"
+            ));
+            
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "유효하지 않은 Refresh Token입니다"
+                    "message", e.getMessage()
             ));
         }
+    }
 
-        // 2. Refresh Token인지 확인
-        if (!jwtProvider.isRefreshToken(refreshToken)) {
+    @Operation(summary = "카카오 로그인", description = "카카오 OAuth를 통한 로그인 (완전한 기능)")
+    @PostMapping("/oauth/kakao")
+    public ResponseEntity<Map<String, Object>> kakaoLogin(
+            @RequestBody KakaoLoginRequestDto requestDto,
+            HttpServletResponse response) {
+        try {
+            JwtTokenResponseDto tokenResponse = authService.kakaoLogin(requestDto.getCode());
+            
+            // JWT 토큰을 쿠키에 저장
+            setTokenCookies(response, tokenResponse);
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "카카오 로그인 성공"
+            ));
+            
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Refresh Token이 아닙니다"
+                    "message", "카카오 로그인 실패: " + e.getMessage()
             ));
         }
-
-        // 3. 토큰이 블랙리스트에 있는지 확인
-        if (tokenService.isBlacklisted(refreshToken)) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "로그아웃된 토큰입니다"
-            ));
-        }
-
-        // 4. 토큰에서 사용자 정보 추출
-        String email = jwtProvider.getEmailFromToken(refreshToken);
-        Long userId = jwtProvider.getUserIdFromToken(refreshToken);
-
-        // 5. 새로운 Access Token만 생성
-        String newAccessToken = jwtProvider.createAccessToken(email, userId);
-
-        // 새로운 Access Token을 쿠키에 저장
-        Cookie accessTokenCookie = createTokenCookie(ACCESS_TOKEN_COOKIE_NAME, newAccessToken, (int) (accessTokenExpiration / 1000));
+    }
+    
+    /**
+     * JWT 토큰들을 쿠키에 저장하는 통합 메서드
+     */
+    private void setTokenCookies(HttpServletResponse response, JwtTokenResponseDto tokenResponse) {
+        Cookie accessTokenCookie = createTokenCookie(
+                ACCESS_TOKEN_COOKIE_NAME, 
+                tokenResponse.getAccessToken(), 
+                (int) (accessTokenExpiration / 1000)
+        );
         response.addCookie(accessTokenCookie);
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Access Token이 재발급되었습니다"
-        ));
+        Cookie refreshTokenCookie = createTokenCookie(
+                REFRESH_TOKEN_COOKIE_NAME, 
+                tokenResponse.getRefreshToken(), 
+                (int) (refreshTokenExpiration / 1000)
+        );
+        response.addCookie(refreshTokenCookie);
     }
 
-    // 카카오 로그인
-    @PostMapping("/oauth/kakao")
-    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
-        String code = body.get("code");
-        String accessToken = kakaoOAuthClient.getAccessToken(code);
-        return ResponseEntity.ok("AccessToken: " + accessToken);
-    }
-
-    // 로그아웃 (쿠키의 토큰들을 블랙리스트에 등록하고 쿠키 삭제)
+    @Operation(summary = "로그아웃", description = "쿠키의 토큰들을 무효화하고 쿠키를 삭제합니다")
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(
             HttpServletRequest request, 
@@ -195,17 +213,8 @@ public class AuthController {
             ));
         }
 
-        // Access Token 블랙리스트 처리
-        if (jwtProvider.validateToken(accessToken)) {
-            long accessTokenExpiration = jwtUtil.getExpiration(accessToken);
-            tokenService.blacklistToken(accessToken, accessTokenExpiration);
-        }
-
-        // Refresh Token 블랙리스트 처리
-        if (refreshToken != null && jwtProvider.validateToken(refreshToken)) {
-            long refreshTokenExpiration = jwtUtil.getExpiration(refreshToken);
-            tokenService.blacklistToken(refreshToken, refreshTokenExpiration);
-        }
+        // AuthService를 통한 로그아웃 처리
+        authService.logout(accessToken, refreshToken);
 
         // 쿠키 삭제
         clearTokenCookies(response);
@@ -216,7 +225,11 @@ public class AuthController {
         ));
     }
 
-    // 쿠키 생성 헬퍼 메서드
+    // === 헬퍼 메서드들 ===
+    
+    /**
+     * 쿠키 생성 헬퍼 메서드
+     */
     private Cookie createTokenCookie(String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);  // XSS 방지
@@ -226,7 +239,9 @@ public class AuthController {
         return cookie;
     }
 
-    // 쿠키에서 토큰 추출 헬퍼 메서드
+    /**
+     * 쿠키에서 토큰 추출 헬퍼 메서드
+     */
     private String getTokenFromCookie(HttpServletRequest request, String cookieName) {
         if (request.getCookies() != null) {
             return Arrays.stream(request.getCookies())
@@ -238,7 +253,9 @@ public class AuthController {
         return null;
     }
 
-    // 토큰 쿠키 삭제 헬퍼 메서드
+    /**
+     * 토큰 쿠키 삭제 헬퍼 메서드
+     */
     private void clearTokenCookies(HttpServletResponse response) {
         // Access Token 쿠키 삭제
         Cookie accessTokenCookie = new Cookie(ACCESS_TOKEN_COOKIE_NAME, "");

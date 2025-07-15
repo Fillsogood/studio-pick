@@ -55,7 +55,7 @@ public class ArtworkCommentController {
         User user = userService.getById(userId);
         
         ArtworkCommentResponseDto response =
-                artworkCommentService.updateComment(commentId, user, request.getComment());
+                artworkCommentService.updateComment(artworkId, commentId, user, request.getComment());
 
         return ResponseEntity.ok(response);
     }
@@ -70,7 +70,7 @@ public class ArtworkCommentController {
         Long userId = userPrincipal.getUserId();
         User user = userService.getById(userId);
         
-        artworkCommentService.deleteComment(commentId, user);
+        artworkCommentService.deleteComment(artworkId, commentId, user);
         return ResponseEntity.noContent().build();
     }
 }
