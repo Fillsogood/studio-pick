@@ -12,6 +12,7 @@ import org.example.studiopick.application.user.service.UserService;
 import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -122,6 +123,15 @@ public class UserController {
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "계정이 비활성화되었습니다"
+        ));
+    }
+
+    @Operation(summary = "내 정보 확인", description = "현재 로그인한 사용자 정보를 반환합니다")
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyInfo(Authentication authentication) {
+        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
+        return ResponseEntity.ok(Map.of(
+            "role", user.getRole()
         ));
     }
 }

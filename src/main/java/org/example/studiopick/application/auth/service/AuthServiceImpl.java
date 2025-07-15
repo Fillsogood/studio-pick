@@ -10,6 +10,7 @@ import org.example.studiopick.common.exception.DuplicateResourceException;
 import org.example.studiopick.common.exception.auth.TokenException;
 import org.example.studiopick.common.enums.ErrorCode;
 import org.example.studiopick.common.util.JwtUtil;
+import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.user.entity.User;
 import org.example.studiopick.security.JwtProvider;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -96,8 +97,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userService.findByEmail(requestDto.getEmail());
         
         // JWT 토큰 생성
-        String accessToken = jwtProvider.createAccessToken(requestDto.getEmail(), user.getId());
-        String refreshToken = jwtProvider.createRefreshToken(requestDto.getEmail(), user.getId());
+        String accessToken = jwtProvider.createAccessToken(requestDto.getEmail(), user.getId(), user.getRole());
+        String refreshToken = jwtProvider.createRefreshToken(requestDto.getEmail(), user.getId(), user.getRole());
         
         log.info("로그인 성공: email={}, userId={}", requestDto.getEmail(), user.getId());
         
@@ -130,9 +131,10 @@ public class AuthServiceImpl implements AuthService {
         // 토큰에서 사용자 정보 추출
         String email = jwtProvider.getEmailFromToken(refreshToken);
         Long userId = jwtProvider.getUserIdFromToken(refreshToken);
+        UserRole role = jwtProvider.getRoleFromToken(refreshToken);
         
         // 새로운 Access Token 생성
-        String newAccessToken = jwtProvider.createAccessToken(email, userId);
+        String newAccessToken = jwtProvider.createAccessToken(email, userId, role);
         
         log.info("토큰 재발급 성공: email={}, userId={}", email, userId);
         

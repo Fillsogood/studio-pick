@@ -17,9 +17,9 @@
             r.status,
             r.created_at as createdAt,
             r.updated_at as updatedAt
-        FROM "Reservation" r
-        INNER JOIN "User" u ON r.user_id = u.id
-        INNER JOIN "Studio" s ON r.studio_id = s.id
+        FROM "reservation" r
+        INNER JOIN "user" u ON r.user_id = u.id
+        INNER JOIN "studio" s ON r.studio_id = s.id
         <where>
             <if test="criteria.status != null and criteria.status != ''">
                 AND r.status = #{criteria.status}
@@ -48,9 +48,9 @@
     <!-- 관리자용 예약 검색 총 개수 -->
     <select id="countReservations" resultType="long">
         SELECT COUNT(*)
-        FROM "Reservation" r
-        INNER JOIN "User" u ON r.user_id = u.id
-        INNER JOIN "Studio" s ON r.studio_id = s.id
+        FROM "reservation" r
+        INNER JOIN "user" u ON r.user_id = u.id
+        INNER JOIN "studio" s ON r.studio_id = s.id
         <where>
             <if test="criteria.status != null and criteria.status != ''">
                 AND r.status = #{criteria.status}
@@ -84,8 +84,8 @@
             r.end_time::text as endTime,
             LOWER(r.status) as status,
             r.total_amount as totalAmount
-        FROM "Reservation" r
-        INNER JOIN "Studio" s ON r.studio_id = s.id
+        FROM "reservation" r
+        INNER JOIN "studio" s ON r.studio_id = s.id
         <where>
             AND r.user_id = #{criteria.userId}
             <if test="criteria.status != null and criteria.status != ''">
@@ -105,7 +105,7 @@
     <!-- 사용자용 예약 검색 총 개수 -->
     <select id="countUserReservations" resultType="long">
         SELECT COUNT(*)
-        FROM "Reservation" r
+        FROM "reservation" r
         <where>
             AND r.user_id = #{criteria.userId}
             <if test="criteria.status != null and criteria.status != ''">
