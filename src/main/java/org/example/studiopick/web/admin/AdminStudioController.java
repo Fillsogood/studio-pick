@@ -3,7 +3,7 @@ package org.example.studiopick.web.admin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.admin.AdminStudioService;
+import org.example.studiopick.application.admin.AdminStudioServiceImpl;
 import org.example.studiopick.application.admin.dto.studio.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminStudioController {
 
-  private final AdminStudioService adminStudioService;
+  private final AdminStudioServiceImpl adminStudioServiceImpl;
 
   /**
    * 스튜디오 계정 목록 조회
@@ -34,7 +34,7 @@ public class AdminStudioController {
     log.info("스튜디오 계정 목록 조회 요청: page={}, size={}, status={}, keyword={}",
         page, size, status, keyword);
 
-    AdminStudioListResponse response = adminStudioService.getStudioAccounts(page, size, status, keyword);
+    AdminStudioListResponse response = adminStudioServiceImpl.getStudioAccounts(page, size, status, keyword);
 
     ApiResponse<AdminStudioListResponse> apiResponse = new ApiResponse<>(
         true,
@@ -55,7 +55,7 @@ public class AdminStudioController {
   ) {
     log.info("스튜디오 계정 상세 조회 요청: studioId={}", studioId);
 
-    AdminStudioDetailResponse response = adminStudioService.getStudioAccount(studioId);
+    AdminStudioDetailResponse response = adminStudioServiceImpl.getStudioAccount(studioId);
 
     ApiResponse<AdminStudioDetailResponse> apiResponse = new ApiResponse<>(
         true,
@@ -77,7 +77,7 @@ public class AdminStudioController {
     log.info("스튜디오 계정 생성 요청: email={}, studioName={}",
         command.email(), command.studioName());
 
-    AdminStudioCreateResponse response = adminStudioService.createStudioAccount(command);
+    AdminStudioCreateResponse response = adminStudioServiceImpl.createStudioAccount(command);
 
     ApiResponse<AdminStudioCreateResponse> apiResponse = new ApiResponse<>(
         true,
@@ -99,7 +99,7 @@ public class AdminStudioController {
   ) {
     log.info("스튜디오 계정 수정 요청: studioId={}", studioId);
 
-    AdminStudioUpdateResponse response = adminStudioService.updateStudioAccount(studioId, command);
+    AdminStudioUpdateResponse response = adminStudioServiceImpl.updateStudioAccount(studioId, command);
 
     ApiResponse<AdminStudioUpdateResponse> apiResponse = new ApiResponse<>(
         true,
@@ -122,7 +122,7 @@ public class AdminStudioController {
     log.info("스튜디오 상태 변경 요청: studioId={}, status={}, reason={}",
         studioId, command.status(), command.reason());
 
-    AdminStudioStatusResponse response = adminStudioService.changeStudioStatus(studioId, command);
+    AdminStudioStatusResponse response = adminStudioServiceImpl.changeStudioStatus(studioId, command);
 
     ApiResponse<AdminStudioStatusResponse> apiResponse = new ApiResponse<>(
         true,
@@ -144,7 +144,7 @@ public class AdminStudioController {
   ) {
     log.info("스튜디오 계정 삭제 요청: studioId={}, reason={}", studioId, reason);
 
-    adminStudioService.deleteStudioAccount(studioId, reason);
+    adminStudioServiceImpl.deleteStudioAccount(studioId, reason);
 
     ApiResponse<Void> apiResponse = new ApiResponse<>(
         true,
@@ -163,7 +163,7 @@ public class AdminStudioController {
   public ResponseEntity<ApiResponse<AdminStudioStatsResponse>> getStudioStats() {
     log.info("스튜디오 통계 조회 요청");
 
-    AdminStudioStatsResponse response = adminStudioService.getStudioStats();
+    AdminStudioStatsResponse response = adminStudioServiceImpl.getStudioStats();
 
     ApiResponse<AdminStudioStatsResponse> apiResponse = new ApiResponse<>(
         true,

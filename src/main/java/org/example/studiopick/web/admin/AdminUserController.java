@@ -3,7 +3,7 @@ package org.example.studiopick.web.admin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.admin.AdminUserService;
+import org.example.studiopick.application.admin.AdminUserServiceImpl;
 import org.example.studiopick.application.admin.dto.user.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
 
-  private final AdminUserService adminUserService;
+  private final AdminUserServiceImpl adminUserServiceImpl;
 
   /**
    * 사용자 계정 목록 조회
@@ -35,7 +35,7 @@ public class AdminUserController {
     log.info("사용자 계정 목록 조회 요청: page={}, size={}, role={}, status={}, keyword={}",
         page, size, role, status, keyword);
 
-    AdminUserListResponse response = adminUserService.getUserAccounts(page, size, role, status, keyword);
+    AdminUserListResponse response = adminUserServiceImpl.getUserAccounts(page, size, role, status, keyword);
 
     ApiResponse<AdminUserListResponse> apiResponse = new ApiResponse<>(
         true,
@@ -56,7 +56,7 @@ public class AdminUserController {
   ) {
     log.info("사용자 계정 상세 조회 요청: userId={}", userId);
 
-    AdminUserDetailResponse response = adminUserService.getUserAccount(userId);
+    AdminUserDetailResponse response = adminUserServiceImpl.getUserAccount(userId);
 
     ApiResponse<AdminUserDetailResponse> apiResponse = new ApiResponse<>(
         true,
@@ -78,7 +78,7 @@ public class AdminUserController {
     log.info("사용자 계정 생성 요청: email={}, name={}, role={}",
         command.email(), command.name(), command.role());
 
-    AdminUserCreateResponse response = adminUserService.createUserAccount(command);
+    AdminUserCreateResponse response = adminUserServiceImpl.createUserAccount(command);
 
     ApiResponse<AdminUserCreateResponse> apiResponse = new ApiResponse<>(
         true,
@@ -100,7 +100,7 @@ public class AdminUserController {
   ) {
     log.info("사용자 계정 수정 요청: userId={}", userId);
 
-    AdminUserUpdateResponse response = adminUserService.updateUserAccount(userId, command);
+    AdminUserUpdateResponse response = adminUserServiceImpl.updateUserAccount(userId, command);
 
     ApiResponse<AdminUserUpdateResponse> apiResponse = new ApiResponse<>(
         true,
@@ -123,7 +123,7 @@ public class AdminUserController {
     log.info("사용자 상태 변경 요청: userId={}, status={}, reason={}",
         userId, command.status(), command.reason());
 
-    AdminUserStatusResponse response = adminUserService.changeUserStatus(userId, command);
+    AdminUserStatusResponse response = adminUserServiceImpl.changeUserStatus(userId, command);
 
     ApiResponse<AdminUserStatusResponse> apiResponse = new ApiResponse<>(
         true,
@@ -146,7 +146,7 @@ public class AdminUserController {
     log.info("사용자 역할 변경 요청: userId={}, role={}, reason={}",
         userId, command.role(), command.reason());
 
-    AdminUserRoleResponse response = adminUserService.changeUserRole(userId, command);
+    AdminUserRoleResponse response = adminUserServiceImpl.changeUserRole(userId, command);
 
     ApiResponse<AdminUserRoleResponse> apiResponse = new ApiResponse<>(
         true,
@@ -168,7 +168,7 @@ public class AdminUserController {
   ) {
     log.info("사용자 계정 삭제 요청: userId={}, reason={}", userId, reason);
 
-    adminUserService.deleteUserAccount(userId, reason);
+    adminUserServiceImpl.deleteUserAccount(userId, reason);
 
     ApiResponse<Void> apiResponse = new ApiResponse<>(
         true,
@@ -187,7 +187,7 @@ public class AdminUserController {
   public ResponseEntity<ApiResponse<AdminUserStatsResponse>> getUserStats() {
     log.info("사용자 통계 조회 요청");
 
-    AdminUserStatsResponse response = adminUserService.getUserStats();
+    AdminUserStatsResponse response = adminUserServiceImpl.getUserStats();
 
     ApiResponse<AdminUserStatsResponse> apiResponse = new ApiResponse<>(
         true,

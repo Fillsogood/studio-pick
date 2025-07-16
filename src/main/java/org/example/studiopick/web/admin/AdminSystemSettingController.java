@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.admin.AdminSystemSettingService;
+import org.example.studiopick.application.admin.AdminSystemSettingServiceImpl;
 import org.example.studiopick.application.admin.dto.setting.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -25,14 +25,14 @@ import java.util.Map;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminSystemSettingController {
 
-  private final AdminSystemSettingService adminSystemSettingService;
+  private final AdminSystemSettingServiceImpl adminSystemSettingServiceImpl;
 
   @Operation(summary = "전체 시스템 설정 조회", description = "모든 시스템 설정을 카테고리와 키 순으로 정렬하여 조회합니다")
   @GetMapping
   public ResponseEntity<ApiResponse<SystemSettingListResponse>> getAllSettings() {
     log.info("전체 시스템 설정 조회 요청");
 
-    SystemSettingListResponse response = adminSystemSettingService.getAllSettings();
+    SystemSettingListResponse response = adminSystemSettingServiceImpl.getAllSettings();
 
     ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
         true,
@@ -53,7 +53,7 @@ public class AdminSystemSettingController {
   ) {
     log.info("카테고리별 시스템 설정 조회 요청: category={}", category);
 
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory(category.toUpperCase());
+    SystemSettingListResponse response = adminSystemSettingServiceImpl.getSettingsByCategory(category.toUpperCase());
 
     ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
         true,
@@ -74,7 +74,7 @@ public class AdminSystemSettingController {
   ) {
     log.info("특정 시스템 설정 조회 요청: settingKey={}", settingKey);
 
-    SystemSettingResponse response = adminSystemSettingService.getSetting(settingKey);
+    SystemSettingResponse response = adminSystemSettingServiceImpl.getSetting(settingKey);
 
     ApiResponse<SystemSettingResponse> apiResponse = new ApiResponse<>(
         true,
@@ -94,7 +94,7 @@ public class AdminSystemSettingController {
     log.info("시스템 설정 업데이트 요청: settingKey={}, newValue={}",
         settingKey, command.settingValue());
 
-    SystemSettingResponse response = adminSystemSettingService.updateSetting(settingKey, command);
+    SystemSettingResponse response = adminSystemSettingServiceImpl.updateSetting(settingKey, command);
 
     ApiResponse<SystemSettingResponse> apiResponse = new ApiResponse<>(
         true,
@@ -116,7 +116,7 @@ public class AdminSystemSettingController {
     log.info("새 시스템 설정 생성 요청: settingKey={}, value={}",
         command.settingKey(), command.settingValue());
 
-    SystemSettingResponse response = adminSystemSettingService.createSetting(command);
+    SystemSettingResponse response = adminSystemSettingServiceImpl.createSetting(command);
 
     ApiResponse<SystemSettingResponse> apiResponse = new ApiResponse<>(
         true,
@@ -137,7 +137,7 @@ public class AdminSystemSettingController {
   ) {
     log.info("시스템 설정 삭제 요청: settingKey={}", settingKey);
 
-    adminSystemSettingService.deleteSetting(settingKey);
+    adminSystemSettingServiceImpl.deleteSetting(settingKey);
 
     ApiResponse<Void> apiResponse = new ApiResponse<>(
         true,
@@ -156,7 +156,7 @@ public class AdminSystemSettingController {
   public ResponseEntity<ApiResponse<Map<String, Long>>> getSettingsStats() {
     log.info("시스템 설정 통계 조회 요청");
 
-    Map<String, Long> stats = adminSystemSettingService.getSettingsStatsByCategory();
+    Map<String, Long> stats = adminSystemSettingServiceImpl.getSettingsStatsByCategory();
 
     ApiResponse<Map<String, Long>> apiResponse = new ApiResponse<>(
         true,
@@ -175,7 +175,7 @@ public class AdminSystemSettingController {
   public ResponseEntity<ApiResponse<SystemSettingListResponse>> getBusinessSettings() {
     log.info("비즈니스 설정 조회 요청");
 
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory("BUSINESS");
+    SystemSettingListResponse response = adminSystemSettingServiceImpl.getSettingsByCategory("BUSINESS");
 
     ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
         true,
@@ -194,7 +194,7 @@ public class AdminSystemSettingController {
   public ResponseEntity<ApiResponse<SystemSettingListResponse>> getSystemSettings() {
     log.info("시스템 설정 조회 요청");
 
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory("SYSTEM");
+    SystemSettingListResponse response = adminSystemSettingServiceImpl.getSettingsByCategory("SYSTEM");
 
     ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
         true,

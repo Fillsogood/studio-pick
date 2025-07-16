@@ -4,18 +4,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.admin.AdminReportService;
+import org.example.studiopick.application.admin.AdminReportServiceImpl;
 import org.example.studiopick.application.admin.dto.report.*;
-import org.example.studiopick.domain.common.enums.ReportStatus;
-import org.example.studiopick.domain.common.enums.ReportType;
-import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -24,7 +20,7 @@ import java.util.List;
 @Tag(name = "Admin Report", description = "관리자 신고 처리 API")
 public class AdminReportController {
     
-    private final AdminReportService adminReportService;
+    private final AdminReportServiceImpl adminReportServiceImpl;
     
 //    @GetMapping
 //    @Operation(summary = "신고 목록 조회", description = "검색 조건에 따른 신고 목록을 페이징하여 조회합니다.")
@@ -68,7 +64,7 @@ public class AdminReportController {
             @Parameter(description = "관리자 ID") @RequestHeader("X-ADMIN-ID") Long adminId,
             @Valid @RequestBody AdminReportProcessCommand command
     ) {
-        adminReportService.processReport(reportId, adminId, command);
+        adminReportServiceImpl.processReport(reportId, adminId, command);
         return ResponseEntity.ok().build();
     }
     
@@ -79,7 +75,7 @@ public class AdminReportController {
             @Parameter(description = "신고 ID 목록") @RequestParam List<Long> reportIds,
             @Valid @RequestBody AdminReportProcessCommand command
     ) {
-        adminReportService.processBatchReports(reportIds, adminId, command);
+        adminReportServiceImpl.processBatchReports(reportIds, adminId, command);
         return ResponseEntity.ok().build();
     }
     
@@ -91,7 +87,7 @@ public class AdminReportController {
             @Parameter(description = "종료 날짜") @RequestParam 
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
-        AdminReportStatsResponse stats = adminReportService.getReportStats(startDate, endDate);
+        AdminReportStatsResponse stats = adminReportServiceImpl.getReportStats(startDate, endDate);
         return ResponseEntity.ok(stats);
     }
     
@@ -115,7 +111,7 @@ public class AdminReportController {
     @GetMapping("/pending/count")
     @Operation(summary = "대기 중인 신고 수 조회", description = "처리 대기 중인 신고의 개수를 조회합니다.")
     public ResponseEntity<Long> getPendingReportCount() {
-        long count = adminReportService.getPendingReportCount();
+        long count = adminReportServiceImpl.getPendingReportCount();
         return ResponseEntity.ok(count);
     }
     

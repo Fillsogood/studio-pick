@@ -2,7 +2,7 @@ package org.example.studiopick.web.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.admin.AdminSalesService;
+import org.example.studiopick.application.admin.AdminSalesServiceImpl;
 import org.example.studiopick.application.admin.dto.sales.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.common.util.SystemSettingUtils;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminSalesController {
   private final SystemSettingUtils settingUtils;
-  private final AdminSalesService adminSalesService;
+  private final AdminSalesServiceImpl adminSalesServiceImpl;
 
   /**
    * 전체 매출 통계 조회
@@ -27,7 +27,7 @@ public class AdminSalesController {
   public ResponseEntity<ApiResponse<AdminSalesStatsResponse>> getSalesStats() {
     log.info("전체 매출 통계 조회 요청");
 
-    AdminSalesStatsResponse response = adminSalesService.getSalesStats();
+    AdminSalesStatsResponse response = adminSalesServiceImpl.getSalesStats();
 
     ApiResponse<AdminSalesStatsResponse> apiResponse = new ApiResponse<>(
         true,
@@ -51,7 +51,7 @@ public class AdminSalesController {
     log.info("매출 트렌드 분석 요청: startDate={}, endDate={}, period={}",
         startDate, endDate, period);
 
-    AdminSalesTrendResponse response = adminSalesService.getSalesTrend(startDate, endDate, period);
+    AdminSalesTrendResponse response = adminSalesServiceImpl.getSalesTrend(startDate, endDate, period);
 
     ApiResponse<AdminSalesTrendResponse> apiResponse = new ApiResponse<>(
         true,
@@ -79,7 +79,7 @@ public class AdminSalesController {
     int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
 
 
-    AdminStudioSalesResponse response = adminSalesService.getStudioSalesAnalysis(
+    AdminStudioSalesResponse response = adminSalesServiceImpl.getStudioSalesAnalysis(
         page, pageSize, startDate, endDate);
 
     ApiResponse<AdminStudioSalesResponse> apiResponse = new ApiResponse<>(
@@ -102,7 +102,7 @@ public class AdminSalesController {
   ) {
     log.info("결제 방법별 통계 요청: startDate={}, endDate={}", startDate, endDate);
 
-    AdminPaymentMethodStatsResponse response = adminSalesService.getPaymentMethodStats(
+    AdminPaymentMethodStatsResponse response = adminSalesServiceImpl.getPaymentMethodStats(
         startDate, endDate);
 
     ApiResponse<AdminPaymentMethodStatsResponse> apiResponse = new ApiResponse<>(
@@ -125,7 +125,7 @@ public class AdminSalesController {
   ) {
     log.info("환불 통계 분석 요청: startDate={}, endDate={}", startDate, endDate);
 
-    AdminRefundStatsResponse response = adminSalesService.getRefundStats(startDate, endDate);
+    AdminRefundStatsResponse response = adminSalesServiceImpl.getRefundStats(startDate, endDate);
 
     ApiResponse<AdminRefundStatsResponse> apiResponse = new ApiResponse<>(
         true,
@@ -154,7 +154,7 @@ public class AdminSalesController {
 
     int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
 
-    AdminSalesDetailResponse response = adminSalesService.getSalesDetails(
+    AdminSalesDetailResponse response = adminSalesServiceImpl.getSalesDetails(
         page, pageSize, startDate, endDate, method, status);
 
     ApiResponse<AdminSalesDetailResponse> apiResponse = new ApiResponse<>(
@@ -175,7 +175,7 @@ public class AdminSalesController {
     log.info("오늘 매출 현황 조회 요청");
 
     String today = java.time.LocalDate.now().toString();
-    AdminSalesTrendResponse response = adminSalesService.getSalesTrend(today, today, "daily");
+    AdminSalesTrendResponse response = adminSalesServiceImpl.getSalesTrend(today, today, "daily");
 
     ApiResponse<AdminSalesTrendResponse> apiResponse = new ApiResponse<>(
         true,
@@ -198,7 +198,7 @@ public class AdminSalesController {
     String startOfMonth = now.withDayOfMonth(1).toString();
     String endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).toString();
 
-    AdminSalesTrendResponse response = adminSalesService.getSalesTrend(
+    AdminSalesTrendResponse response = adminSalesServiceImpl.getSalesTrend(
         startOfMonth, endOfMonth, "daily");
 
     ApiResponse<AdminSalesTrendResponse> apiResponse = new ApiResponse<>(
@@ -222,7 +222,7 @@ public class AdminSalesController {
     String startOfYear = now.withDayOfYear(1).toString();
     String endOfYear = now.withDayOfYear(now.lengthOfYear()).toString();
 
-    AdminSalesTrendResponse response = adminSalesService.getSalesTrend(
+    AdminSalesTrendResponse response = adminSalesServiceImpl.getSalesTrend(
         startOfYear, endOfYear, "monthly");
 
     ApiResponse<AdminSalesTrendResponse> apiResponse = new ApiResponse<>(
@@ -243,17 +243,17 @@ public class AdminSalesController {
     log.info("매출 대시보드 조회 요청");
 
     // 기본 통계
-    AdminSalesStatsResponse stats = adminSalesService.getSalesStats();
+    AdminSalesStatsResponse stats = adminSalesServiceImpl.getSalesStats();
 
     // 최근 7일 트렌드
     java.time.LocalDate now = java.time.LocalDate.now();
     String weekAgo = now.minusDays(6).toString();
     String today = now.toString();
-    AdminSalesTrendResponse weekTrend = adminSalesService.getSalesTrend(weekAgo, today, "daily");
+    AdminSalesTrendResponse weekTrend = adminSalesServiceImpl.getSalesTrend(weekAgo, today, "daily");
 
     // 결제 방법별 통계 (최근 30일)
     String monthAgo = now.minusDays(29).toString();
-    AdminPaymentMethodStatsResponse methodStats = adminSalesService.getPaymentMethodStats(monthAgo, today);
+    AdminPaymentMethodStatsResponse methodStats = adminSalesServiceImpl.getPaymentMethodStats(monthAgo, today);
 
     AdminSalesDashboardResponse dashboard = new AdminSalesDashboardResponse(
         stats,
