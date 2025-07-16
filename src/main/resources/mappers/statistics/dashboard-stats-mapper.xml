@@ -34,9 +34,9 @@
         WHERE created_at BETWEEN #{start} AND #{end}
     </select>
 
-    <select id="countClassesByStudioId" resultType="long">
-        SELECT COUNT(*) FROM "studio"
-        WHERE studio_id = #{studioId}
-    </select>
+<!--    <select id="countClassesByStudioId" resultType="long">-->
+<!--        SELECT COUNT(*) FROM "workshop"-->
+<!--        WHERE studio_id = #{studioId}-->
+<!--    </select>-->
 
 </mapper>

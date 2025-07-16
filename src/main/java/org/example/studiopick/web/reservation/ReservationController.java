@@ -32,7 +32,7 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     /**
-     * 예약 생성
+     *  스튜디오 예약 생성
      */
     @Operation(summary = "예약 생성", description = "새로운 스튜디오 예약을 생성합니다")
     @ApiResponses(value = {
@@ -41,7 +41,7 @@ public class ReservationController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "예약 시간 중복"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음")
     })
-    @PostMapping
+    @PostMapping("/studio")
     public ResponseEntity<ApiResponse<ReservationResponse>> createReservation(
         @Valid @RequestBody ReservationCreateCommand command,
         @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -52,13 +52,34 @@ public class ReservationController {
             userId, command.studioId(), command.reservationDate(), 
             command.startTime(), command.endTime());
 
-        ReservationResponse response = reservationService.createStudioReservation(command.studioId(), command);
+        ReservationResponse response = reservationService.createStudioReservation(command.studioId(), command, userId);
 
         log.info("예약 생성 완료: reservationId={}", response.id());
 
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new ApiResponse<>(true, response, "예약이 신청되었습니다."));
     }
+
+    /**
+     * 공방 예약 생성
+     */
+    @Operation(summary = "공방 예약 생성", description = "새로운 공방 예약을 생성합니다")
+    @PostMapping("/workshop")
+    public ResponseEntity<ApiResponse<ReservationResponse>> createWorkshopReservation(
+        @Valid @RequestBody ReservationCreateCommand command,
+        @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        Long userId = userPrincipal.getUserId();
+
+        ReservationResponse response = reservationService.createWorkshopReservation(command.workshopId(), command, userId);
+
+        log.info("공방 예약 생성 완료: reservationId={}", response.id());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(new ApiResponse<>(true, response, "공방 예약이 신청되었습니다."));
+    }
+
+
 
     /**
      * 예약 가능 시간 조회

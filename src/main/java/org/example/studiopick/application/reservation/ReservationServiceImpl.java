@@ -100,7 +100,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command) {
+    public ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command, Long userId) {
         // 1. 기본 유효성 검증
         validateReservationRules(command);
 
@@ -154,7 +154,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command) {
+    public ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command, Long userId) {
         validateReservationRules(command);
         WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
             .orElseThrow(() -> new IllegalArgumentException("해당 Workshop id를 찾을 수 없습니다."));

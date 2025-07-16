@@ -38,5 +38,5 @@ public interface ReportService {
     /**
      * 비공개된 컨텐츠 복원
      */
-    boolean restoreContent(ReportType reportType, Long reportedId);
+    void restoreContent(ReportType reportType, Long reportedId);
 }

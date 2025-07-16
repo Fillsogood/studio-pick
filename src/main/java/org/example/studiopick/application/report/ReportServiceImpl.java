@@ -188,22 +188,18 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     @Transactional
-    public boolean restoreContent(ReportType reportType, Long reportedId) {
+    public void restoreContent(ReportType reportType, Long reportedId) {
         try {
             switch (reportType) {
-                case ARTWORK:
-                    return restoreArtwork(reportedId);
-                case CLASS:
-                    return restoreWorkShop(reportedId);
-                case REVIEW:
-                    return restoreStudio(reportedId);
-                default:
+                case ARTWORK -> restoreArtwork(reportedId);
+                case CLASS -> restoreWorkShop(reportedId);
+                case REVIEW -> restoreStudio(reportedId);
+                default -> {
                     log.warn("Unknown report type: {}", reportType);
-                    return false;
+                }
             }
         } catch (Exception e) {
             log.error("Failed to restore content. Type: {}, ID: {}", reportType, reportedId, e);
-            return false;
         }
     }
 

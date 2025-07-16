@@ -56,13 +56,6 @@ public class ReviewController {
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "리뷰가 삭제되었습니다."));
   }
 
-  // 운영자 리뷰 목록 + 답글 조회
-//  @GetMapping("/studios/{studioId}")
-//  public ApiResponse<List<ReviewWithReplyDto>> getReviewsWithReplies(
-//      @PathVariable Long studioId
-//  ) {
-//    return new ApiResponse<>(true, reviewReplyService.getReviewsWithReplies(studioId), "리뷰 목록을 불러왔습니다.");
-//  }
 
   // 답글 등록 및 수정
   @PostMapping("/reply")
@@ -78,5 +71,45 @@ public class ReviewController {
   ) {
     reviewReplyService.deleteReply(reviewId);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "답글이 삭제되었습니다."));
+  }
+
+  // 리뷰 상세 조회
+  @GetMapping("/{reviewId}")
+  public ResponseEntity<ApiResponse<ReviewDetailResponse>> getReviewDetail(
+      @PathVariable Long reviewId
+  ) {
+    ReviewDetailResponse response = reviewService.getReviewDetail(reviewId);
+    return ResponseEntity.ok(new ApiResponse<>(true, response, "리뷰 상세 정보입니다."));
+  }
+
+  // 스튜디오 리뷰 목록 조회
+  @GetMapping("/studio/{studioId}")
+  public ResponseEntity<ApiResponse<List<ReviewSummaryDto>>> getReviewsByStudio(
+      @PathVariable Long studioId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    List<ReviewSummaryDto> reviews = reviewService.getReviewsByStudio(studioId, page, size);
+    return ResponseEntity.ok(new ApiResponse<>(true, reviews, "스튜디오 리뷰 목록입니다."));
+  }
+
+  // 공방 리뷰 목록 조회
+  @GetMapping("/workshop/{workshopId}")
+  public ResponseEntity<ApiResponse<List<ReviewSummaryDto>>> getReviewsByWorkshop(
+      @PathVariable Long workshopId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    List<ReviewSummaryDto> reviews = reviewService.getReviewsByWorkshop(workshopId, page, size);
+    return ResponseEntity.ok(new ApiResponse<>(true, reviews, "공방 리뷰 목록입니다."));
+  }
+
+  // 특정 리뷰의 답글 조회
+  @GetMapping("/{reviewId}/reply")
+  public ResponseEntity<ApiResponse<ReviewReplyDto>> getReplyByReviewId(
+      @PathVariable Long reviewId
+  ) {
+    ReviewReplyDto reply = reviewReplyService.getReplyByReviewId(reviewId);
+    return ResponseEntity.ok(new ApiResponse<>(true, reply, "리뷰 답글입니다."));
   }
 }

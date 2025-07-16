@@ -12,12 +12,12 @@ public interface ReservationService {
     /**
      * 스튜디오 예약 생성
      */
-    ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command);
+    ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command, Long userId);
 
     /**
      * 공방 예약 생성
      */
-    ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command);
+    ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command, Long userId);
 
     /**
      * 예약 가능 시간 조회

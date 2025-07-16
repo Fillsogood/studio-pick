@@ -106,4 +106,29 @@ public class ArtWorkController {
             throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
         }
     }
+
+    // 작품 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> updateArtwork(
+        @PathVariable Long id,
+        @RequestBody ArtworkUploadRequestDto dto,
+        @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        Long userId = userPrincipal.getUserId();
+        artworkService.updateArtwork(id, userId, dto);
+
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "작품이 수정되었습니다."));
+    }
+
+    //작품 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteArtwork(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        Long userId = userPrincipal.getUserId();
+        artworkService.deleteArtwork(id, userId);
+
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "작품이 삭제되었습니다."));
+    }
 }
