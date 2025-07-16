@@ -1,26 +1,8 @@
 package org.example.studiopick.application.token.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
+public interface TokenService {
 
-import java.time.Duration;
+    void blacklistToken(String accessToken, long expirationInMillis);
 
-@Service
-@RequiredArgsConstructor
-public class TokenService {
-
-    private final RedisTemplate<String, String> redisTemplate;
-
-    public void blacklistToken(String accessToken, long expirationInMillis) {
-        redisTemplate.opsForValue().set(
-                accessToken,
-                "logout",
-                Duration.ofMillis(expirationInMillis)
-        );
-    }
-
-    public boolean isBlacklisted(String accessToken) {
-        return redisTemplate.hasKey(accessToken);
-    }
+    boolean isBlacklisted(String accessToken);
 }

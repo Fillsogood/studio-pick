@@ -2,7 +2,7 @@ package org.example.studiopick.security;
 
 import lombok.Getter;
 import org.example.studiopick.domain.common.enums.UserRole;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;

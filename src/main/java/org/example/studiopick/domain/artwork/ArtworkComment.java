@@ -2,7 +2,7 @@ package org.example.studiopick.domain.artwork;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 
 import java.time.LocalDateTime;
 

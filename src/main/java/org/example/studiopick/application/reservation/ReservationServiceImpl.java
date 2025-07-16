@@ -11,12 +11,14 @@ import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
+import org.example.studiopick.domain.workshop.WorkShop;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.example.studiopick.infrastructure.reservation.mybatis.ReservationSearchMapper;
 import org.example.studiopick.infrastructure.reservation.mybatis.dto.UserReservationSearchCriteria;
 import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
+import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,7 @@ public class ReservationServiceImpl implements ReservationService {
     
     // ✅ JPA Repository (기본 CRUD + 핵심 로직)
     private final JpaReservationRepository jpaReservationRepository;
+    private final JpaWorkShopRepository jpaWorkShopRepository;
     
     // ✅ MyBatis Mapper (복잡한 검색)
     private final ReservationSearchMapper reservationSearchMapper;
@@ -97,12 +100,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
-    public ReservationResponse create(Long studioId, ReservationCreateCommand command) {
-        
+    public ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command, Long userId) {
         // 1. 기본 유효성 검증
         validateReservationRules(command);
-        
+
         // 2. 스튜디오 존재 확인 (락 제거 - 성능 개선)
         Studio studio = jpaStudioRepository.findById(studioId)
             .orElseThrow(() -> new IllegalArgumentException("해당 Studio id를 찾을 수 없습니다."));
@@ -139,8 +140,8 @@ public class ReservationServiceImpl implements ReservationService {
         try {
             Reservation saved = jpaReservationRepository.save(reservation);
 
-            log.info("예약 생성 완료: reservationId={}, userId={}, studioId={}", 
-                    saved.getId(), command.userId(), studioId);
+            log.info("예약 생성 완료: reservationId={}, userId={}, studioId={}",
+                saved.getId(), command.userId(), studioId);
 
             return new ReservationResponse(
                 saved.getId(),
@@ -149,6 +150,43 @@ public class ReservationServiceImpl implements ReservationService {
             );
         } catch (DataIntegrityViolationException e) {
             throw new IllegalArgumentException("해당 시간대에 이미 예약이 존재합니다.", e);
+        }
+    }
+
+    @Override
+    public ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command, Long userId) {
+        validateReservationRules(command);
+        WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
+            .orElseThrow(() -> new IllegalArgumentException("해당 Workshop id를 찾을 수 없습니다."));
+        User user = jpaUserRepository.findById(command.userId())
+            .orElseThrow(() -> new IllegalArgumentException("해당 User id를 찾을 수 없습니다."));
+        if (!workshop.isAvailableForReservation()) {
+            throw new IllegalStateException("현재 예약이 불가능한 공방입니다.");
+        }
+        if (!workshop.isValidTimeRange()) {
+            throw new IllegalStateException("공방의 시작시간과 종료시간이 유효하지 않습니다.");
+        }
+        Reservation reservation = Reservation.builder()
+            .workShop(workshop)
+            .user(user)
+            .reservationDate(workshop.getDate())
+            .startTime(workshop.getStartTime())
+            .endTime(workshop.getEndTime())
+            .status(ReservationStatus.PENDING)
+            .peopleCount(command.peopleCount())
+            .totalAmount(workshop.getPrice().longValue())
+            .build();
+        try {
+            Reservation saved = jpaReservationRepository.save(reservation);
+            log.info("공방 예약 생성 완료: reservationId={}, userId={}, workshopId={}",
+                saved.getId(), command.userId(), workshopId);
+            return new ReservationResponse(
+                saved.getId(),
+                saved.getTotalAmount(),
+                saved.getStatus()
+            );
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("공방 예약 생성 중 오류가 발생했습니다.", e);
         }
     }
 
@@ -211,6 +249,25 @@ public class ReservationServiceImpl implements ReservationService {
             reservations,
             new PaginationResponse(page, totalCount)
         );
+    }
+
+    /**
+     * 결제 완료 시 예약 확정
+     */
+    @Override
+    @Transactional
+    public void confirmReservationPayment(Long reservationId) {
+        Reservation reservation = jpaReservationRepository.findById(reservationId)
+            .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("예약 상태가 PENDING이 아닙니다.");
+        }
+
+        reservation.confirm();
+        jpaReservationRepository.save(reservation);
+
+        log.info("예약 결제 확정 완료: reservationId={}", reservationId);
     }
 
     @Override
@@ -383,4 +440,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         return baseAmount + personAmount;
     }
+
+
 }

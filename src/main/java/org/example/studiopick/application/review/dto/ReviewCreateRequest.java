@@ -5,8 +5,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public record ReviewCreateRequest(
-    Long studioId,
+    Long classId,
     Short rating,
     String comment,
-    List<MultipartFile> images
+    List<MultipartFile> imageUrls
 ) {}

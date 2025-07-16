@@ -26,40 +26,40 @@ public class AdminReportController {
     
     private final AdminReportService adminReportService;
     
-    @GetMapping
-    @Operation(summary = "신고 목록 조회", description = "검색 조건에 따른 신고 목록을 페이징하여 조회합니다.")
-    public ResponseEntity<Page<AdminReportListResponse>> getReportList(
-            @Parameter(description = "신고 타입") @RequestParam(required = false) ReportType reportedType,
-            @Parameter(description = "신고 상태") @RequestParam(required = false) ReportStatus status,
-            @Parameter(description = "신고자 ID") @RequestParam(required = false) Long reporterId,
-            @Parameter(description = "콘텐츠 소유자 ID") @RequestParam(required = false) Long contentOwnerId,
-            @Parameter(description = "시작 일시") @RequestParam(required = false) 
-            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime startDate,
-            @Parameter(description = "종료 일시") @RequestParam(required = false) 
-            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime endDate,
-            @Parameter(description = "검색 키워드") @RequestParam(required = false) String keyword,
-            @Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "정렬 기준") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "정렬 방향") @RequestParam(defaultValue = "desc") String sortDirection
-    ) {
-        AdminReportSearchCriteria criteria = new AdminReportSearchCriteria(
-                reportedType, status, reporterId, contentOwnerId, 
-                startDate, endDate, keyword, page, size, sortBy, sortDirection
-        );
-        
-        Page<AdminReportListResponse> reports = adminReportService.getReportList(criteria);
-        return ResponseEntity.ok(reports);
-    }
-    
-    @GetMapping("/{reportId}")
-    @Operation(summary = "신고 상세 조회", description = "특정 신고의 상세 정보를 조회합니다.")
-    public ResponseEntity<AdminReportDetailResponse> getReportDetail(
-            @Parameter(description = "신고 ID") @PathVariable Long reportId
-    ) {
-        AdminReportDetailResponse report = adminReportService.getReportDetail(reportId);
-        return ResponseEntity.ok(report);
-    }
+//    @GetMapping
+//    @Operation(summary = "신고 목록 조회", description = "검색 조건에 따른 신고 목록을 페이징하여 조회합니다.")
+//    public ResponseEntity<Page<AdminReportListResponse>> getReportList(
+//            @Parameter(description = "신고 타입") @RequestParam(required = false) ReportType reportedType,
+//            @Parameter(description = "신고 상태") @RequestParam(required = false) ReportStatus status,
+//            @Parameter(description = "신고자 ID") @RequestParam(required = false) Long reporterId,
+//            @Parameter(description = "콘텐츠 소유자 ID") @RequestParam(required = false) Long contentOwnerId,
+//            @Parameter(description = "시작 일시") @RequestParam(required = false)
+//            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime startDate,
+//            @Parameter(description = "종료 일시") @RequestParam(required = false)
+//            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime endDate,
+//            @Parameter(description = "검색 키워드") @RequestParam(required = false) String keyword,
+//            @Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
+//            @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "20") int size,
+//            @Parameter(description = "정렬 기준") @RequestParam(defaultValue = "createdAt") String sortBy,
+//            @Parameter(description = "정렬 방향") @RequestParam(defaultValue = "desc") String sortDirection
+//    ) {
+//        AdminReportSearchCriteria criteria = new AdminReportSearchCriteria(
+//                reportedType, status, reporterId, contentOwnerId,
+//                startDate, endDate, keyword, page, size, sortBy, sortDirection
+//        );
+//
+//        Page<AdminReportListResponse> reports = adminReportService.getReportList(criteria);
+//        return ResponseEntity.ok(reports);
+//    }
+//
+//    @GetMapping("/{reportId}")
+//    @Operation(summary = "신고 상세 조회", description = "특정 신고의 상세 정보를 조회합니다.")
+//    public ResponseEntity<AdminReportDetailResponse> getReportDetail(
+//            @Parameter(description = "신고 ID") @PathVariable Long reportId
+//    ) {
+//        AdminReportDetailResponse report = adminReportService.getReportDetail(reportId);
+//        return ResponseEntity.ok(report);
+//    }
     
     @PutMapping("/{reportId}/process")
     @Operation(summary = "신고 처리", description = "특정 신고를 처리합니다.")
@@ -95,22 +95,22 @@ public class AdminReportController {
         return ResponseEntity.ok(stats);
     }
     
-    @GetMapping("/content/{type}/{contentId}")
-    @Operation(summary = "특정 콘텐츠 신고 조회", description = "특정 콘텐츠에 대한 모든 신고를 조회합니다.")
-    public ResponseEntity<List<AdminReportListResponse>> getContentReports(
-            @Parameter(description = "콘텐츠 타입") @PathVariable ReportType type,
-            @Parameter(description = "콘텐츠 ID") @PathVariable Long contentId
-    ) {
-        List<AdminReportListResponse> reports = adminReportService.getContentReports(type, contentId);
-        return ResponseEntity.ok(reports);
-    }
-    
-    @GetMapping("/auto-hidden")
-    @Operation(summary = "자동 비공개 신고 조회", description = "자동으로 비공개 처리된 신고 목록을 조회합니다.")
-    public ResponseEntity<List<AdminReportListResponse>> getAutoHiddenReports() {
-        List<AdminReportListResponse> reports = adminReportService.getAutoHiddenReports();
-        return ResponseEntity.ok(reports);
-    }
+//    @GetMapping("/content/{type}/{contentId}")
+//    @Operation(summary = "특정 콘텐츠 신고 조회", description = "특정 콘텐츠에 대한 모든 신고를 조회합니다.")
+//    public ResponseEntity<List<AdminReportListResponse>> getContentReports(
+//            @Parameter(description = "콘텐츠 타입") @PathVariable ReportType type,
+//            @Parameter(description = "콘텐츠 ID") @PathVariable Long contentId
+//    ) {
+//        List<AdminReportListResponse> reports = adminReportService.getContentReports(type, contentId);
+//        return ResponseEntity.ok(reports);
+//    }
+//
+//    @GetMapping("/auto-hidden")
+//    @Operation(summary = "자동 비공개 신고 조회", description = "자동으로 비공개 처리된 신고 목록을 조회합니다.")
+//    public ResponseEntity<List<AdminReportListResponse>> getAutoHiddenReports() {
+//        List<AdminReportListResponse> reports = adminReportService.getAutoHiddenReports();
+//        return ResponseEntity.ok(reports);
+//    }
     
     @GetMapping("/pending/count")
     @Operation(summary = "대기 중인 신고 수 조회", description = "처리 대기 중인 신고의 개수를 조회합니다.")
@@ -119,16 +119,16 @@ public class AdminReportController {
         return ResponseEntity.ok(count);
     }
     
-    @GetMapping("/urgent")
-    @Operation(summary = "긴급 신고 조회", description = "긴급 처리가 필요한 신고를 조회합니다.")
-    public ResponseEntity<List<AdminReportListResponse>> getUrgentReports() {
-        // 특정 키워드나 신고 횟수가 많은 콘텐츠를 긴급으로 분류
-        AdminReportSearchCriteria criteria = new AdminReportSearchCriteria(
-                null, ReportStatus.PENDING, null, null, 
-                null, null, null, 0, 10, "createdAt", "desc"
-        );
-        
-        Page<AdminReportListResponse> reports = adminReportService.getReportList(criteria);
-        return ResponseEntity.ok(reports.getContent());
-    }
+//    @GetMapping("/urgent")
+//    @Operation(summary = "긴급 신고 조회", description = "긴급 처리가 필요한 신고를 조회합니다.")
+//    public ResponseEntity<List<AdminReportListResponse>> getUrgentReports() {
+//        // 특정 키워드나 신고 횟수가 많은 콘텐츠를 긴급으로 분류
+//        AdminReportSearchCriteria criteria = new AdminReportSearchCriteria(
+//                null, ReportStatus.PENDING, null, null,
+//                null, null, null, 0, 10, "createdAt", "desc"
+//        );
+//
+//        Page<AdminReportListResponse> reports = adminReportService.getReportList(criteria);
+//        return ResponseEntity.ok(reports.getContent());
+//    }
 }

@@ -5,6 +5,7 @@ import java.time.LocalTime;
 
 public record ReservationCreateCommand(
     Long studioId,
+    Long workshopId,
     Long userId,
     LocalDate reservationDate,
     LocalTime startTime,

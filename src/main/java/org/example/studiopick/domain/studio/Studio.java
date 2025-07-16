@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.common.BaseEntity;
+import org.example.studiopick.domain.common.enums.ArtworkStatus;
+import org.example.studiopick.domain.common.enums.HideStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.common.enums.OperationType;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -46,6 +48,10 @@ public class Studio extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StudioStatus status = StudioStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "hide_status", nullable = false)
+    private HideStatus hideStatus = HideStatus.OPEN;
 
     @Column(name = "weekend_price", nullable = false)
     private BigDecimal weekendPrice;
@@ -254,5 +260,9 @@ public class Studio extends BaseEntity {
             this.instructorCareer = instructorCareer;
             this.availableClasses = availableClasses;
         }
+    }
+
+    public void StudioChangeStatus(HideStatus status) {
+        this.hideStatus = status;
     }
 }

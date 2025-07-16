@@ -8,7 +8,7 @@ import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.s3.S3Uploader;
 import org.springframework.security.crypto.password.PasswordEncoder;

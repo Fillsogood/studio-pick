@@ -3,7 +3,9 @@ package org.example.studiopick.infrastructure.studio;
 import jakarta.persistence.LockModeType;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.common.enums.OperationType;
+import org.example.studiopick.domain.common.enums.Weekday;
 import org.example.studiopick.domain.studio.Studio;
+import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -29,6 +31,14 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
       @Param("location") String location
   );
 
+  // 활성화된 스튜디오만 조회
+  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
+  Page<Studio> findActiveStudios(Pageable pageable);
+  
+  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
+  List<Studio> findActiveStudios();
+
+  // 상태별 조회
   Optional<Studio> findByIdAndStatus(Long id, StudioStatus status);
 
   //관리자용
@@ -38,15 +48,9 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
   Page<Studio> findByStatusAndNameContainingIgnoreCaseOrderByCreatedAtDesc(StudioStatus status, String name, Pageable pageable);
   boolean existsByName(String name);
   long countByStatus(StudioStatus status);
-  
-  // 운영 타입별 메서드들
-  boolean existsByOwnerIdAndOperationTypeAndStatusIn(Long ownerId, OperationType operationType, List<StudioStatus> statuses);
-  List<Studio> findByOperationType(OperationType operationType);
-  Page<Studio> findByOperationTypeAndStatusOrderByCreatedAtDesc(OperationType operationType, StudioStatus status, Pageable pageable);
-  Page<Studio> findByOperationTypeOrderByCreatedAtDesc(OperationType operationType, Pageable pageable);
-  Page<Studio> findByOperationTypeAndStatusAndNameContainingIgnoreCaseOrderByCreatedAtDesc(
-      OperationType operationType, StudioStatus status, String name, Pageable pageable);
-  long countByOperationType(OperationType operationType);
-  long countByOperationTypeAndStatus(OperationType operationType, StudioStatus status);
 
+  @Query("SELECT s FROM Studio s WHERE s.status = :status")
+  Page<Studio> findByStatus(@Param("status") StudioStatus status, Pageable pageable);
+
+  List<Studio> findAllByStatus(StudioStatus status);
 }

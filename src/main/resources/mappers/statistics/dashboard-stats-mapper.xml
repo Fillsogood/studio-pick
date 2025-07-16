@@ -3,40 +3,40 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.example.studiopick.infrastructure.statistics.DashboardStatsMapper">
+<mapper namespace="org.example.studiopick.infrastructure.studio.mybatis.StudioDashboardStatsMapper">
 
     <select id="countTodayReservations" resultType="long">
-        SELECT COUNT(*) FROM "Reservation"
+        SELECT COUNT(*) FROM "reservation"
         WHERE studio_id = #{studioId}
           AND reservation_date = #{today}
     </select>
 
     <select id="countMonthReservations" resultType="long">
-        SELECT COUNT(*) FROM "Reservation"
+        SELECT COUNT(*) FROM "reservation"
         WHERE studio_id = #{studioId}
           AND reservation_date BETWEEN #{start} AND #{end}
     </select>
 
     <select id="sumTodayRevenue" resultType="long">
-        SELECT COALESCE(SUM(total_amount), 0) FROM "Reservation"
+        SELECT COALESCE(SUM(total_amount), 0) FROM "reservation"
         WHERE studio_id = #{studioId}
           AND reservation_date = #{today}
     </select>
 
     <select id="sumMonthRevenue" resultType="long">
-        SELECT COALESCE(SUM(total_amount), 0) FROM "Reservation"
+        SELECT COALESCE(SUM(total_amount), 0) FROM "reservation"
         WHERE studio_id = #{studioId}
           AND reservation_date BETWEEN #{start} AND #{end}
     </select>
 
     <select id="countNewCustomers" resultType="long">
-        SELECT COUNT(*) FROM "User"
+        SELECT COUNT(*) FROM "user"
         WHERE created_at BETWEEN #{start} AND #{end}
     </select>
 
-    <select id="countClassesByStudioId" resultType="long">
-        SELECT COUNT(*) FROM "Class"
-        WHERE studio_id = #{studioId}
-    </select>
+<!--    <select id="countClassesByStudioId" resultType="long">-->
+<!--        SELECT COUNT(*) FROM "workshop"-->
+<!--        WHERE studio_id = #{studioId}-->
+<!--    </select>-->
 
 </mapper>

@@ -1,0 +1,74 @@
+package org.example.studiopick.web.workshop;
+
+import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.workshop.WorkShopService;
+import org.example.studiopick.application.workshop.dto.*;
+import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/classes")
+@RequiredArgsConstructor
+public class WorkShopController {
+
+  private final WorkShopService workShopService;
+
+  @GetMapping
+  public ResponseEntity<ApiSuccessResponse<WorkShopListResponse>> getClasses(
+      @RequestParam Long studioId,
+      @RequestParam String status,
+      @RequestParam String date
+  ) {
+    WorkShopListResponse response = workShopService.getWorkShopList(status, date);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiSuccessResponse<WorkShopDetailDto>> getClassDetail(@PathVariable Long id) {
+    WorkShopDetailDto response = workShopService.getWorkShopDetail(id);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+  }
+
+  /**
+   * 공방 운영 신청
+   */
+  @PostMapping
+  public ResponseEntity<ApiSuccessResponse<WorkShopApplicationResponse>> applyWorkshop(
+      @RequestBody WorkShopApplicationRequest request,
+      @RequestParam Long userId
+  ) {
+    WorkShopApplicationResponse response = workShopService.applyWorkshop(request, userId);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+  }
+
+  /**
+   * 공방 신청 상태 조회
+   */
+  @GetMapping("/{id}/application-status")
+  public ResponseEntity<ApiSuccessResponse<WorkShopApplicationDetailResponse>> getApplicationStatus(@PathVariable Long id) {
+    WorkShopApplicationDetailResponse response = workShopService.getWorkshopApplicationStatus(id);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+  }
+
+  /**
+   * 공방 정보 수정
+   */
+  @PatchMapping("/{id}")
+  public ResponseEntity<ApiSuccessResponse<Void>> updateWorkshop(
+      @PathVariable Long id,
+      @RequestBody WorkShopApplicationRequest request
+  ) {
+    workShopService.updateWorkshop(id, request);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "공방 정보가 수정되었습니다."));
+  }
+
+  /**
+   * 공방 비활성화
+   */
+  @PatchMapping("/{id}/deactivate")
+  public ResponseEntity<ApiSuccessResponse<Void>> deactivateWorkshop(@PathVariable Long id) {
+    workShopService.deactivateWorkshop(id);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "공방이 비활성화되었습니다."));
+  }
+}

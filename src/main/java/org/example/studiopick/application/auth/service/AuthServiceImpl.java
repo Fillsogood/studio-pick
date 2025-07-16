@@ -11,7 +11,7 @@ import org.example.studiopick.common.exception.auth.TokenException;
 import org.example.studiopick.common.enums.ErrorCode;
 import org.example.studiopick.common.util.JwtUtil;
 import org.example.studiopick.domain.common.enums.UserRole;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.example.studiopick.security.JwtProvider;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

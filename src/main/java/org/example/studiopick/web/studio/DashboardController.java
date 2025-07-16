@@ -2,7 +2,7 @@ package org.example.studiopick.web.studio;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.dto.DashboardResponseDto;
-import org.example.studiopick.application.studio.service.DashboardService;
+import org.example.studiopick.application.studio.DashboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
