@@ -16,6 +16,9 @@ import org.example.studiopick.infrastructure.review.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
@@ -88,6 +91,66 @@ public class ReviewServiceImpl implements ReviewService {
     }
     // 리뷰 삭제
     reviewRepository.delete(review);
+  }
+
+  @Override
+  public ReviewDetailResponse getReviewDetail(Long reviewId) {
+    Review review = reviewRepository.findById(reviewId)
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    List<String> imageUrls = review.getImages().stream()
+        .map(ReviewImage::getImageUrl)
+        .collect(Collectors.toList());
+
+    return new ReviewDetailResponse(
+        review.getId(),
+        review.getUser().getId(),
+        review.getUser().getNickname(),
+        review.getStudio().getId(),
+        review.getWorkShop().getId(),
+        review.getRating(),
+        review.getComment(),
+        review.getStatus(),
+        imageUrls,
+        review.getCreatedAt(),
+        review.getUpdatedAt()
+    );
+  }
+
+  @Override
+  public List<ReviewSummaryDto> getReviewsByStudio(Long studioId, int page, int size) {
+    return reviewRepository.findByStudioIdOrWorkshopId(studioId).stream()
+        .filter(Review::isPubliclyVisible)
+        .skip((long) (page - 1) * size)
+        .limit(size)
+        .map(r -> new ReviewSummaryDto(
+            r.getId(),
+            r.getUser().getId(),
+            r.getUser().getNickname(),
+            r.getRating(),
+            r.getComment(),
+            r.getStatus(),
+            r.getCreatedAt()
+        ))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ReviewSummaryDto> getReviewsByWorkshop(Long workshopId, int page, int size) {
+    return reviewRepository.findByStudioIdOrWorkshopId(workshopId).stream()
+        .filter(Review::isPubliclyVisible)
+        .skip((long) (page - 1) * size)
+        .limit(size)
+        .map(r -> new ReviewSummaryDto(
+            r.getId(),
+            r.getUser().getId(),
+            r.getUser().getNickname(),
+            r.getRating(),
+            r.getComment(),
+            r.getStatus(),
+            r.getCreatedAt()
+        ))
+        .collect(Collectors.toList());
   }
 
 }

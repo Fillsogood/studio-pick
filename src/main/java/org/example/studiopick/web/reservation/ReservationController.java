@@ -52,7 +52,7 @@ public class ReservationController {
             userId, command.studioId(), command.reservationDate(), 
             command.startTime(), command.endTime());
 
-        ReservationResponse response = reservationService.create(command.studioId(), command);
+        ReservationResponse response = reservationService.createStudioReservation(command.studioId(), command);
 
         log.info("예약 생성 완료: reservationId={}", response.id());
 

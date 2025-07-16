@@ -31,6 +31,14 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
       @Param("location") String location
   );
 
+  // 활성화된 스튜디오만 조회
+  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
+  Page<Studio> findActiveStudios(Pageable pageable);
+  
+  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
+  List<Studio> findActiveStudios();
+
+  // 상태별 조회
   Optional<Studio> findByIdAndStatus(Long id, StudioStatus status);
 
   //관리자용
@@ -41,4 +49,8 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
   boolean existsByName(String name);
   long countByStatus(StudioStatus status);
 
+  @Query("SELECT s FROM Studio s WHERE s.status = :status")
+  Page<Studio> findByStatus(@Param("status") StudioStatus status, Pageable pageable);
+
+  List<Studio> findAllByStatus(StudioStatus status);
 }

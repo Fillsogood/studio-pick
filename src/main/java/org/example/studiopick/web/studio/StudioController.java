@@ -5,10 +5,11 @@ import org.example.studiopick.application.studio.StudioService;
 import org.example.studiopick.application.studio.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,14 +62,6 @@ public class StudioController {
     return ResponseEntity.ok(new ApiSuccessResponse<>(Map.of("images", images)));
   }
 
-  @PatchMapping("/{id}/gallery")
-  public ResponseEntity<ApiSuccessResponse<Void>> updateGalleryOrder(
-      @PathVariable Long id,
-      @RequestBody List<StudioGalleryOrderUpdate> requestList
-  ) {
-    studioService.updateGalleryOrder(id, requestList);
-    return ResponseEntity.ok(new ApiSuccessResponse<>(null));
-  }
 
   // 5. 스튜디오 요금 정보 조회
   @GetMapping("/{id}/pricing")
@@ -114,9 +107,11 @@ public class StudioController {
    */
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ApiResponse<StudioApplicationResponse>> apply(
-      @ModelAttribute StudioApplicationRequest request
+      @ModelAttribute SpaceRentalApplicationRequest request,
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
-    StudioApplicationResponse response = studioService.applyStudio(request);
+    Long userId = userPrincipal.getUserId();
+    StudioApplicationResponse response = studioService.studioRental(request, userId);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new ApiResponse<>(true, response, "스튜디오 운영 신청이 접수되었습니다"));
   }
@@ -124,11 +119,11 @@ public class StudioController {
   /**
    * 스튜디오 운영 신청 상태 조회
    */
-  @GetMapping("/{id}")
+  @GetMapping("/{id}/application-status")
   public ResponseEntity<ApiResponse<StudioApplicationDetailResponse>> getApplicationStatus(
       @PathVariable Long id
   ) {
-    StudioApplicationDetailResponse response = studioService.getApplicationStatus(id);
+    StudioApplicationDetailResponse response = studioService.studioRentalApplicationStatus(id);
     return ResponseEntity.ok(new ApiResponse<>(true, response, null));
   }
 

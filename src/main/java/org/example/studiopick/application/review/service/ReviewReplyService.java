@@ -10,4 +10,6 @@ public interface ReviewReplyService {
   List<ReviewReplyDto> getReviewsWithReplies(Long classId);
   ReviewReplyResponse createOrUpdateReply(ReviewReplyRequest classRequest);
   void deleteReply(Long reviewId);
+
+  ReviewReplyDto getReplyByReviewId(Long reviewId);
 }

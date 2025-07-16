@@ -168,7 +168,7 @@ public class ReportServiceImpl implements ReportService {
             .map(workShop -> {
                 workShop.WorkShopChangeStatus(HideStatus.REPORTED);
                 jpaWorkShopRepository.save(workShop);
-                log.info("Class {} auto-hidden due to reports", workShopId);
+                log.info("WorkShop {} auto-hidden due to reports", workShopId);
                 return true;
             }).orElse(false);
     }
@@ -178,7 +178,7 @@ public class ReportServiceImpl implements ReportService {
             .map(studio  -> {
                 studio.StudioChangeStatus(HideStatus.REPORTED);
                 jpaStudioRepository.save(studio);
-                log.info("Review {} auto-hidden due to reports", studioId);
+                log.info("Studio {} auto-hidden due to reports", studioId);
                 return true;
             }).orElse(false);
     }

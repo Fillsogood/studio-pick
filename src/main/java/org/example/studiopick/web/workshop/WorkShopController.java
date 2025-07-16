@@ -21,13 +21,13 @@ public class WorkShopController {
       @RequestParam String status,
       @RequestParam String date
   ) {
-    WorkShopListResponse response = workShopService.getClassList(studioId, status, date);
+    WorkShopListResponse response = workShopService.getWorkShopList(status, date);
     return ResponseEntity.ok(new ApiSuccessResponse<>(response));
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiSuccessResponse<WorkShopDetailDto>> getClassDetail(@PathVariable Long id) {
-    WorkShopDetailDto response = workShopService.getClassDetail(id);
+    WorkShopDetailDto response = workShopService.getWorkShopDetail(id);
     return ResponseEntity.ok(new ApiSuccessResponse<>(response));
   }
 }

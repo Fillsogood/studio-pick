@@ -17,14 +17,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewReplyServiceImpl implements ReviewReplyService {
 
-  private final ReviewRepository classReviewRepository;
+  private final ReviewRepository reviewRepository;
   private final ReviewReplyRepository reviewReplyRepository;
 
   @Override
-  public List<ReviewReplyDto> getReviewsWithReplies(Long classId) {
-    return classReviewRepository.findByClassEntityId(classId).stream()
+  public List<ReviewReplyDto> getReviewsWithReplies(Long contentId) {
+    return reviewRepository.findByStudioIdOrWorkshopId(contentId).stream()
         .map(review -> {
-          String replyContent = reviewReplyRepository.findByClassReviewId(review.getId())
+          String replyContent = reviewReplyRepository.findByReviewId(review.getId())
               .map(ReviewReply::getContent)
               .orElse(null);
           return new ReviewReplyDto(
@@ -39,19 +39,20 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
   }
 
   @Override
-  public ReviewReplyResponse createOrUpdateReply(ReviewReplyRequest classRequest) {
-    Review review = classReviewRepository.findById(classRequest.reviewId())
+  @Transactional
+  public ReviewReplyResponse createOrUpdateReply(ReviewReplyRequest request) {
+    Review review = reviewRepository.findById(request.reviewId())
         .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
 
-    ReviewReply reply = reviewReplyRepository.findByClassReviewId(classRequest.reviewId())
+    ReviewReply reply = reviewReplyRepository.findByReviewId(request.reviewId())
         .map(r -> {
-          r.updateContent(classRequest.content());
+          r.updateContent(request.content());
           return r;
         })
         .orElseGet(() -> reviewReplyRepository.save(
             ReviewReply.builder()
                 .review(review)
-                .content(classRequest.content())
+                .content(request.content())
                 .build()
         ));
 
@@ -60,10 +61,29 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
 
   @Override
   @Transactional
-  public void deleteReply(Long classReviewId) {
-    ReviewReply reply = reviewReplyRepository.findByClassReviewId(classReviewId)
+  public void deleteReply(Long reviewId) {
+    ReviewReply reply = reviewReplyRepository.findByReviewId(reviewId)
         .orElseThrow(() -> new RuntimeException("답글이 존재하지 않습니다."));
 
     reviewReplyRepository.delete(reply);
+  }
+
+  @Override
+  public ReviewReplyDto getReplyByReviewId(Long reviewId) {
+    Review review = reviewRepository.findById(reviewId)
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    String replyContent = reviewReplyRepository.findByReviewId(reviewId)
+        .map(ReviewReply::getContent)
+        .orElse(null);
+
+    return new ReviewReplyDto(
+        review.getId(),
+        review.getComment(),
+        review.getRating(),
+        review.getUser().getNickname(),
+        replyContent,
+        review.getCreatedAt()
+    );
   }
 }
