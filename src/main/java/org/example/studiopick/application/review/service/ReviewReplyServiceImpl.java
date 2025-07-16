@@ -2,9 +2,9 @@ package org.example.studiopick.application.review.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.studiopick.application.review.dto.ReviewReplyDto;
 import org.example.studiopick.application.review.dto.ReviewReplyRequest;
 import org.example.studiopick.application.review.dto.ReviewReplyResponse;
-import org.example.studiopick.application.review.dto.ReviewWithReplyDto;
 import org.example.studiopick.domain.review.Review;
 import org.example.studiopick.domain.review.ReviewReply;
 import org.example.studiopick.infrastructure.review.ReviewReplyRepository;
@@ -17,17 +17,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewReplyServiceImpl implements ReviewReplyService {
 
-  private final ReviewRepository reviewRepository;
-  private final ReviewReplyRepository replyRepository;
+  private final ReviewRepository classReviewRepository;
+  private final ReviewReplyRepository reviewReplyRepository;
 
   @Override
-  public List<ReviewWithReplyDto> getReviewsWithReplies(Long studioId) {
-    return reviewRepository.findByStudioId(studioId).stream()
+  public List<ReviewReplyDto> getReviewsWithReplies(Long classId) {
+    return classReviewRepository.findByClassEntityId(classId).stream()
         .map(review -> {
-          String replyContent = replyRepository.findByReviewId(review.getId())
+          String replyContent = reviewReplyRepository.findByClassReviewId(review.getId())
               .map(ReviewReply::getContent)
               .orElse(null);
-          return new ReviewWithReplyDto(
+          return new ReviewReplyDto(
               review.getId(),
               review.getComment(),
               review.getRating(),
@@ -39,19 +39,19 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
   }
 
   @Override
-  public ReviewReplyResponse createOrUpdateReply(ReviewReplyRequest request) {
-    Review review = reviewRepository.findById(request.reviewId())
-        .orElseThrow(() -> new IllegalArgumentException("리뷰가 존재하지 않습니다."));
+  public ReviewReplyResponse createOrUpdateReply(ReviewReplyRequest classRequest) {
+    Review review = classReviewRepository.findById(classRequest.reviewId())
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
 
-    ReviewReply reply = replyRepository.findByReviewId(request.reviewId())
+    ReviewReply reply = reviewReplyRepository.findByClassReviewId(classRequest.reviewId())
         .map(r -> {
-          r.updateContent(request.content());
+          r.updateContent(classRequest.content());
           return r;
         })
-        .orElseGet(() -> replyRepository.save(
+        .orElseGet(() -> reviewReplyRepository.save(
             ReviewReply.builder()
                 .review(review)
-                .content(request.content())
+                .content(classRequest.content())
                 .build()
         ));
 
@@ -60,10 +60,10 @@ public class ReviewReplyServiceImpl implements ReviewReplyService {
 
   @Override
   @Transactional
-  public void deleteReply(Long reviewId) {
-    ReviewReply reply = replyRepository.findByReviewId(reviewId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 리뷰의 답글이 존재하지 않습니다."));
+  public void deleteReply(Long classReviewId) {
+    ReviewReply reply = reviewReplyRepository.findByClassReviewId(classReviewId)
+        .orElseThrow(() -> new RuntimeException("답글이 존재하지 않습니다."));
 
-    replyRepository.delete(reply);
+    reviewReplyRepository.delete(reply);
   }
 }

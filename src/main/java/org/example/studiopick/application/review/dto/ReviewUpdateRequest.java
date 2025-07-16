@@ -5,5 +5,5 @@ import org.springframework.web.multipart.MultipartFile;
 public record ReviewUpdateRequest(
     Short rating,
     String comment,
-    MultipartFile images
+    MultipartFile imageUrl
 ) {}

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.studiopick.domain.common.BaseEntity;
 
 @Entity
+@Table(name = "review_reply")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewReply extends BaseEntity {
@@ -16,7 +17,7 @@ public class ReviewReply extends BaseEntity {
   @JoinColumn(name = "review_id", nullable = false)
   private Review review;
 
-  @Column(nullable = false, length = 500)
+  @Column(name = "content", nullable = false, length = 500)
   private String content;
 
   @Builder
@@ -29,3 +30,4 @@ public class ReviewReply extends BaseEntity {
     this.content = content;
   }
 }
+

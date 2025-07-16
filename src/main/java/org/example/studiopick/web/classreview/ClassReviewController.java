@@ -1,9 +1,9 @@
 package org.example.studiopick.web.classreview;
 
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.classreview.dto.*;
-import org.example.studiopick.application.classreview.service.ClassReviewReplyService;
-import org.example.studiopick.application.classreview.service.ClassReviewService;
+import org.example.studiopick.application.review.dto.*;
+import org.example.studiopick.application.review.service.ReviewReplyService;
+import org.example.studiopick.application.review.service.ReviewService;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.example.studiopick.security.UserPrincipal;
@@ -18,17 +18,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClassReviewController {
 
-  private final ClassReviewService classReviewService;
-  private final ClassReviewReplyService replyService;
+  private final ReviewService classReviewService;
+  private final ReviewReplyService replyService;
 
   @PostMapping
-  public ResponseEntity<ApiResponse<ClassReviewResponse>> createReview(
+  public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
       @AuthenticationPrincipal UserPrincipal userPrincipal,
-      @ModelAttribute ClassReviewCreateRequest request
+      @ModelAttribute ReviewCreateRequest request
   ) {
     // 토큰에서 직접 사용자 ID 추출
     Long userId = userPrincipal.getUserId();
-    ClassReviewResponse response = classReviewService.createReview(userId, request);
+    ReviewResponse response = classReviewService.createReview(userId, request);
     return ResponseEntity.ok(new ApiResponse<>(true, response, "리뷰가 등록되었습니다."));
   }
 
@@ -36,7 +36,7 @@ public class ClassReviewController {
   public ResponseEntity<ApiSuccessResponse<Void>> updateReview(
       @PathVariable Long reviewId,
       @AuthenticationPrincipal UserPrincipal userPrincipal,
-      @ModelAttribute ClassReviewUpdateRequest request
+      @ModelAttribute ReviewUpdateRequest request
   ) {
     // 토큰에서 직접 사용자 ID 추출
     Long userId = userPrincipal.getUserId();
@@ -57,7 +57,7 @@ public class ClassReviewController {
 
   // 운영자 리뷰 목록 + 답글 조회
   @GetMapping("/classes/{classId}")
-  public ApiResponse<List<ClassReviewReplyDto>> getReviewsWithReplies(
+  public ApiResponse<List<ReviewReplyDto>> getReviewsWithReplies(
       @PathVariable Long classId
   ) {
     return new ApiResponse<>(true, replyService.getReviewsWithReplies(classId), "리뷰 목록을 불러왔습니다.");
@@ -65,8 +65,8 @@ public class ClassReviewController {
 
   // 답글 등록 및 수정
   @PostMapping("/reply")
-  public ApiResponse<ClassReviewReplyResponse> createOrUpdateReply(
-      @RequestBody ClassReviewReplyRequest request
+  public ApiResponse<ReviewReplyResponse> createOrUpdateReply(
+      @RequestBody ReviewReplyRequest request
   ) {
     return new ApiResponse<>(true, replyService.createOrUpdateReply(request), "리뷰에 답글이 등록되었습니다.");
   }

@@ -11,7 +11,7 @@ import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.reservation.ReservationDomainService;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.example.studiopick.infrastructure.reservation.mybatis.ReservationSearchMapper;
@@ -213,6 +213,25 @@ public class ReservationServiceImpl implements ReservationService {
         );
     }
 
+    /**
+     * 결제 완료 시 예약 확정
+     */
+    @Override
+    @Transactional
+    public void confirmReservationPayment(Long reservationId) {
+        Reservation reservation = jpaReservationRepository.findById(reservationId)
+            .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("예약 상태가 PENDING이 아닙니다.");
+        }
+
+        reservation.confirm();
+        jpaReservationRepository.save(reservation);
+
+        log.info("예약 결제 확정 완료: reservationId={}", reservationId);
+    }
+
     @Override
     @Transactional
     public ReservationCancelResponse cancelReservation(Long id, ReservationCancelRequest request) {
@@ -383,4 +402,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         return baseAmount + personAmount;
     }
+
+
 }

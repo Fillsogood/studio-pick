@@ -1,11 +1,9 @@
 package org.example.studiopick.application.review.service;
 
-import org.example.studiopick.application.review.dto.ReviewCreateRequest;
-import org.example.studiopick.application.review.dto.ReviewResponse;
-import org.example.studiopick.application.review.dto.ReviewUpdateRequest;
+import org.example.studiopick.application.review.dto.*;
 
 public interface ReviewService {
-  ReviewResponse createReview(Long userId, ReviewCreateRequest request);
-  void updateReview(Long reviewId, Long userId, ReviewUpdateRequest request);
-  void deleteReview(Long reviewId, Long userId);
+  ReviewResponse createReview(Long userId, ReviewCreateRequest classRequest);
+  void updateReview(Long classReviewId, Long userId, ReviewUpdateRequest classRequest);
+  void deleteReview(Long classReviewId, Long userId);
 }

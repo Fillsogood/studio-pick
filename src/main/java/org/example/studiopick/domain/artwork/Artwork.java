@@ -5,7 +5,7 @@ import lombok.*;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.ArtworkStatus;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 
 // Artwork 엔티티 - 작품 피드용
 @Entity
@@ -53,7 +53,7 @@ public class Artwork extends BaseEntity {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private ArtworkStatus status = ArtworkStatus.PUBLIC;
+    private ArtworkStatus hideStatus = ArtworkStatus.PUBLIC;
 
     @Column(name = "display_order", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer order;
@@ -69,7 +69,7 @@ public class Artwork extends BaseEntity {
         this.imageUrl = imageUrl;
         this.hashtags = hashtags;
         this.isPublic = isPublic != null ? isPublic : true;
-        this.status = status != null ? status : ArtworkStatus.PUBLIC;
+        this.hideStatus = status != null ? status : ArtworkStatus.PUBLIC;
         this.shootingDate = shootingDate;               // [추가]
         this.shootingLocation = shootingLocation;       // [추가]
     }
@@ -87,40 +87,41 @@ public class Artwork extends BaseEntity {
     public void changeVisibility(Boolean isPublic) {
         this.isPublic = isPublic;
         if (!isPublic) {
-            this.status = ArtworkStatus.PRIVATE;
+            this.hideStatus = ArtworkStatus.PRIVATE;
         } else {
-            this.status = ArtworkStatus.PUBLIC;
+            this.hideStatus = ArtworkStatus.PUBLIC;
         }
     }
     
-    public void changeStatus(ArtworkStatus status) {
-        this.status = status;
+    public void ArtworkChangeStatus(ArtworkStatus status) {
+        this.hideStatus = status;
     }
+
     
     public void makePublic() {
         this.isPublic = true;
-        this.status = ArtworkStatus.PUBLIC;
+        this.hideStatus = ArtworkStatus.PUBLIC;
     }
     
     public void makePrivate() {
         this.isPublic = false;
-        this.status = ArtworkStatus.PRIVATE;
+        this.hideStatus = ArtworkStatus.PRIVATE;
     }
     
     public void report() {
-        this.status = ArtworkStatus.REPORTED;
+        this.hideStatus = ArtworkStatus.REPORTED;
     }
     
     public boolean isPublic() {
-        return this.isPublic && this.status == ArtworkStatus.PUBLIC;
+        return this.isPublic && this.hideStatus == ArtworkStatus.PUBLIC;
     }
     
     public boolean isPrivate() {
-        return !this.isPublic || this.status == ArtworkStatus.PRIVATE;
+        return !this.isPublic || this.hideStatus == ArtworkStatus.PRIVATE;
     }
     
     public boolean isReported() {
-        return this.status == ArtworkStatus.REPORTED;
+        return this.hideStatus == ArtworkStatus.REPORTED;
     }
 
     // 순서 변경을 위한 도메인 메서드

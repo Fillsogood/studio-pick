@@ -1,6 +1,7 @@
 package org.example.studiopick.web.review;
 
 import lombok.RequiredArgsConstructor;
+
 import org.example.studiopick.application.review.dto.*;
 import org.example.studiopick.application.review.service.ReviewReplyService;
 import org.example.studiopick.application.review.service.ReviewService;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/studios/reviews")
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
@@ -56,12 +57,12 @@ public class ReviewController {
   }
 
   // 운영자 리뷰 목록 + 답글 조회
-  @GetMapping("/studios/{studioId}")
-  public ApiResponse<List<ReviewWithReplyDto>> getReviewsWithReplies(
-      @PathVariable Long studioId
-  ) {
-    return new ApiResponse<>(true, reviewReplyService.getReviewsWithReplies(studioId), "리뷰 목록을 불러왔습니다.");
-  }
+//  @GetMapping("/studios/{studioId}")
+//  public ApiResponse<List<ReviewWithReplyDto>> getReviewsWithReplies(
+//      @PathVariable Long studioId
+//  ) {
+//    return new ApiResponse<>(true, reviewReplyService.getReviewsWithReplies(studioId), "리뷰 목록을 불러왔습니다.");
+//  }
 
   // 답글 등록 및 수정
   @PostMapping("/reply")

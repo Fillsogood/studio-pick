@@ -8,7 +8,7 @@ import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

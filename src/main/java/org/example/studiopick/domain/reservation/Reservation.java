@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
+import org.example.studiopick.domain.workshop.WorkShop;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +28,10 @@ public class Reservation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "studio_id")
     private Studio studio;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workshop_id")
+    private WorkShop workshop;
 
     @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;
@@ -57,10 +62,11 @@ public class Reservation extends BaseEntity {
     private ReservationStatus status = ReservationStatus.PENDING;
 
     @Builder
-    public Reservation(User user, Studio studio, LocalDate reservationDate,
+    public Reservation(User user, Studio studio,WorkShop workShop, LocalDate reservationDate,
                        LocalTime startTime, LocalTime endTime, Short peopleCount, ReservationStatus status, Long totalAmount) {
         this.user = user;
         this.studio = studio;
+        this.workshop = workShop;
         this.reservationDate = reservationDate;
         this.startTime = startTime;
         this.endTime = endTime;

@@ -35,4 +35,6 @@ public interface ReservationService {
      * 예약 취소
      */
     ReservationCancelResponse cancelReservation(Long id, ReservationCancelRequest request);
+
+    void confirmReservationPayment(Long reservationId);
 }

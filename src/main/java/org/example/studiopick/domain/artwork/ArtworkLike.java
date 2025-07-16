@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 
 import java.time.LocalDateTime;
 

@@ -4,7 +4,7 @@ import org.example.studiopick.application.auth.dto.UserSignupRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileResponseDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
 import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

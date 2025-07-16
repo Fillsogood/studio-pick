@@ -9,10 +9,10 @@ import org.example.studiopick.common.exception.social.SocialLoginException;
 import org.example.studiopick.domain.common.enums.SocialProvider;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
-import org.example.studiopick.domain.user.entity.SocialAccount;
-import org.example.studiopick.domain.user.entity.User;
-import org.example.studiopick.domain.user.repository.SocialAccountRepository;
-import org.example.studiopick.domain.user.repository.UserRepository;
+import org.example.studiopick.domain.user.SocialAccount;
+import org.example.studiopick.domain.user.User;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.User.SocialAccountRepository;
 import org.example.studiopick.infrastructure.oauth.KakaoOAuthClient;
 import org.example.studiopick.security.JwtProvider;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ import java.util.Optional;
 public class SocialAuthServiceImpl implements SocialAuthService {
     
     private final KakaoOAuthClient kakaoOAuthClient;
-    private final UserRepository userRepository;
+    private final JpaUserRepository userRepository;
     private final SocialAccountRepository socialAccountRepository;
     private final JwtProvider jwtProvider;
     

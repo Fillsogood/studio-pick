@@ -1,7 +1,6 @@
 package org.example.studiopick.application.auth.service;
 
 import org.example.studiopick.application.auth.dto.*;
-import org.example.studiopick.domain.user.entity.User;
 
 /**
  * 인증 관련 비즈니스 로직을 처리하는 서비스 인터페이스

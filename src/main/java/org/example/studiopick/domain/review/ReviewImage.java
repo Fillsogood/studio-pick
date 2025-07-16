@@ -17,17 +17,17 @@ public class ReviewImage {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "review_id")
+  @JoinColumn(name = "review_id", nullable = false)
   private Review review;
 
   @Column(name = "image_url", nullable = false, length = 255)
   private String imageUrl;
+
 
   @Builder
   public ReviewImage(Review review, String imageUrl) {
     this.review = review;
     this.imageUrl = imageUrl;
   }
-
-  public void setReview(Review review) {this.review = review;}
 }
+

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.FavoriteType;
-import org.example.studiopick.domain.user.entity.User;
+import org.example.studiopick.domain.user.User;
 
 @Entity
 @Table(name = "\"Favorite\"", 
