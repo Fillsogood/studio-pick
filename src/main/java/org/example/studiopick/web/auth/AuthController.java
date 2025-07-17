@@ -93,6 +93,9 @@ public class AuthController {
         // AuthService를 통한 로그인 처리
         JwtTokenResponseDto tokenResponse = authService.login(requestDto);
 
+        boolean rememberMe = requestDto.isRememberMe();
+        int refreshMaxAge = rememberMe ? (60 * 60 * 24 * 14) : -1; // 14일 or 세션 쿠키
+
         ResponseCookie accessToken = ResponseCookie.from(ACCESS_TOKEN_COOKIE_NAME, tokenResponse.getAccessToken())
             .httpOnly(true)
             .secure(false)
@@ -106,7 +109,7 @@ public class AuthController {
             .secure(false)
             .path("/")
             .sameSite("Lax")
-            .maxAge(refreshTokenExpiration / 1000)
+            .maxAge(refreshMaxAge)
             .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessToken.toString());
