@@ -32,6 +32,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 전체 매출 통계 조회
    */
+  @Override
   public AdminSalesStatsResponse getSalesStats() {
     // 전체 매출
     BigDecimal totalSales = paymentRepository.getTotalSalesByStatus(PaymentStatus.PAID);
@@ -75,6 +76,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 기간별 매출 트렌드 분석
    */
+  @Override
   public AdminSalesTrendResponse getSalesTrend(String startDate, String endDate, String period) {
     LocalDate start = LocalDate.parse(startDate);
     LocalDate end = LocalDate.parse(endDate);
@@ -106,6 +108,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 스튜디오별 매출 분석
    */
+  @Override
   public AdminStudioSalesResponse getStudioSalesAnalysis(
       int page, int size, String startDate, String endDate) {
 
@@ -136,6 +139,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 결제 방법별 통계
    */
+  @Override
   public AdminPaymentMethodStatsResponse getPaymentMethodStats(String startDate, String endDate) {
     LocalDate start = startDate != null ? LocalDate.parse(startDate) : LocalDate.now().minusMonths(1);
     LocalDate end = endDate != null ? LocalDate.parse(endDate) : LocalDate.now();
@@ -161,6 +165,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 환불 통계 및 분석
    */
+  @Override
   public AdminRefundStatsResponse getRefundStats(String startDate, String endDate) {
     LocalDate start = startDate != null ? LocalDate.parse(startDate) : LocalDate.now().minusMonths(1);
     LocalDate end = endDate != null ? LocalDate.parse(endDate) : LocalDate.now();
@@ -200,6 +205,7 @@ public class AdminSalesServiceImpl implements AdminSalesService {
   /**
    * 매출 상세 내역 조회
    */
+  @Override
   public AdminSalesDetailResponse getSalesDetails(
       int page, int size, String startDate, String endDate, String method, String status) {
 

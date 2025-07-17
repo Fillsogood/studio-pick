@@ -15,11 +15,6 @@ public interface AdminSystemSettingService {
     SystemSettingListResponse getAllSettings();
 
     /**
-     * 카테고리별 시스템 설정 조회
-     */
-    SystemSettingListResponse getSettingsByCategory(String category);
-
-    /**
      * 특정 설정 조회
      */
     SystemSettingResponse getSetting(String settingKey);
@@ -39,8 +34,4 @@ public interface AdminSystemSettingService {
      */
     void deleteSetting(String settingKey);
 
-    /**
-     * 카테고리별 통계
-     */
-    Map<String, Long> getSettingsStatsByCategory();
 }

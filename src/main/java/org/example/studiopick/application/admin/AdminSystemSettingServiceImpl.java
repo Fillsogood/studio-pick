@@ -21,37 +21,65 @@ public class AdminSystemSettingServiceImpl implements AdminSystemSettingService 
   private final JpaSystemSettingRepository settingRepository;
   private final SystemSettingUtils settingUtils;
 
-  /**
-   * 전체 시스템 설정 조회
-   */
+
+  @Override
+  @Transactional(readOnly = true)
   public SystemSettingListResponse getAllSettings() {
-    List<SystemSetting> settings = settingRepository.findAllOrderByCategoryAndKey();
-
-    List<SystemSettingResponse> settingResponses = settings.stream()
+    // 모든 시스템 설정 조회 (이미 정렬된 상태로)
+    List<SystemSetting> allSettings = settingRepository.findAllOrderByCategoryAndKey();
+    
+    // SystemSettingResponse로 변환
+    List<SystemSettingResponse> settingResponses = allSettings.stream()
         .map(this::toSystemSettingResponse)
-        .toList();
-
+        .collect(Collectors.toList());
+    
+    // 전체 설정 반환
     return new SystemSettingListResponse(
         settingResponses,
         "ALL",
-        settings.size()
+        settingResponses.size()
     );
   }
-
+  
   /**
-   * 카테고리별 시스템 설정 조회
+   * 카테고리별 설정 조회
    */
+  @Transactional(readOnly = true)
   public SystemSettingListResponse getSettingsByCategory(String category) {
-    List<SystemSetting> settings = settingRepository.findByCategoryOrderBySettingKey(category);
-
-    List<SystemSettingResponse> settingResponses = settings.stream()
+    // 카테고리별 조회 (이미 정렬된 상태로)
+    List<SystemSetting> categorySettings = settingRepository.findByCategoryOrderBySettingKey(category);
+    
+    List<SystemSettingResponse> settingResponses = categorySettings.stream()
         .map(this::toSystemSettingResponse)
-        .toList();
-
+        .collect(Collectors.toList());
+    
     return new SystemSettingListResponse(
         settingResponses,
         category,
-        settings.size()
+        settingResponses.size()
+    );
+  }
+  
+  /**
+   * 편집 가능한 설정만 조회
+   */
+  @Transactional(readOnly = true)
+  public SystemSettingListResponse getEditableSettings() {
+    List<SystemSetting> editableSettings = settingRepository.findByIsEditableTrue();
+    
+    List<SystemSettingResponse> settingResponses = editableSettings.stream()
+        .map(this::toSystemSettingResponse)
+        .sorted((a, b) -> {
+            int categoryCompare = a.category().compareTo(b.category());
+            if (categoryCompare != 0) return categoryCompare;
+            return a.settingKey().compareTo(b.settingKey());
+        })
+        .collect(Collectors.toList());
+    
+    return new SystemSettingListResponse(
+        settingResponses,
+        "EDITABLE",
+        settingResponses.size()
     );
   }
 
@@ -144,18 +172,6 @@ public class AdminSystemSettingServiceImpl implements AdminSystemSettingService 
     log.info("시스템 설정 삭제 완료: {}", settingKey);
   }
 
-  /**
-   * 카테고리별 통계
-   */
-  public Map<String, Long> getSettingsStatsByCategory() {
-    List<SystemSetting> allSettings = settingRepository.findAll();
-
-    return allSettings.stream()
-        .collect(Collectors.groupingBy(
-            SystemSetting::getCategory,
-            Collectors.counting()
-        ));
-  }
 
   // Private helper methods
 

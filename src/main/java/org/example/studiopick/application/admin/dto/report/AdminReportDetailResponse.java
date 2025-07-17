@@ -5,33 +5,37 @@ import org.example.studiopick.domain.common.enums.ReportType;
 
 import java.time.LocalDateTime;
 
+/**
+ * 신고 상세 응답
+ */
 public record AdminReportDetailResponse(
-        Long reportId,
+        Long id,
         ReportType reportedType,
         Long reportedId,
-        String reportedContent,
-        String reportedImageUrl,  // 작품/클래스 이미지 등
-        ReporterInfo reporter,
-        ContentOwnerInfo contentOwner,
+        String contentTitle,
+        String contentImageUrl,
+        ReporterInfo reporterInfo,
+        ContentOwnerInfo contentOwnerInfo,
         String reason,
         ReportStatus status,
         LocalDateTime createdAt,
-        AdminProcessInfo adminProcess,
-        Long totalReportCount,  // 해당 콘텐츠의 총 신고 횟수
-        Long pendingReportCount // 해당 콘텐츠의 대기 중인 신고 횟수
+        AdminProcessInfo adminProcessInfo,
+        long totalReportCount,
+        long pendingReportCount
 ) {
+    
     public record ReporterInfo(
             Long userId,
-            String username,
-            String email,
-            Long reportCount  // 이 사용자의 총 신고 횟수
+            String userName,
+            String userEmail,
+            long reportCount
     ) {}
     
     public record ContentOwnerInfo(
             Long userId,
-            String username,
-            String email,
-            Long reportedCount  // 이 사용자의 콘텐츠가 받은 총 신고 횟수
+            String userName,
+            String userEmail,
+            long reportedCount
     ) {}
     
     public record AdminProcessInfo(

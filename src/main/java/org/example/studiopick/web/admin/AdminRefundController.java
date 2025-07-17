@@ -2,95 +2,82 @@ package org.example.studiopick.web.admin;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.example.studiopick.application.refund.RefundService;
-import org.example.studiopick.application.refund.dto.DailyRefundStatsDto;
-import org.example.studiopick.application.refund.dto.RefundHistoryResponse;
+import org.example.studiopick.application.admin.AdminRefundService;
+import org.example.studiopick.application.admin.dto.refund.RefundDTOs.*;
 import org.example.studiopick.common.dto.ApiResponse;
-import org.example.studiopick.domain.refund.Refund;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.List;
-
-/**
- * ✅ 관리자용 환불 내역 관리 컨트롤러
- */
-@Tag(name = "Admin Refund", description = "관리자 환불 내역 관리")
 @RestController
-@RequestMapping("/api/v1/admin/refunds")
+@RequestMapping("/api/admin/refunds")
 @RequiredArgsConstructor
-@Slf4j
+@PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Admin Refund", description = "관리자 환불 관리 API")
 public class AdminRefundController {
 
-    private final RefundService refundService;
+    private final AdminRefundService adminRefundService;
 
-    /**
-     * 환불 실패 건 조회 (관리자용)
-     */
-    @Operation(summary = "환불 실패 건 조회", description = "환불에 실패한 모든 건을 조회합니다.")
-    @GetMapping("/failed")
-    public ResponseEntity<ApiResponse<List<RefundHistoryResponse>>> getFailedRefunds() {
-        
-        log.info("환불 실패 건 조회 요청");
-        
-        List<Refund> failedRefunds = refundService.getFailedRefunds();
-        List<RefundHistoryResponse> responses = failedRefunds.stream()
-            .map(RefundHistoryResponse::from)
-            .toList();
-            
-        log.info("환불 실패 건 조회 완료: count={}", responses.size());
-
-        return ResponseEntity.ok(new org.example.studiopick.common.dto.ApiResponse<>(
-            true, responses, "환불 실패 건을 성공적으로 조회했습니다."));
+    @GetMapping
+    @Operation(summary = "환불 요청 목록 조회")
+    public ResponseEntity<ApiResponse<AdminRefundListResponse>> getRefunds(
+        @RequestParam int page,
+        @RequestParam int size,
+        @RequestParam(required = false) String status,
+        @RequestParam(required = false) String startDate,
+        @RequestParam(required = false) String endDate) {
+        AdminRefundListResponse response = adminRefundService.getRefunds(page, size, status, startDate, endDate);
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "환불 요청 목록을 조회했습니다."));
     }
 
-    /**
-     * 일별 환불 통계 조회 (관리자용)
-     */
-    @Operation(summary = "일별 환불 통계 조회", description = "지정된 기간의 일별 환불 통계를 조회합니다.")
-    @GetMapping("/stats/daily")
-    public ResponseEntity<ApiResponse<List<DailyRefundStatsDto>>> getDailyRefundStats(
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
-        
-        log.info("일별 환불 통계 조회 요청: startDate={}, endDate={}", startDate, endDate);
-        
-        List<DailyRefundStatsDto> response = refundService.getDailyRefundStats(startDate, endDate);
-            
-        log.info("일별 환불 통계 조회 완료: count={}", response.size());
-
-        return ResponseEntity.ok(new org.example.studiopick.common.dto.ApiResponse<>(
-            true, response, "일별 환불 통계를 성공적으로 조회했습니다."));
+    @GetMapping("/{refundId}")
+    @Operation(summary = "환불 상세 조회")
+    public ResponseEntity<ApiResponse<AdminRefundDetailResponse>> getRefundDetail(@PathVariable Long refundId) {
+        AdminRefundDetailResponse response = adminRefundService.getRefundDetail(refundId);
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "환불 상세 정보를 조회했습니다."));
     }
 
-    /**
-     * 전체 환불 내역 조회 (관리자용)
-     */
-    @Operation(summary = "전체 환불 내역 조회", description = "모든 환불 내역을 조회합니다.")
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<RefundHistoryResponse>>> getAllRefunds(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.info("전체 환불 내역 조회 요청: page={}, size={}", page, size);
-        
-        // TODO: 페이징 처리 로직 추가 필요
-        throw new UnsupportedOperationException("전체 환불 내역 조회 기능은 페이징 처리 후 구현 예정입니다.");
+    @PostMapping("/{refundId}/process")
+    @Operation(summary = "환불 처리")
+    public ResponseEntity<ApiResponse<AdminRefundProcessResponse>> processRefund(
+        @PathVariable Long refundId,
+        @Valid @RequestBody AdminRefundProcessCommand command) {
+        AdminRefundProcessResponse response = adminRefundService.processRefund(refundId, command);
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "환불 처리를 완료했습니다."));
     }
 
-    /**
-     * 환불 재처리 (관리자용)
-     */
-    @Operation(summary = "환불 재처리", description = "실패한 환불을 재처리합니다.")
-    @PostMapping("/{refundId}/retry")
-    public ResponseEntity<ApiResponse<String>> retryRefund(@PathVariable Long refundId) {
-        
-        log.info("환불 재처리 요청: refundId={}", refundId);
-        
-        // TODO: 환불 재처리 로직 구현 필요
-        throw new UnsupportedOperationException("환불 재처리 기능은 아직 구현되지 않았습니다.");
+    @GetMapping("/stats")
+    @Operation(summary = "환불 통계 조회")
+    public ResponseEntity<ApiResponse<AdminRefundStatsResponse>> getRefundStats(
+        @RequestParam String startDate,
+        @RequestParam String endDate) {
+        AdminRefundStatsResponse response = adminRefundService.getRefundStats(startDate, endDate);
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "환불 통계를 조회했습니다."));
+    }
+
+    @GetMapping("/pending/count")
+    @Operation(summary = "환불 대기 건수 조회")
+    public ResponseEntity<ApiResponse<Long>> getPendingRefundCount() {
+        long count = adminRefundService.getPendingRefundCount();
+        return ResponseEntity.ok(new ApiResponse<>(true, count, "환불 대기 건수를 조회했습니다."));
+    }
+
+    @PostMapping("/bulk-process")
+    @Operation(summary = "대량 환불 처리")
+    public ResponseEntity<ApiResponse<AdminBulkRefundResponse>> processBulkRefunds(
+        @Valid @RequestBody AdminBulkRefundCommand command) {
+        AdminBulkRefundResponse response = adminRefundService.processBulkRefunds(command);
+        return ResponseEntity.ok(new ApiResponse<>(true, response, "대량 환불 처리를 완료했습니다."));
+    }
+
+    @DeleteMapping("/{refundId}/cancel")
+    @Operation(summary = "환불 취소")
+    public ResponseEntity<ApiResponse<Void>> cancelRefund(
+        @PathVariable Long refundId,
+        @RequestParam String reason) {
+        adminRefundService.cancelRefund(refundId, reason);
+        return ResponseEntity.ok(new ApiResponse<>(true, null, "환불을 취소했습니다."));
     }
 }

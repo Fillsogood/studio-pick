@@ -5,11 +5,14 @@ import org.example.studiopick.domain.common.enums.ReportType;
 
 import java.time.LocalDateTime;
 
+/**
+ * 신고 목록 응답
+ */
 public record AdminReportListResponse(
-        Long reportId,
+        Long id,
         ReportType reportedType,
         Long reportedId,
-        String reportedContent,  // 신고된 콘텐츠 제목/내용 일부
+        String reportedContent,
         Long reporterId,
         String reporterName,
         String reason,

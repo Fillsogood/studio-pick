@@ -1,22 +1,18 @@
 package org.example.studiopick.infrastructure.studio;
 
-import jakarta.persistence.LockModeType;
 import org.example.studiopick.domain.common.enums.StudioStatus;
-import org.example.studiopick.domain.common.enums.OperationType;
-import org.example.studiopick.domain.common.enums.Weekday;
 import org.example.studiopick.domain.studio.Studio;
-import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Pageable;
+import org.example.studiopick.application.admin.dto.dashboard.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpecificationExecutor<Studio> {
@@ -34,12 +30,7 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
   // 활성화된 스튜디오만 조회
   @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
   Page<Studio> findActiveStudios(Pageable pageable);
-  
-  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE'")
-  List<Studio> findActiveStudios();
 
-  // 상태별 조회
-  Optional<Studio> findByIdAndStatus(Long id, StudioStatus status);
 
   //관리자용
   Page<Studio> findAllByOrderByCreatedAtDesc(Pageable pageable);
@@ -49,8 +40,8 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
   boolean existsByName(String name);
   long countByStatus(StudioStatus status);
 
-  @Query("SELECT s FROM Studio s WHERE s.status = :status")
-  Page<Studio> findByStatus(@Param("status") StudioStatus status, Pageable pageable);
+  long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
   List<Studio> findAllByStatus(StudioStatus status);
+
 }

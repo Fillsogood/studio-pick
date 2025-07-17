@@ -9,7 +9,9 @@ import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.RefundStatus;
 import org.example.studiopick.domain.payment.Payment;
 import org.example.studiopick.domain.reservation.Reservation;
+import org.example.studiopick.domain.user.User;
 
+import javax.swing.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -30,6 +32,10 @@ public class Refund extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "reservation_id", nullable = false)
@@ -70,7 +76,7 @@ public class Refund extends BaseEntity {
     public Refund(Payment payment, Reservation reservation, BigDecimal refundAmount, 
                   BigDecimal originalAmount, BigDecimal cancellationFee, 
                   String refundReason, String refundPolicy, RefundStatus status,
-                  String tossPaymentKey) {
+                  String tossPaymentKey, User user) {
         this.payment = payment;
         this.reservation = reservation;
         this.refundAmount = refundAmount;
@@ -80,6 +86,7 @@ public class Refund extends BaseEntity {
         this.refundPolicy = refundPolicy;
         this.status = status != null ? status : RefundStatus.PENDING;
         this.tossPaymentKey = tossPaymentKey;
+        this.user = user;
     }
     
     /**

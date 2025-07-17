@@ -33,4 +33,9 @@ public interface WorkShopService {
      * 공방 비활성화
      */
     void deactivateWorkshop(Long workshopId);
+
+    /**
+     * 승인 후 공방 활성화 및 생성 처리
+     */
+    Long activateAndCreateWorkshop(Long workshopApplicationId, WorkShopCreateCommand command, Long adminUserId);
 }

@@ -3,6 +3,7 @@ package org.example.studiopick.application.workshop.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public record WorkShopApplicationRequest(
     String title,
@@ -11,5 +12,7 @@ public record WorkShopApplicationRequest(
     LocalDate date,
     String instructor,
     LocalTime startTime,
-    LocalTime endTime
+    LocalTime endTime,
+    String thumbnailUrl,
+    List<String> imageUrls
 ) {}
