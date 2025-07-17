@@ -64,7 +64,7 @@ public class SettlementServiceImpl implements SettlementService {
         BigDecimal taxRate = BigDecimal.valueOf(3.3); // 세금율 3.3%
         BigDecimal taxAmount = payoutAmount.multiply(taxRate).divide(BigDecimal.valueOf(100));
 
-        Settlement settlement = Settlement.builder()
+        Settlement settlement = Settlement.studioBuilder()
                 .studio(studio)
                 .payment(payment)
                 .totalAmount(totalAmount)

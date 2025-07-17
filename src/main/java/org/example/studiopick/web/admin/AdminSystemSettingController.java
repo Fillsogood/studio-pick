@@ -44,27 +44,6 @@ public class AdminSystemSettingController {
   }
 
   /**
-   * 카테고리별 시스템 설정 조회
-   * GET /api/admin/settings/category/{category}
-   */
-  @GetMapping("/category/{category}")
-  public ResponseEntity<ApiResponse<SystemSettingListResponse>> getSettingsByCategory(
-      @PathVariable String category
-  ) {
-    log.info("카테고리별 시스템 설정 조회 요청: category={}", category);
-
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory(category.toUpperCase());
-
-    ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
-        true,
-        response,
-        category + " 카테고리 설정을 조회했습니다."
-    );
-
-    return ResponseEntity.ok(apiResponse);
-  }
-
-  /**
    * 특정 설정 조회
    * GET /api/admin/settings/{settingKey}
    */
@@ -143,63 +122,6 @@ public class AdminSystemSettingController {
         true,
         null,
         "시스템 설정이 삭제되었습니다."
-    );
-
-    return ResponseEntity.ok(apiResponse);
-  }
-
-  /**
-   * 카테고리별 설정 통계
-   * GET /api/admin/settings/stats
-   */
-  @GetMapping("/stats")
-  public ResponseEntity<ApiResponse<Map<String, Long>>> getSettingsStats() {
-    log.info("시스템 설정 통계 조회 요청");
-
-    Map<String, Long> stats = adminSystemSettingService.getSettingsStatsByCategory();
-
-    ApiResponse<Map<String, Long>> apiResponse = new ApiResponse<>(
-        true,
-        stats,
-        "시스템 설정 통계를 조회했습니다."
-    );
-
-    return ResponseEntity.ok(apiResponse);
-  }
-
-  /**
-   * 편의용 API - 비즈니스 설정만 조회
-   * GET /api/admin/settings/business
-   */
-  @GetMapping("/business")
-  public ResponseEntity<ApiResponse<SystemSettingListResponse>> getBusinessSettings() {
-    log.info("비즈니스 설정 조회 요청");
-
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory("BUSINESS");
-
-    ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
-        true,
-        response,
-        "비즈니스 설정을 조회했습니다."
-    );
-
-    return ResponseEntity.ok(apiResponse);
-  }
-
-  /**
-   * 편의용 API - 시스템 설정만 조회
-   * GET /api/admin/settings/system
-   */
-  @GetMapping("/system")
-  public ResponseEntity<ApiResponse<SystemSettingListResponse>> getSystemSettings() {
-    log.info("시스템 설정 조회 요청");
-
-    SystemSettingListResponse response = adminSystemSettingService.getSettingsByCategory("SYSTEM");
-
-    ApiResponse<SystemSettingListResponse> apiResponse = new ApiResponse<>(
-        true,
-        response,
-        "시스템 설정을 조회했습니다."
     );
 
     return ResponseEntity.ok(apiResponse);

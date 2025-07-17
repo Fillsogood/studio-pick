@@ -26,6 +26,13 @@ public class WorkShop extends BaseEntity {
     @JoinColumn(name = "owner_user_id", nullable = false)
     private User owner;
 
+    @Column(name = "thumbnail_url", length = 255)
+    private String thumbnailUrl;
+
+    @Getter
+    @OneToMany(mappedBy = "workShop", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkShopImage> images = new ArrayList<>();
+
     @Column(name = "title", nullable = false, length = 30)
     private String title;
     
@@ -56,7 +63,7 @@ public class WorkShop extends BaseEntity {
     
     @Builder
     public WorkShop(User owner,String title, String description, BigDecimal price,
-                    LocalDate date, String instructor, LocalTime startTime, LocalTime endTime, HideStatus status) {
+                    LocalDate date, String instructor, LocalTime startTime, LocalTime endTime, String thumbnailUrl, HideStatus status) {
         this.owner = owner;
         this.title = title;
         this.description = description;
@@ -65,6 +72,7 @@ public class WorkShop extends BaseEntity {
         this.instructor = instructor;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.thumbnailUrl = thumbnailUrl;
         this.hideStatus = status != null ? status : HideStatus.OPEN;
     }
     
@@ -120,4 +128,9 @@ public class WorkShop extends BaseEntity {
     public boolean isValidTimeRange() {
         return startTime != null && endTime != null && startTime.isBefore(endTime);
     }
+
+    public void updateThumbnail(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
 }

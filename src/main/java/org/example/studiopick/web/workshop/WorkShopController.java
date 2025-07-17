@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.workshop.WorkShopService;
 import org.example.studiopick.application.workshop.dto.*;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
+import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,7 +18,6 @@ public class WorkShopController {
 
   @GetMapping
   public ResponseEntity<ApiSuccessResponse<WorkShopListResponse>> getClasses(
-      @RequestParam Long studioId,
       @RequestParam String status,
       @RequestParam String date
   ) {
@@ -36,10 +37,11 @@ public class WorkShopController {
   @PostMapping
   public ResponseEntity<ApiSuccessResponse<WorkShopApplicationResponse>> applyWorkshop(
       @RequestBody WorkShopApplicationRequest request,
-      @RequestParam Long userId
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
+    Long userId = userPrincipal.getUserId();
     WorkShopApplicationResponse response = workShopService.applyWorkshop(request, userId);
-    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response, "공방 운영 신청이 완료되었습니다."));
   }
 
   /**
@@ -48,8 +50,9 @@ public class WorkShopController {
   @GetMapping("/{id}/application-status")
   public ResponseEntity<ApiSuccessResponse<WorkShopApplicationDetailResponse>> getApplicationStatus(@PathVariable Long id) {
     WorkShopApplicationDetailResponse response = workShopService.getWorkshopApplicationStatus(id);
-    return ResponseEntity.ok(new ApiSuccessResponse<>(response));
+    return ResponseEntity.ok(new ApiSuccessResponse<>(response, "공방 신청 상태를 조회했습니다."));
   }
+
 
   /**
    * 공방 정보 수정
@@ -70,5 +73,16 @@ public class WorkShopController {
   public ResponseEntity<ApiSuccessResponse<Void>> deactivateWorkshop(@PathVariable Long id) {
     workShopService.deactivateWorkshop(id);
     return ResponseEntity.ok(new ApiSuccessResponse<>(null, "공방이 비활성화되었습니다."));
+  }
+
+  @PostMapping("/{id}/activate")
+  public ResponseEntity<ApiSuccessResponse<Long>> activateAndCreateWorkshop(
+      @PathVariable Long id,
+      @RequestBody WorkShopCreateCommand command,
+      @AuthenticationPrincipal UserPrincipal userPrincipal
+  ) {
+    Long adminUserId = userPrincipal.getUserId();
+    Long workshopId = workShopService.activateAndCreateWorkshop(id, command, adminUserId);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(workshopId, "공방이 승인 및 활성화되었습니다."));
   }
 }

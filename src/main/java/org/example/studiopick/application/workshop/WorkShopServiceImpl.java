@@ -6,7 +6,9 @@ import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.common.enums.HideStatus;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.workshop.WorkShop;
+import org.example.studiopick.domain.workshop.WorkShopImage;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.workshop.JpaWorkShopImageRepository;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class WorkShopServiceImpl implements WorkShopService {
   private final JpaWorkShopRepository jpaWorkShopRepository;
   private final JpaUserRepository userRepository;
   private final SystemSettingUtils settingUtils;
+  private final JpaWorkShopImageRepository workShopImageRepository;
 
   @Override
   public WorkShopListResponse getWorkShopList(String status, String date) {
@@ -85,10 +88,22 @@ public class WorkShopServiceImpl implements WorkShopService {
         .instructor(request.instructor())
         .startTime(request.startTime())
         .endTime(request.endTime())
+        .thumbnailUrl(request.thumbnailUrl())
         .status(HideStatus.OPEN)
         .build();
 
     jpaWorkShopRepository.save(workshop);
+
+    if (request.imageUrls() != null) {
+      request.imageUrls().forEach(url -> {
+        WorkShopImage image = WorkShopImage.builder()
+            .workShop(workshop)
+            .imageUrl(url)
+            .build();
+        // 반드시 JPA 레포지토리 save() 처리 필요
+        workShopImageRepository.save(image);
+      });
+    }
 
     return new WorkShopApplicationResponse(workshop.getId(), workshop.getHideStatus().name().toLowerCase());
   }
@@ -125,6 +140,39 @@ public class WorkShopServiceImpl implements WorkShopService {
 
     workshop.close();
   }
+
+  @Override
+  @Transactional
+  public Long activateAndCreateWorkshop(Long workshopApplicationId, WorkShopCreateCommand command, Long adminUserId) {
+    WorkShop workshop = jpaWorkShopRepository.findById(workshopApplicationId)
+        .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
+
+    // 상태 변경
+    workshop.open();
+
+    // 기본 정보 업데이트
+    workshop.updateBasicInfo(command.title(), command.description(), command.price());
+    workshop.updateSchedule(command.date(), command.startTime(), command.endTime());
+
+    // 썸네일 추가
+    workshop.updateThumbnail(command.thumbnailUrl());
+
+    // 기존 이미지 삭제 후 새로운 이미지 등록
+    workShopImageRepository.deleteByWorkShop(workshop);
+
+    if (command.imageUrls() != null) {
+      command.imageUrls().forEach(url -> {
+        WorkShopImage image = WorkShopImage.builder()
+            .workShop(workshop)
+            .imageUrl(url)
+            .build();
+        workShopImageRepository.save(image);
+      });
+    }
+
+    return workshop.getId();
+  }
+
 
   private List<String> getDefaultSupplies() {
     // 시스템 설정에서 기본 준비물 조회하거나, 빈 리스트 반환

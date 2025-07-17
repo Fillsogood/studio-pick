@@ -33,14 +33,4 @@ public interface RefundService {
      * 일별 환불 통계 조회
      */
     List<DailyRefundStatsDto> getDailyRefundStats(LocalDate startDate, LocalDate endDate);
-
-    /**
-     * 환불 실패 건 조회 (관리자용)
-     */
-    List<Refund> getFailedRefunds();
-
-    /**
-     * 일반 결제 취소
-     */
-    void cancelPayment(String paymentKey, BigDecimal cancelAmount, String reason);
 }
