@@ -76,16 +76,23 @@
 
     <!-- 사용자용 예약 검색 -->
     <select id="searchUserReservations" resultType="org.example.studiopick.application.reservation.dto.UserReservationResponse">
-        SELECT 
-            r.id,
-            s.name as studioName,
-            r.reservation_date::text as date,
-            r.start_time::text as startTime,
-            r.end_time::text as endTime,
-            LOWER(r.status) as status,
-            r.total_amount as totalAmount
+        SELECT
+        r.id,
+        CASE
+        WHEN r.workshop_id IS NOT NULL THEN 'workshop'
+        ELSE 'studio'
+        END AS type,
+        s.name AS studioName,
+        w.title AS workshopTitle,
+        w.instructor AS instructor,
+        r.reservation_date::text as date,
+        r.start_time::text as startTime,
+        r.end_time::text as endTime,
+        LOWER(r.status) as status,
+        r.total_amount as totalAmount
         FROM "reservation" r
-        INNER JOIN "studio" s ON r.studio_id = s.id
+        LEFT JOIN "studio" s ON r.studio_id = s.id
+        LEFT JOIN "workshop" w ON r.workshop_id = w.id
         <where>
             AND r.user_id = #{criteria.userId}
             <if test="criteria.status != null and criteria.status != ''">

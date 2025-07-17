@@ -39,8 +39,8 @@ public interface ReservationSearchMapper {
      * @param criteria 검색 조건
      * @return 사용자 예약 목록
      */
-    List<UserReservationResponse> searchUserReservations(@Param("criteria") UserReservationSearchCriteria criteria);
-    
+    List<UserReservationResponse> searchUserReservations(UserReservationSearchCriteria criteria);
+
     /**
      * 사용자별 예약 총 개수
      * @param criteria 검색 조건
