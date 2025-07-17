@@ -4,11 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.studiopick.application.user.dto.ChangePasswordRequestDto;
-import org.example.studiopick.application.user.dto.UserProfileResponseDto;
-import org.example.studiopick.application.user.dto.UserProfileUpdateRequestDto;
-import org.example.studiopick.application.user.dto.UserProfileUpdateResponseDto;
+import org.example.studiopick.application.user.dto.*;
 import org.example.studiopick.application.user.service.UserService;
+import org.example.studiopick.common.exception.UserNotFoundException;
 import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -134,4 +132,38 @@ public class UserController {
             "role", user.getRole()
         ));
     }
+
+    // 비밀번호 재설정 링크 요청
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<Map<String, Object>> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequestDto requestDto) {
+        try {
+            userService.sendPasswordResetEmail(requestDto.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "비밀번호 재설정 링크가 이메일로 전송되었습니다."
+            ));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()  // ex: "등록된 이메일이 없습니다."
+            ));
+        }
+    }
+
+
+    // 토큰 기반 비밀번호 재설정
+    @PostMapping("/password/reset")
+    public ResponseEntity<Map<String, Object>> resetPassword(
+            @Valid @RequestBody PasswordResetConfirmDto requestDto) {
+        userService.resetPasswordByToken(requestDto.getToken(), requestDto.getNewPassword());
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "비밀번호가 성공적으로 재설정되었습니다."
+        ));
+    }
+
+
+
 }
+

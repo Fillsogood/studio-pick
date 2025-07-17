@@ -9,6 +9,7 @@ import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,12 @@ public class User extends BaseEntity {
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expires_at")
+    private LocalDateTime resetTokenExpiresAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -131,7 +138,16 @@ public class User extends BaseEntity {
         }
     }
 
-    //관리자용 상태 변경 메서드
+    // 비밀번호 재설정용 토큰 setter 추가
+    public void setResetToken(String token) {
+        this.resetToken = token;
+    }
+
+    public void setResetTokenExpiresAt(LocalDateTime expiresAt) {
+        this.resetTokenExpiresAt = expiresAt;
+    }
+
+    // 상태 확인 메서드들
     public void activate() {
         this.status = UserStatus.ACTIVE;
     }
@@ -144,7 +160,6 @@ public class User extends BaseEntity {
         this.status = UserStatus.INACTIVE;
     }
 
-    // 상태 확인 메서드들
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE;
     }
@@ -157,15 +172,16 @@ public class User extends BaseEntity {
         return this.role == UserRole.STUDIO_OWNER || this.isStudioOwner;
     }
 
-    public boolean isWorkShopOwner() { return this.role == UserRole.WORKSHOP_OWNER || this.isWorkShopOwner; }
+    public boolean isWorkShopOwner() {
+        return this.role == UserRole.WORKSHOP_OWNER || this.isWorkShopOwner;
+    }
 
     public boolean isAdmin() {
         return this.role == UserRole.ADMIN;
     }
-    
+
     /**
      * 화면에 표시할 사용자 이름을 반환
-     * nickname이 있으면 nickname, 없으면 name 반환
      */
     public String getDisplayName() {
         return this.nickname != null && !this.nickname.isEmpty() ? this.nickname : this.name;

@@ -48,8 +48,10 @@ public class SecurityConfig {
                                 "/api/studios/search",    // 스튜디오 검색 공개
                                 "/api/studios/{id}",       // 스튜디오 상세 공개
                                 "/api/payments/request",
-                                "/api/payments/confirm"
-                        ).permitAll()
+                                "/api/payments/confirm",
+                                "/api/users/password/reset-request",
+                                "/api/users/password/reset"
+                                ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -47,7 +47,7 @@ dependencies {
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.109.Final:osx-aarch_64'
     implementation platform('software.amazon.awssdk:bom:2.25.18') // ① 버전 관리용 BOM (Bill of Materials)
     implementation 'software.amazon.awssdk:s3'                     //  ② 실제로 사용할 S3 라이브러리
-
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 
 }

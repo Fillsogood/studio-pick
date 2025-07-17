@@ -26,6 +26,9 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
   // 소셜 로그인용
   Optional<User> findBySocialAccountsProviderAndSocialAccountsSocialId(SocialProvider provider, String socialId);
 
+  // 비밀번호 재설정용 토큰 기반 조회
+  Optional<User> findByResetToken(String resetToken);
+
   // 페이징 조회용
   Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
   Page<User> findByRoleOrderByCreatedAtDesc(UserRole role, Pageable pageable);

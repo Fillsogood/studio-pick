@@ -57,4 +57,9 @@ public interface UserService {
      */
     String uploadProfileImage(Long userId, MultipartFile image);
 
+
+    void sendPasswordResetEmail(String email);
+
+    void resetPasswordByToken(String token, String newPassword);
+
 }
