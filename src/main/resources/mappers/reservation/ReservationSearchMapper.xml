@@ -89,7 +89,11 @@
         r.start_time::text as startTime,
         r.end_time::text as endTime,
         LOWER(r.status) as status,
-        r.total_amount as totalAmount
+        r.total_amount as totalAmount,
+        -- 스튜디오 썸네일 이미지
+        (SELECT si.image_url FROM studio_image si WHERE si.studio_id = s.id AND si.is_thumbnail = true LIMIT 1) AS studioImageUrl,
+        -- 워크샵 썸네일 이미지
+        w.thumbnail_url AS workshopImageUrl
         FROM "reservation" r
         LEFT JOIN "studio" s ON r.studio_id = s.id
         LEFT JOIN "workshop" w ON r.workshop_id = w.id
