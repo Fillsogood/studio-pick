@@ -10,5 +10,7 @@ public record UserReservationResponse(
     String startTime,       // startTime (HH:mm)
     String endTime,         // endTime (HH:mm)
     String status,          // ReservationStatus.name()
-    Long totalAmount             // totalAmount
+    Long totalAmount,       // totalAmount
+    String studioImageUrl,  // 스튜디오 썸네일 이미지 URL
+    String workshopImageUrl // 워크샵 썸네일 이미지 URL
 ) {}
