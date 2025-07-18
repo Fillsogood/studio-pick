@@ -14,5 +14,6 @@ public record WorkShopApplicationRequest(
     LocalTime startTime,
     LocalTime endTime,
     String thumbnailUrl,
-    List<String> imageUrls
+    List<String> imageUrls,
+    String address
 ) {}
