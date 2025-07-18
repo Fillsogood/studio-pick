@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -279,6 +280,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         log.info("비밀번호 재설정 완료: userId={}", user.getId());
+    }
+
+    @Override
+    public boolean verifyPassword(Long userId, String rawPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("유저를 찾을 수 없습니다."));
+
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
 
