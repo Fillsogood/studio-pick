@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.user.dto.*;
 import org.example.studiopick.application.user.service.UserService;
+import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.common.exception.UserNotFoundException;
 import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.MediaType;
@@ -163,6 +164,21 @@ public class UserController {
         ));
     }
 
+    // 회원정보 수정시 비밀번호 인증
+    @PostMapping("/verify-password")
+    public ResponseEntity<ApiResponse<?>> verifyPassword(
+            @RequestBody VerifyPasswordRequestDto dto,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        boolean isValid = userService.verifyPassword(userPrincipal.getId(), dto.getPassword());
+
+        if (!isValid) {
+            // 👇 401 대신 200 + success: false
+            return ResponseEntity.ok(ApiResponse.error("비밀번호가 일치하지 않습니다."));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("비밀번호 확인 완료"));
+    }
 
 
 }

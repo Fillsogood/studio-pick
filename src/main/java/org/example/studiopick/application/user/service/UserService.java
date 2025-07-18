@@ -62,4 +62,6 @@ public interface UserService {
 
     void resetPasswordByToken(String token, String newPassword);
 
+    boolean verifyPassword(Long userId, String rawPassword);
+
 }
