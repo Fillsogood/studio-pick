@@ -3,20 +3,16 @@ package org.example.studiopick.application.admin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.dto.report.*;
-import org.example.studiopick.domain.artwork.Artwork;
-import org.example.studiopick.domain.common.enums.ReportStatus;
-import org.example.studiopick.domain.common.enums.ReportType;
-import org.example.studiopick.domain.common.enums.UserStatus;
-import org.example.studiopick.domain.common.enums.ArtworkStatus;
-import org.example.studiopick.domain.common.enums.HideStatus;
-import org.example.studiopick.domain.report.Report;
-import org.example.studiopick.infrastructure.User.JpaUserRepository;
-import org.example.studiopick.infrastructure.report.ReportRepository;
 import org.example.studiopick.application.report.ReportService;
-import org.example.studiopick.infrastructure.artwork.ArtworkRepository;
-import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
-import org.example.studiopick.infrastructure.review.ReviewRepository;
+import org.example.studiopick.domain.artwork.Artwork;
+import org.example.studiopick.domain.common.enums.*;
+import org.example.studiopick.domain.report.Report;
 import org.example.studiopick.domain.user.User;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.artwork.ArtworkRepository;
+import org.example.studiopick.infrastructure.report.ReportRepository;
+import org.example.studiopick.infrastructure.review.ReviewRepository;
+import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -562,19 +558,23 @@ public class AdminReportServiceImpl implements AdminReportService {
                 return artworkRepository.findById(contentId)
                         .map(artwork -> artwork.getHideStatus() != null && artwork.getHideStatus() != ArtworkStatus.PUBLIC)
                         .orElse(true); // 삭제된 경우 hidden으로 처리
+
             case CLASS:
                 return jpaWorkShopRepository.findById(contentId)
-                        .map(workshop -> workshop.getHideStatus() != null && workshop.getHideStatus() != HideStatus.OPEN)
-                        .orElse(true);
+                        .map(workshop -> workshop.getStatus() != null && workshop.getStatus() != WorkShopStatus.ACTIVE)
+                        .orElse(true); // 삭제되었거나 비활성 상태인 경우 숨김 처리
+
             case REVIEW:
                 return reviewRepository.findById(contentId)
                         .map(review -> !review.isVisible())
-                        .orElse(true);
+                        .orElse(true); // 삭제된 경우 숨김 처리
+
             default:
                 return false;
         }
     }
-    
+
+
     /**
      * 콘텐츠 소유자 정보 조회
      */

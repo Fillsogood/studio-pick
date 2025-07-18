@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.studiopick.domain.common.BaseEntity;
-import org.example.studiopick.domain.common.enums.HideStatus;
+import org.example.studiopick.domain.common.enums.WorkShopStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.user.User;
 
@@ -35,35 +35,39 @@ public class WorkShop extends BaseEntity {
 
     @Column(name = "title", nullable = false, length = 30)
     private String title;
-    
+
     @Column(name = "description", length = 500)
     private String description;
-    
+
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-    
+
     @Column(name = "date")
     private LocalDate date;
 
     @Column(name = "instructor", length = 50)
     private String instructor;
-    
+
     @Column(name = "start_time")
     private LocalTime startTime;
-    
+
     @Column(name = "end_time")
     private LocalTime endTime;
-    
+
+    @Column(name = "address", nullable = false, length = 255)
+    private String address;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "hide_status", nullable = false)
-    private HideStatus hideStatus = HideStatus.OPEN;
+    @Column(name = "status", nullable = false)
+    private WorkShopStatus status;
 
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
-    
+
     @Builder
-    public WorkShop(User owner,String title, String description, BigDecimal price,
-                    LocalDate date, String instructor, LocalTime startTime, LocalTime endTime, String thumbnailUrl, HideStatus status) {
+    public WorkShop(User owner, String title, String description, BigDecimal price,
+                    LocalDate date, String instructor, LocalTime startTime, LocalTime endTime,
+                    String thumbnailUrl, WorkShopStatus status, String address) {
         this.owner = owner;
         this.title = title;
         this.description = description;
@@ -73,64 +77,57 @@ public class WorkShop extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.thumbnailUrl = thumbnailUrl;
-        this.hideStatus = status != null ? status : HideStatus.OPEN;
+        this.address = address;
+        this.status = status != null ? status : WorkShopStatus.PENDING;
     }
-    
+
     public void updateBasicInfo(String title, String description, BigDecimal price) {
         this.title = title;
         this.description = description;
         this.price = price;
     }
-    
+
     public void updateSchedule(LocalDate date, LocalTime startTime, LocalTime endTime) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
     }
-    
-    public void WorkShopChangeStatus(HideStatus status) {
-        this.hideStatus = status;
+
+    public void updateThumbnail(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
-    
-    public void open() {
-        this.hideStatus = HideStatus.OPEN;
-    }
-    
-    public void close() {
-        this.hideStatus = HideStatus.CLOSED;
-    }
-    
-    public boolean isOpen() {
-        return this.hideStatus == HideStatus.OPEN;
-    }
-    
-    public boolean isClosed() {
-        return this.hideStatus == HideStatus.CLOSED;
-    }
-    
-    public void report() {
-        this.hideStatus = HideStatus.REPORTED;
-    }
-    
-    public void restore() {
-        this.hideStatus = HideStatus.OPEN;
-    }
-    
-    public boolean isReported() {
-        return this.hideStatus == HideStatus.REPORTED;
-    }
-    
-    public boolean isAvailableForReservation() {
-        return this.hideStatus == HideStatus.OPEN && this.date != null &&
-               this.date.isAfter(LocalDate.now().minusDays(1));
-    }
-    
+
     public boolean isValidTimeRange() {
         return startTime != null && endTime != null && startTime.isBefore(endTime);
     }
 
-    public void updateThumbnail(String thumbnailUrl) {
-        this.thumbnailUrl = thumbnailUrl;
+    public boolean isAvailableForReservation() {
+        return this.status == WorkShopStatus.ACTIVE && this.date != null &&
+                this.date.isAfter(LocalDate.now().minusDays(1));
+    }
+
+    public void activate() {
+        this.status = WorkShopStatus.ACTIVE;
+    }
+
+    public void deactivate() {
+        this.status = WorkShopStatus.INACTIVE;
+    }
+
+    public boolean isActive() {
+        return this.status == WorkShopStatus.ACTIVE;
+    }
+
+    public boolean isPending() {
+        return this.status == WorkShopStatus.PENDING;
+    }
+
+    public boolean isInactive() {
+        return this.status == WorkShopStatus.INACTIVE;
+    }
+
+    public void changeStatus(WorkShopStatus status) {
+        this.status = status;
     }
 
 }

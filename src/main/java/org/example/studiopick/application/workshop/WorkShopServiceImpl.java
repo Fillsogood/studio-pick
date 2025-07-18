@@ -3,7 +3,7 @@ package org.example.studiopick.application.workshop;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.workshop.dto.*;
 import org.example.studiopick.common.util.SystemSettingUtils;
-import org.example.studiopick.domain.common.enums.HideStatus;
+import org.example.studiopick.domain.common.enums.WorkShopStatus;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.workshop.WorkShop;
 import org.example.studiopick.domain.workshop.WorkShopImage;
@@ -28,25 +28,25 @@ public class WorkShopServiceImpl implements WorkShopService {
   @Override
   public WorkShopListResponse getWorkShopList(String status, String date) {
     LocalDate parsedDate = LocalDate.parse(date);
-    HideStatus hideStatus = HideStatus.valueOf(status.toUpperCase());
+    WorkShopStatus workshopStatus = WorkShopStatus.valueOf(status.toUpperCase());
 
     int defaultMaxParticipants = settingUtils.getIntegerSetting("class.default.max.participants", 8);
 
     List<WorkShopListDto> result = jpaWorkShopRepository
-        .findByHideStatusAndDate(hideStatus, parsedDate)
-        .stream()
-        .map(c -> new WorkShopListDto(
-            c.getId(),
-            c.getTitle(),
-            c.getDescription(),
-            c.getPrice(),
-            c.getDate(),
-            c.getStartTime(),
-            c.getEndTime(),
-            defaultMaxParticipants,
-            c.getReservations().size()
-        ))
-        .toList();
+            .findByStatusAndDate(workshopStatus, parsedDate)
+            .stream()
+            .map(c -> new WorkShopListDto(
+                    c.getId(),
+                    c.getTitle(),
+                    c.getDescription(),
+                    c.getPrice(),
+                    c.getDate(),
+                    c.getStartTime(),
+                    c.getEndTime(),
+                    defaultMaxParticipants,
+                    c.getReservations().size()
+            ))
+            .toList();
 
     return new WorkShopListResponse(result);
   }
@@ -54,22 +54,21 @@ public class WorkShopServiceImpl implements WorkShopService {
   @Override
   public WorkShopDetailDto getWorkShopDetail(Long workshopId) {
     WorkShop ce = jpaWorkShopRepository.findById(workshopId)
-        .orElseThrow(() -> new IllegalArgumentException("공방를 찾을 수 없습니다."));
-
+            .orElseThrow(() -> new IllegalArgumentException("공방를 찾을 수 없습니다."));
 
     int defaultMaxParticipants = settingUtils.getIntegerSetting("class.default.max.participants", 8);
 
     return new WorkShopDetailDto(
-        ce.getId(),
-        ce.getTitle(),
-        ce.getDescription(),
-        ce.getPrice(),
-        ce.getDate(),
-        ce.getStartTime(),
-        ce.getEndTime(),
-        ce.getInstructor(),
-        defaultMaxParticipants,
-        getDefaultSupplies() //  별도 메서드로 분리
+            ce.getId(),
+            ce.getTitle(),
+            ce.getDescription(),
+            ce.getPrice(),
+            ce.getDate(),
+            ce.getStartTime(),
+            ce.getEndTime(),
+            ce.getInstructor(),
+            defaultMaxParticipants,
+            getDefaultSupplies()
     );
   }
 
@@ -77,48 +76,47 @@ public class WorkShopServiceImpl implements WorkShopService {
   @Transactional
   public WorkShopApplicationResponse applyWorkshop(WorkShopApplicationRequest request, Long userId) {
     User owner = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
     WorkShop workshop = WorkShop.builder()
-        .owner(owner)
-        .title(request.title())
-        .description(request.description())
-        .price(request.price())
-        .date(request.date())
-        .instructor(request.instructor())
-        .startTime(request.startTime())
-        .endTime(request.endTime())
-        .thumbnailUrl(request.thumbnailUrl())
-        .status(HideStatus.OPEN)
-        .build();
+            .owner(owner)
+            .title(request.title())
+            .description(request.description())
+            .price(request.price())
+            .date(request.date())
+            .instructor(request.instructor())
+            .startTime(request.startTime())
+            .endTime(request.endTime())
+            .thumbnailUrl(request.thumbnailUrl())
+            .address(request.address())
+            .build();
 
     jpaWorkShopRepository.save(workshop);
 
     if (request.imageUrls() != null) {
       request.imageUrls().forEach(url -> {
         WorkShopImage image = WorkShopImage.builder()
-            .workShop(workshop)
-            .imageUrl(url)
-            .build();
-        // 반드시 JPA 레포지토리 save() 처리 필요
+                .workShop(workshop)
+                .imageUrl(url)
+                .build();
         workShopImageRepository.save(image);
       });
     }
 
-    return new WorkShopApplicationResponse(workshop.getId(), workshop.getHideStatus().name().toLowerCase());
+    return new WorkShopApplicationResponse(workshop.getId(), workshop.getStatus().name().toLowerCase());
   }
 
   @Override
   public WorkShopApplicationDetailResponse getWorkshopApplicationStatus(Long workshopId) {
     WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
-        .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
     return new WorkShopApplicationDetailResponse(
-        workshop.getId(),
-        workshop.getTitle(),
-        workshop.getHideStatus().name().toLowerCase(),
-        workshop.getCreatedAt(),
-        getStatusMessage(workshop.getHideStatus())
+            workshop.getId(),
+            workshop.getTitle(),
+            workshop.getStatus().name().toLowerCase(),
+            workshop.getCreatedAt(),
+            getStatusMessage(workshop.getStatus())
     );
   }
 
@@ -126,7 +124,7 @@ public class WorkShopServiceImpl implements WorkShopService {
   @Transactional
   public void updateWorkshop(Long workshopId, WorkShopApplicationRequest request) {
     WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
-        .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
     workshop.updateBasicInfo(request.title(), request.description(), request.price());
     workshop.updateSchedule(request.date(), request.startTime(), request.endTime());
@@ -136,36 +134,31 @@ public class WorkShopServiceImpl implements WorkShopService {
   @Transactional
   public void deactivateWorkshop(Long workshopId) {
     WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
-        .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
-    workshop.close();
+    workshop.deactivate();
   }
 
   @Override
   @Transactional
   public Long activateAndCreateWorkshop(Long workshopApplicationId, WorkShopCreateCommand command, Long adminUserId) {
     WorkShop workshop = jpaWorkShopRepository.findById(workshopApplicationId)
-        .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
-    // 상태 변경
-    workshop.open();
+    workshop.activate();
 
-    // 기본 정보 업데이트
     workshop.updateBasicInfo(command.title(), command.description(), command.price());
     workshop.updateSchedule(command.date(), command.startTime(), command.endTime());
-
-    // 썸네일 추가
     workshop.updateThumbnail(command.thumbnailUrl());
 
-    // 기존 이미지 삭제 후 새로운 이미지 등록
     workShopImageRepository.deleteByWorkShop(workshop);
 
     if (command.imageUrls() != null) {
       command.imageUrls().forEach(url -> {
         WorkShopImage image = WorkShopImage.builder()
-            .workShop(workshop)
-            .imageUrl(url)
-            .build();
+                .workShop(workshop)
+                .imageUrl(url)
+                .build();
         workShopImageRepository.save(image);
       });
     }
@@ -173,21 +166,19 @@ public class WorkShopServiceImpl implements WorkShopService {
     return workshop.getId();
   }
 
-
   private List<String> getDefaultSupplies() {
-    // 시스템 설정에서 기본 준비물 조회하거나, 빈 리스트 반환
     String suppliesConfig = settingUtils.getStringSetting("class.default.supplies", "");
     if (suppliesConfig.isEmpty()) {
-      return List.of(); // 빈 목록 반환
+      return List.of();
     }
-    return List.of(suppliesConfig.split(",")); // 콤마로 구분된 문자열을 리스트로 변환
+    return List.of(suppliesConfig.split(","));
   }
 
-  private String getStatusMessage(HideStatus status) {
+  private String getStatusMessage(WorkShopStatus status) {
     return switch (status) {
-      case OPEN -> "운영 중인 공방입니다.";
-      case CLOSED -> "운영이 종료되었습니다.";
-      case REPORTED -> "신고 접수로 인해 숨김 처리되었습니다.";
+      case PENDING -> "승인 대기 중입니다.";
+      case ACTIVE -> "운영 중인 클래스입니다.";
+      case INACTIVE -> "비활성화된 클래스입니다.";
     };
   }
 }
