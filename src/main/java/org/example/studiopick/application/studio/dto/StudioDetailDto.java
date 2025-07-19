@@ -1,7 +1,5 @@
 package org.example.studiopick.application.studio.dto;
 
-import org.example.studiopick.domain.common.enums.StudioStatus;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,12 +8,15 @@ public record StudioDetailDto(
     String name,
     String description,
     String phone,
-    List<String> images,
     String location,
-    StudioStatus status,
     Long hourlyBaseRate,
     BigDecimal weekendPrice,
-    Integer maxPeople,
     Long perPersonRate,
+    Integer maxPeople,
+    Integer size,
+    String facilities,
+    String rules,
+    String thumbnailImage,
+    List<String> imageUrls,
     List<OperatingHoursDto> operatingHours
 ) {}

@@ -43,4 +43,8 @@ public class StudioImage {
     this.displayOrder = displayOrder;
     this.isThumbnail = isThumbnail;
   }
+
+  public StudioImage(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
 }

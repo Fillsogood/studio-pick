@@ -3,8 +3,9 @@ package org.example.studiopick.application.studio.dto;
 public record StudioListDto(
     Long id,
     String name,
-    String description,
     String location,
+    Long hourlyBaseRate,
     double averageRating,
-    int reviewCount
+    int reviewCount,
+    String thumbnailImage
 ) {}
