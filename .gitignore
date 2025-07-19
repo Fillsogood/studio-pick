@@ -37,3 +37,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### db 백업 파일 ###
+*.dump
+
+# .gitignore
+studio_pick.dump
