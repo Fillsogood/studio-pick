@@ -44,6 +44,20 @@ public class Studio extends BaseEntity {
 
     @Column(name = "max_people")
     private Integer maxPeople = 10;
+
+    @Column(name = "size")
+    private Integer size; // 공간 면적
+
+    @Lob
+    @Column(name = "facilities", columnDefinition = "TEXT")
+    private String facilities;
+
+    @Lob
+    @Column(name = "rules", columnDefinition = "TEXT")
+    private String rules;
+
+    @Column(name = "thumbnail_image")
+    private String thumbnailImage;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -85,7 +99,8 @@ public class Studio extends BaseEntity {
                   StudioStatus status, BigDecimal weekendPrice,
                   Long hourlyBaseRate, Long perPersonRate, Integer maxPeople,
                   OperationType operationType, String instructorName, 
-                  String instructorCareer, String availableClasses) {
+                  String instructorCareer, String availableClasses, Integer size,
+                  String rules, String facilities, String thumbnailImage) {
         this.owner = owner;
         this.name = name;
         this.description = description;
@@ -104,6 +119,11 @@ public class Studio extends BaseEntity {
         this.instructorName = instructorName;
         this.instructorCareer = instructorCareer;
         this.availableClasses = availableClasses;
+
+        this.thumbnailImage = thumbnailImage;
+        this.rules = rules;
+        this.facilities = facilities;
+        this.size = size;
     }
     
     /**
@@ -226,13 +246,19 @@ public class Studio extends BaseEntity {
     }
 
     // 스튜디오 관리
-    public void updateInfo(String description, String phone, Long hourlyBaseRate, BigDecimal weekend, Long perPersonRate, Integer maxPeople) {
+    public void updateInfo(String description, String phone, Long hourlyBaseRate, BigDecimal weekend,
+                           Long perPersonRate, Integer maxPeople, String rules,
+                           String facilities, String thumbnailImage, Integer size) {
         this.description = description;
         this.phone = phone;
         this.hourlyBaseRate = hourlyBaseRate;
         this.weekendPrice = weekend;
         this.perPersonRate = perPersonRate;
         this.maxPeople = maxPeople;
+        this.rules = rules;
+        this.facilities = facilities;
+        this.thumbnailImage = thumbnailImage;
+        this.size = size;
     }
 
     public void updateMaxPeople(Integer maxPeople) {

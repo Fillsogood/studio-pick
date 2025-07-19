@@ -1,5 +1,6 @@
 package org.example.studiopick.application.studio;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.studio.dto.*;
 import org.example.studiopick.domain.common.enums.OperationType;
@@ -40,7 +41,7 @@ public class StudioServiceImpl implements StudioService {
    * 스튜디오(공간) 검색
    */
   @Override
-  public StudioListResponse searchStudios(String category, String location, String price, int page, int limit) {
+  public StudioListResponse searchStudios(String location, String price, int page, int limit) {
     Pageable pageable = PageRequest.of(page - 1, limit);
     Page<Studio> studios = studioRepository.findActiveStudios(pageable);
 
@@ -48,10 +49,11 @@ public class StudioServiceImpl implements StudioService {
         .map(studio -> new StudioListDto(
             studio.getId(),
             studio.getName(),
-            studio.getDescription(),
             studio.getLocation(),
+            studio.getHourlyBaseRate(),
             calculateAverageRating(studio.getId()),
-            calculateReviewCount(studio.getId())
+            calculateReviewCount(studio.getId()),
+            studio.getThumbnailImage()
         ))
         .toList();
 
@@ -93,30 +95,59 @@ public class StudioServiceImpl implements StudioService {
   @Override
   public StudioDetailDto findById(Long studioId) {
     Studio studio = studioRepository.findById(studioId)
-        .orElseThrow(() -> new IllegalArgumentException("스튜디오를 찾을 수 없습니다."));
+        .orElseThrow(() -> new EntityNotFoundException("해당 스튜디오가 없습니다."));
 
-    List<OperatingHoursDto> operatingHours = hoursRepository.findByStudioId(studioId).stream()
-        .map(h -> new OperatingHoursDto(h.getWeekday(), h.getOpenTime(), h.getCloseTime()))
-        .collect(Collectors.toList());
-
-    List<String> images = studio.getImages().stream()
-        .sorted(Comparator.comparingInt(StudioImage::getDisplayOrder))
+    List<String> imageUrls = studio.getImages().stream()
         .map(StudioImage::getImageUrl)
         .collect(Collectors.toList());
 
     return new StudioDetailDto(
-        studio.getId(), 
-        studio.getName(), 
-        studio.getDescription(), 
-        studio.getPhone(), 
-        images, 
-        studio.getLocation(), 
-        studio.getStatus(),
-        studio.getHourlyBaseRate(), 
-        studio.getWeekendPrice(), 
-        studio.getMaxPeople(), 
-        studio.getPerPersonRate(), 
-        operatingHours
+        studio.getId(),
+        studio.getName(),
+        studio.getDescription(),
+        studio.getPhone(),
+        studio.getLocation(),
+        studio.getHourlyBaseRate(),
+        studio.getWeekendPrice(),
+        studio.getPerPersonRate(),
+        studio.getMaxPeople(),
+        studio.getSize(),
+        studio.getFacilities(),
+        studio.getRules(),
+        studio.getThumbnailImage(),
+        imageUrls,
+        studio.getOperatingHours().stream()
+            .map(OperatingHoursDto::fromEntity)
+            .toList()
+    );
+  }
+
+  private StudioDetailDto getStudioDetail(Long studioId) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new EntityNotFoundException("해당 스튜디오가 없습니다."));
+
+    List<String> imageUrls = studio.getImages().stream()
+        .map(StudioImage::getImageUrl)
+        .toList();
+
+    return new StudioDetailDto(
+        studio.getId(),
+        studio.getName(),
+        studio.getDescription(),
+        studio.getPhone(),
+        studio.getLocation(),
+        studio.getHourlyBaseRate(),
+        studio.getWeekendPrice(),
+        studio.getPerPersonRate(),
+        studio.getMaxPeople(),
+        studio.getSize(),
+        studio.getFacilities(),
+        studio.getRules(),
+        studio.getThumbnailImage(),
+        imageUrls,
+        studio.getOperatingHours().stream()
+            .map(OperatingHoursDto::fromEntity)
+            .toList()
     );
   }
 
@@ -231,49 +262,41 @@ public class StudioServiceImpl implements StudioService {
    */
   @Override
   @Transactional
-  public StudioCreateResponse createStudio(StudioCreateRequest request) {
-    Studio studio = studioRepository.findById(request.studioId())
-        .orElseThrow(() -> new IllegalArgumentException("스튜디오를 찾을 수 없습니다."));
-        
-    if (studio.getStatus() != StudioStatus.PENDING) {
-      throw new IllegalStateException("해당 스튜디오는 생성할 수 없는 상태입니다.");
-    }
+  public StudioDetailDto createStudio(StudioCreateRequest request, Long userId) {
+    User owner = userRepository.findById(userId)
+        .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
-    // 추가 정보 업데이트
-    studio.updateInfo(
-        request.description(),
-        request.phone(),
-        request.hourlyBaseRate(),
-        request.weekendPrice(),
-        request.perPersonRate(),
-        request.maxPeople()
-    );
+    Studio studio = Studio.builder()
+        .owner(owner)
+        .name(request.name())
+        .description(request.description())
+        .phone(request.phone())
+        .location("임시 위치") // 추후 수정
+        .hourlyBaseRate(request.hourlyBaseRate())
+        .weekendPrice(request.weekendPrice())
+        .perPersonRate(request.perPersonRate())
+        .maxPeople(request.maxPeople())
+        .size(request.size())
+        .facilities(request.facilities())
+        .rules(request.rules())
+        .thumbnailImage(request.thumbnailImage())
+        .build();
 
-    // 운영 시간 저장
-    List<StudioOperatingHours> newHours = request.operatingHours().stream()
-        .map(dto -> StudioOperatingHours.builder()
-            .studio(studio)
-            .weekday(dto.weekday())
-            .openTime(dto.openTime())
-            .closeTime(dto.closeTime())
-            .build())
-        .toList();
-
-    hoursRepository.saveAll(newHours);
-
-    // 대표 이미지 설정
-    studio.getImages().forEach(image -> {
-      boolean isThumbnail = image.getId().equals(request.thumbnailId());
-      image.setThumbnail(isThumbnail);
+    // 운영시간 추가
+    request.operatingHours().forEach(hourDto -> {
+      StudioOperatingHours hours = hourDto.toEntity();
+      studio.addOperatingHour(hours);
     });
 
-    studio.changeStatus(StudioStatus.ACTIVE);
+    // 이미지 URL들 → StudioImage 엔티티로 변환
+    if (request.imageUrls() != null) {
+      for (String url : request.imageUrls()) {
+        studio.addImage(new StudioImage(url));
+      }
+    }
 
-    return new StudioCreateResponse(
-        studio.getId(), 
-        studio.getName(), 
-        studio.getStatus().name().toLowerCase()
-    );
+    studioRepository.save(studio);
+    return getStudioDetail(studio.getId());
   }
 
   /**
@@ -281,42 +304,40 @@ public class StudioServiceImpl implements StudioService {
    */
   @Override
   @Transactional
-  public void updateStudio(Long studioId, StudioUpdateRequest request) {
+  public StudioDetailDto updateStudio(Long studioId, StudioUpdateRequest request, Long userId) {
     Studio studio = studioRepository.findById(studioId)
-        .orElseThrow(() -> new IllegalArgumentException("스튜디오를 찾을 수 없습니다."));
+        .orElseThrow(() -> new EntityNotFoundException("해당 스튜디오가 없습니다."));
 
-    // 기본 정보 수정
-    if (request.description() != null) studio.updateDescription(request.description());
-    if (request.phone() != null) studio.updatePhone(request.phone());
-    if (request.hourlyBaseRate() != null) studio.updateHourlyBaseRate(request.hourlyBaseRate());
-    if (request.weekendPrice() != null) studio.updateWeekendPrice(request.weekendPrice());
-    if (request.maxPeople() != null) studio.updateMaxPeople(request.maxPeople());
-    if (request.perPersonRate() != null) studio.updatePerPersonRate(request.perPersonRate());
+    studio.updateInfo(
+        request.description(),
+        request.phone(),
+        request.hourlyBaseRate(),
+        request.weekendPrice(),
+        request.perPersonRate(),
+        request.maxPeople(),
+        request.rules(),
+        request.facilities(),
+        request.thumbnailImage(),
+        request.size()
+    );
 
-    // 운영 시간 수정
-    if (request.operatingHours() != null) {
-      hoursRepository.deleteByStudioId(studioId);
-      request.operatingHours().forEach(dto -> {
-        studio.addOperatingHour(StudioOperatingHours.builder()
-            .studio(studio)
-            .weekday(dto.weekday())
-            .openTime(dto.openTime())
-            .closeTime(dto.closeTime())
-            .build());
-      });
+    studio.updateLocation("임시 위치"); // 필요시 위치도 수정
+
+    // 운영 시간 교체 로직
+    studio.getOperatingHours().clear();
+    request.operatingHours().forEach(hourDto -> {
+      studio.addOperatingHour(hourDto.toEntity());
+    });
+
+    // 이미지 수정
+    studio.getImages().clear();
+    if (request.imageUrls() != null) {
+      for (String url : request.imageUrls()) {
+        studio.addImage(new StudioImage(url));
+      }
     }
 
-    // 이미지 순서 및 대표 이미지 수정
-    if (request.images() != null) {
-      request.images().forEach(dto -> {
-        StudioImage image = studio.getImages().stream()
-            .filter(i -> i.getId().equals(dto.imageId()))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("해당 이미지를 찾을 수 없습니다."));
-
-        image.updateImageOrder(dto.displayOrder(), dto.isThumbnail());
-      });
-    }
+    return getStudioDetail(studio.getId());
   }
 
   /**

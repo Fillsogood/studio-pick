@@ -11,5 +11,9 @@ public record StudioUpdateRequest(
     Integer maxPeople,
     Long perPersonRate,
     List<OperatingHoursDto> operatingHours,
-    List<StudioImageUpdateDto> images // 이미지 순서 및 대표 여부 수정
+    Integer size,
+    String facilities,
+    String rules,
+    String thumbnailImage,
+    List<String> imageUrls
 ) {}

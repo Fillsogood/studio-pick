@@ -7,13 +7,17 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record StudioCreateRequest(
-    Long studioId,
+    @NotBlank String name,
     @NotBlank String description,
     @NotBlank String phone,
     @NotNull Long hourlyBaseRate,
     BigDecimal weekendPrice,
     Integer maxPeople,
     Long perPersonRate,
-    Long thumbnailId,
+    Integer size,
+    String facilities,
+    String rules,
+    String thumbnailImage,
+    List<String> imageUrls,
     List<OperatingHoursDto> operatingHours
 ) {}
