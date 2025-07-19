@@ -65,39 +65,69 @@ public class ReservationServiceImpl implements ReservationService {
     public UserReservationDetailResponse getReservationDetail(Long reservationId, Long userId) {
         // 1. 예약 조회 및 존재 확인
         Reservation reservation = jpaReservationRepository.findById(reservationId)
-            .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
 
         // 2. 본인 예약 확인
         if (!reservation.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("본인의 예약만 조회할 수 있습니다.");
         }
 
-        // 3. 스튜디오 정보
-        var studioInfo = new UserReservationDetailResponse.StudioInfo(
-            reservation.getStudio().getId(),
-            reservation.getStudio().getName(),
-            reservation.getStudio().getPhone(),
-            reservation.getStudio().getLocation(),
-            reservation.getStudio().getHourlyBaseRate(),
-            reservation.getStudio().getPerPersonRate()
-        );
+        // 3. 스튜디오 or 클래스 타입 분기
+        String type;
+        UserReservationDetailResponse.StudioInfo studioInfo = null;
+        UserReservationDetailResponse.WorkshopInfo workshopInfo = null;
 
-        // 4. 응답 생성
+        if (reservation.getStudio() != null) {
+            // 스튜디오 예약일 경우
+            type = "studio";
+            Studio studio = reservation.getStudio();
+
+            studioInfo = new UserReservationDetailResponse.StudioInfo(
+                    studio.getId(),
+                    studio.getName(),
+                    studio.getPhone(),
+                    studio.getLocation(),
+                    studio.getHourlyBaseRate(),
+                    studio.getPerPersonRate()
+            );
+        } else if (reservation.getWorkshop() != null) {
+            type = "workshop";
+            WorkShop workshop = reservation.getWorkshop();
+
+            workshopInfo = new UserReservationDetailResponse.WorkshopInfo(
+                    workshop.getId(),
+                    workshop.getTitle(),
+                    workshop.getInstructor(),
+                    workshop.getAddress(),
+                    workshop.getThumbnailUrl(),
+                    workshop.getDate(),
+                    workshop.getStartTime(),
+                    workshop.getEndTime(),
+                    workshop.getPrice()
+            );
+        } else {
+            throw new IllegalStateException("예약에는 studio 또는 workshop 중 하나는 반드시 존재해야 합니다.");
+        }
+
+        // 4. 최종 응답 생성
         return new UserReservationDetailResponse(
-            reservation.getId(),
-            studioInfo,
-            reservation.getReservationDate(),
-            reservation.getStartTime(),
-            reservation.getEndTime(),
-            reservation.getPeopleCount(),
-            reservation.getTotalAmount(),
-            reservation.getStatus().getValue(),
-            reservation.getCancelledReason(),
-            reservation.getCancelledAt(),
-            reservation.getCreatedAt(),
-            reservation.getUpdatedAt()
+                reservation.getId(),
+                type,
+                studioInfo,
+                workshopInfo,
+                reservation.getReservationDate(),
+                reservation.getStartTime(),
+                reservation.getEndTime(),
+                reservation.getPeopleCount(),
+                reservation.getTotalAmount(),
+                reservation.getStatus().getValue(),
+                reservation.getCancelledReason(),
+                reservation.getCancelledAt(),
+                reservation.getCreatedAt(),
+                reservation.getUpdatedAt()
         );
     }
+
 
     @Override
     public ReservationResponse createStudioReservation(Long studioId, ReservationCreateCommand command, Long userId) {
