@@ -1,18 +1,18 @@
 package org.example.studiopick.application.workshop.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 public record WorkShopCreateCommand(
-    String title,
-    String description,
-    BigDecimal price,
-    LocalDate date,
-    String instructor,
-    LocalTime startTime,
-    LocalTime endTime,
-    String thumbnailUrl,
-    List<String>imageUrls
-) {}
+        String title,
+        String description,
+        BigDecimal price,
+        String date,
+        String instructor,
+        TimeRequest startTime,
+        TimeRequest endTime,
+        String thumbnailUrl,
+        List<String> imageUrls
+) {
+    public record TimeRequest(int hour, int minute, int second, int nano) {}
+}

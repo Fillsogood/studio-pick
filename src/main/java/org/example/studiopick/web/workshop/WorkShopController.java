@@ -1,13 +1,18 @@
 package org.example.studiopick.web.workshop;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.workshop.WorkShopService;
 import org.example.studiopick.application.workshop.dto.*;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.example.studiopick.security.UserPrincipal;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -85,4 +90,22 @@ public class WorkShopController {
     Long workshopId = workShopService.activateAndCreateWorkshop(id, command, adminUserId);
     return ResponseEntity.ok(new ApiSuccessResponse<>(workshopId, "공방이 승인 및 활성화되었습니다."));
   }
+
+  @PostMapping(value = "/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiSuccessResponse<List<String>>> uploadClassImages(
+          @RequestPart("files") List<MultipartFile> files
+  ) {
+    List<String> urls = workShopService.uploadClassImages(files);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(urls, "클래스 이미지가 업로드되었습니다."));
+  }
+
+  @Operation(summary = "클래스 이미지 삭제", description = "업로드된 클래스 이미지를 S3에서 삭제합니다.")
+  @DeleteMapping(value = "/images", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ApiSuccessResponse<Void>> deleteClassImages(
+          @RequestBody List<String> imageUrls
+  ) {
+    workShopService.deleteClassImages(imageUrls);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "이미지가 삭제되었습니다."));
+  }
+
 }
