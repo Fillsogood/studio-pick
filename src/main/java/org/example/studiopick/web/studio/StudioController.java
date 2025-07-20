@@ -110,9 +110,9 @@ public class StudioController {
   @PostMapping("/rental")
   public ResponseEntity<ApiResponse<StudioApplicationResponse>> apply(
       @RequestBody SpaceRentalApplicationRequest request,
-      @AuthenticationPrincipal Long userId
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
-    StudioApplicationResponse result = studioService.studioRental(request, userId);
+    StudioApplicationResponse result = studioService.studioRental(request, userPrincipal.getUserId());
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new ApiResponse<>(true, result, "스튜디오 운영 신청이 접수되었습니다"));
   }
