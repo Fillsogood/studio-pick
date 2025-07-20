@@ -283,13 +283,15 @@ public class AdminStudioServiceImpl implements AdminStudioService {
    */
   public AdminStudioStatsResponse getStudioStats() {
     long totalStudios = jpaStudioRepository.count();
-    long activeStudios = jpaStudioRepository.countByStatus(StudioStatus.ACTIVE);
+    long approvedStudios = jpaStudioRepository.countByStatus(StudioStatus.APPROVED);
     long pendingStudios = jpaStudioRepository.countByStatus(StudioStatus.PENDING);
+    long rejectedStudios = jpaStudioRepository.countByStatus(StudioStatus.REJECTED);
     long suspendedStudios = jpaStudioRepository.countByStatus(StudioStatus.SUSPENDED);
 
     return new AdminStudioStatsResponse(
         totalStudios,
-        activeStudios,
+        approvedStudios,
+        rejectedStudios,
         pendingStudios,
         suspendedStudios
     );
