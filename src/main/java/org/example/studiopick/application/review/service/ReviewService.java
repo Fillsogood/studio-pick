@@ -5,7 +5,7 @@ import org.example.studiopick.application.review.dto.*;
 import java.util.List;
 
 public interface ReviewService {
-  ReviewResponse createReview(Long userId, ReviewCreateRequest classRequest);
+  ReviewResponse createReview(Long userId, ReviewCreateRequest request);
   void updateReview(Long classReviewId, Long userId, ReviewUpdateRequest classRequest);
   void deleteReview(Long classReviewId, Long userId);
 
