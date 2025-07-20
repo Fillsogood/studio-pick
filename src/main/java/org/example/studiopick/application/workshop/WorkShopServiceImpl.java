@@ -8,12 +8,15 @@ import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.workshop.WorkShop;
 import org.example.studiopick.domain.workshop.WorkShopImage;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.s3.S3Uploader;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopImageRepository;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -24,6 +27,7 @@ public class WorkShopServiceImpl implements WorkShopService {
   private final JpaUserRepository userRepository;
   private final SystemSettingUtils settingUtils;
   private final JpaWorkShopImageRepository workShopImageRepository;
+  private final S3Uploader s3Uploader;
 
   @Override
   public WorkShopListResponse getWorkShopList(String status, String date) {
@@ -52,9 +56,15 @@ public class WorkShopServiceImpl implements WorkShopService {
   }
 
   @Override
+  public void deleteClassImages(List<String> imageUrls) {
+    s3Uploader.deleteFiles(imageUrls);
+  }
+
+
+  @Override
   public WorkShopDetailDto getWorkShopDetail(Long workshopId) {
     WorkShop ce = jpaWorkShopRepository.findById(workshopId)
-            .orElseThrow(() -> new IllegalArgumentException("공방를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
     int defaultMaxParticipants = settingUtils.getIntegerSetting("class.default.max.participants", 8);
 
@@ -78,15 +88,28 @@ public class WorkShopServiceImpl implements WorkShopService {
     User owner = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+    // ✅ 문자열 → LocalDate로 파싱
+    LocalDate date = LocalDate.parse(request.date());
+
+    // ✅ TimeRequest → LocalTime으로 변환
+    LocalTime startTime = LocalTime.of(
+            request.startTime().hour(), request.startTime().minute(),
+            request.startTime().second(), request.startTime().nano()
+    );
+    LocalTime endTime = LocalTime.of(
+            request.endTime().hour(), request.endTime().minute(),
+            request.endTime().second(), request.endTime().nano()
+    );
+
     WorkShop workshop = WorkShop.builder()
             .owner(owner)
             .title(request.title())
             .description(request.description())
             .price(request.price())
-            .date(request.date())
+            .date(date)
             .instructor(request.instructor())
-            .startTime(request.startTime())
-            .endTime(request.endTime())
+            .startTime(startTime)
+            .endTime(endTime)
             .thumbnailUrl(request.thumbnailUrl())
             .address(request.address())
             .build();
@@ -121,13 +144,29 @@ public class WorkShopServiceImpl implements WorkShopService {
   }
 
   @Override
+  public List<String> uploadClassImages(List<MultipartFile> files) {
+    return s3Uploader.uploadFiles(files, "classes");
+  }
+
+  @Override
   @Transactional
   public void updateWorkshop(Long workshopId, WorkShopApplicationRequest request) {
     WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
             .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다."));
 
+    // ✅ 다시 파싱
+    LocalDate date = LocalDate.parse(request.date());
+    LocalTime startTime = LocalTime.of(
+            request.startTime().hour(), request.startTime().minute(),
+            request.startTime().second(), request.startTime().nano()
+    );
+    LocalTime endTime = LocalTime.of(
+            request.endTime().hour(), request.endTime().minute(),
+            request.endTime().second(), request.endTime().nano()
+    );
+
     workshop.updateBasicInfo(request.title(), request.description(), request.price());
-    workshop.updateSchedule(request.date(), request.startTime(), request.endTime());
+    workshop.updateSchedule(date, startTime, endTime);
   }
 
   @Override
@@ -147,8 +186,20 @@ public class WorkShopServiceImpl implements WorkShopService {
 
     workshop.activate();
 
+    // ✅ date, time 변환
+    LocalDate date = LocalDate.parse(command.date());
+
+    LocalTime startTime = LocalTime.of(
+            command.startTime().hour(), command.startTime().minute(),
+            command.startTime().second(), command.startTime().nano()
+    );
+    LocalTime endTime = LocalTime.of(
+            command.endTime().hour(), command.endTime().minute(),
+            command.endTime().second(), command.endTime().nano()
+    );
+
     workshop.updateBasicInfo(command.title(), command.description(), command.price());
-    workshop.updateSchedule(command.date(), command.startTime(), command.endTime());
+    workshop.updateSchedule(date, startTime, endTime); // ✅ 변환된 값 전달
     workshop.updateThumbnail(command.thumbnailUrl());
 
     workShopImageRepository.deleteByWorkShop(workshop);
@@ -165,6 +216,7 @@ public class WorkShopServiceImpl implements WorkShopService {
 
     return workshop.getId();
   }
+
 
   private List<String> getDefaultSupplies() {
     String suppliesConfig = settingUtils.getStringSetting("class.default.supplies", "");

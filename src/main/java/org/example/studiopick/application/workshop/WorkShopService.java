@@ -1,6 +1,9 @@
 package org.example.studiopick.application.workshop;
 
 import org.example.studiopick.application.workshop.dto.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface WorkShopService {
 
@@ -38,4 +41,11 @@ public interface WorkShopService {
      * 승인 후 공방 활성화 및 생성 처리
      */
     Long activateAndCreateWorkshop(Long workshopApplicationId, WorkShopCreateCommand command, Long adminUserId);
+
+
+    List<String> uploadClassImages(List<MultipartFile> files);
+
+    void deleteClassImages(List<String> imageUrls);
+
+
 }

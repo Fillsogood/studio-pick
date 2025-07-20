@@ -14,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -78,4 +80,16 @@ public class S3Uploader {
         int startIndex = url.indexOf(".amazonaws.com/") + ".amazonaws.com/".length();
         return url.substring(startIndex);
     }
+
+    public List<String> uploadFiles(List<MultipartFile> files, String dirName) {
+        return files.stream()
+                .map(file -> upload(file, dirName))
+                .collect(Collectors.toList());
+    }
+
+    public void deleteFiles(List<String> urls) {
+        urls.forEach(this::delete);
+    }
+
+
 }
