@@ -4,12 +4,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.review.dto.*;
 import org.example.studiopick.application.studio.FileUploader;
+import org.example.studiopick.domain.studio.Studio;
 import org.example.studiopick.domain.workshop.WorkShop;
 import org.example.studiopick.domain.review.Review;
 import org.example.studiopick.domain.review.ReviewImage;
 import org.example.studiopick.domain.common.enums.ReviewStatus;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
+import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.example.studiopick.infrastructure.review.ReviewImageRepository;
 import org.example.studiopick.infrastructure.review.ReviewRepository;
@@ -27,29 +29,53 @@ public class ReviewServiceImpl implements ReviewService {
   private final ReviewImageRepository imageRepository;
   private final JpaUserRepository userRepository;
   private final JpaWorkShopRepository jpaWorkShopRepository;
+  private final JpaStudioRepository studioRepository;
   private final FileUploader fileUploader;
 
 
+  // ✅ 수정된 리뷰 생성 로직
   @Override
   @Transactional
   public ReviewResponse createReview(Long userId, ReviewCreateRequest request) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("사용자 없음"));
-    WorkShop workShop = jpaWorkShopRepository.findById(request.classId())
-        .orElseThrow(() -> new RuntimeException("클래스 없음"));
+            .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-    Review review = Review.builder()
-        .user(user)
-        .workShop(workShop)
-        .rating(request.rating())
-        .comment(request.comment())
-        .status(ReviewStatus.VISIBLE)
-        .build();
+    Review review;
+
+    // 🔧 studio / workshop 분기 처리
+    switch (request.type().toLowerCase()) {
+      case "studio" -> {
+        Studio studio = studioRepository.findById(request.targetId())
+                .orElseThrow(() -> new RuntimeException("스튜디오 없음"));
+        review = Review.builder()
+                .user(user)
+                .studio(studio)
+                .rating(request.rating())
+                .comment(request.comment())
+                .status(ReviewStatus.VISIBLE)
+                .build();
+      }
+      case "workshop" -> {
+        WorkShop workShop = jpaWorkShopRepository.findById(request.targetId())
+                .orElseThrow(() -> new RuntimeException("공방 없음"));
+        review = Review.builder()
+                .user(user)
+                .workShop(workShop)
+                .rating(request.rating())
+                .comment(request.comment())
+                .status(ReviewStatus.VISIBLE)
+                .build();
+      }
+      default -> throw new RuntimeException("리뷰 대상 타입이 유효하지 않습니다.");
+    }
+
     reviewRepository.save(review);
+
+    // 이미지 업로드 처리
 
     if (request.imageUrls() != null) {
       for (MultipartFile image : request.imageUrls()) {
-        String url = fileUploader.upload(image, "reviews/class");
+        String url = fileUploader.upload(image, "reviews/" + request.type()); // 🔧 경로 개선
         ReviewImage reviewImage = ReviewImage.builder()
             .review(review)
             .imageUrl(url)

@@ -77,7 +77,8 @@ public class WorkShop extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.thumbnailUrl = thumbnailUrl;
-        this.address = address;
+//        this.address = address;// 원래코드
+        this.address = (address != null) ? address : ""; //null 방지
         this.status = status != null ? status : WorkShopStatus.PENDING;
     }
 
