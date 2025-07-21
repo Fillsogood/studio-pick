@@ -52,7 +52,9 @@ public class SecurityConfig {
                                 "/api/payments/request",
                                 "/api/payments/confirm",
                                 "/api/users/password/reset-request",
-                                "/api/users/password/reset"
+                                "/api/users/password/reset",
+                                "/api/reviews/studio/**",    // 스튜디오 리뷰 조회 공개
+                                "/api/reviews/workshop/**"   // 공방 리뷰 조회 공개
                                 ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

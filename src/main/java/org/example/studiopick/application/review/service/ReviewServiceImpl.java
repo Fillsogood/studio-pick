@@ -147,12 +147,16 @@ public class ReviewServiceImpl implements ReviewService {
             .map(ReviewImage::getImageUrl)
             .collect(Collectors.toList());
 
+    // 스튜디오와 공방 ID를 안전하게 가져오기
+    Long studioId = review.getStudio() != null ? review.getStudio().getId() : null;
+    Long workshopId = review.getWorkShop() != null ? review.getWorkShop().getId() : null;
+
     return new ReviewDetailResponse(
             review.getId(),
             review.getUser().getId(),
             review.getUser().getNickname(),
-            review.getStudio().getId(),
-            review.getWorkShop().getId(),
+            studioId,
+            workshopId,
             review.getRating(),
             review.getComment(),
             review.getStatus(),
@@ -165,20 +169,44 @@ public class ReviewServiceImpl implements ReviewService {
   // ✅ 스튜디오 리뷰 목록
   @Override
   public List<ReviewSummaryDto> getReviewsByStudio(Long studioId, int page, int size) {
-    return reviewRepository.findByStudioIdOrWorkshopId(studioId).stream()
+    System.out.println("=== getReviewsByStudio 시작 ===");
+    System.out.println("studioId: " + studioId);
+    System.out.println("page: " + page);
+    System.out.println("size: " + size);
+    
+    List<Review> allReviews = reviewRepository.findByStudioIdOrWorkshopId(studioId);
+    System.out.println("전체 리뷰 개수: " + allReviews.size());
+    
+    List<Review> visibleReviews = allReviews.stream()
             .filter(Review::isPubliclyVisible)
+            .collect(Collectors.toList());
+    System.out.println("공개 리뷰 개수: " + visibleReviews.size());
+    
+    List<ReviewSummaryDto> result = visibleReviews.stream()
             .skip((long) (page - 1) * size)
             .limit(size)
-            .map(r -> new ReviewSummaryDto(
-                    r.getId(),
-                    r.getUser().getId(),
-                    r.getUser().getNickname(),
-                    r.getRating(),
-                    r.getComment(),
-                    r.getStatus(),
-                    r.getCreatedAt()
-            ))
+            .map(r -> {
+                List<String> imageUrls = r.getImages().stream()
+                        .map(ReviewImage::getImageUrl)
+                        .collect(Collectors.toList());
+                
+                return new ReviewSummaryDto(
+                        r.getId(),
+                        r.getUser().getId(),
+                        r.getUser().getNickname(),
+                        r.getRating(),
+                        r.getComment(),
+                        r.getStatus(),
+                        r.getCreatedAt(),
+                        imageUrls
+                );
+            })
             .collect(Collectors.toList());
+    
+    System.out.println("반환할 리뷰 개수: " + result.size());
+    System.out.println("=== getReviewsByStudio 완료 ===");
+    
+    return result;
   }
 
   // ✅ 공방 리뷰 목록
@@ -188,15 +216,22 @@ public class ReviewServiceImpl implements ReviewService {
             .filter(Review::isPubliclyVisible)
             .skip((long) (page - 1) * size)
             .limit(size)
-            .map(r -> new ReviewSummaryDto(
-                    r.getId(),
-                    r.getUser().getId(),
-                    r.getUser().getNickname(),
-                    r.getRating(),
-                    r.getComment(),
-                    r.getStatus(),
-                    r.getCreatedAt()
-            ))
+            .map(r -> {
+                List<String> imageUrls = r.getImages().stream()
+                        .map(ReviewImage::getImageUrl)
+                        .collect(Collectors.toList());
+                
+                return new ReviewSummaryDto(
+                        r.getId(),
+                        r.getUser().getId(),
+                        r.getUser().getNickname(),
+                        r.getRating(),
+                        r.getComment(),
+                        r.getStatus(),
+                        r.getCreatedAt(),
+                        imageUrls
+                );
+            })
             .collect(Collectors.toList());
   }
 

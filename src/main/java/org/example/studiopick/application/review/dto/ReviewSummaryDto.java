@@ -3,6 +3,7 @@ package org.example.studiopick.application.review.dto;
 import org.example.studiopick.domain.common.enums.ReviewStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ReviewSummaryDto(
     Long id,
@@ -11,6 +12,7 @@ public record ReviewSummaryDto(
     Short rating,
     String comment,
     ReviewStatus status,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    List<String> imageUrls
 ) {
 }
