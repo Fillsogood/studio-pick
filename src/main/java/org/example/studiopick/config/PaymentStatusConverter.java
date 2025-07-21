@@ -15,6 +15,7 @@ public class PaymentStatusConverter implements AttributeConverter<PaymentStatus,
 
   @Override
   public PaymentStatus convertToEntityAttribute(String dbData) {
+    System.out.println("컨버터 변환 시도: " + dbData);
     if (dbData == null) return null;
     return Arrays.stream(PaymentStatus.values())
         .filter(s -> s.getValue().equals(dbData))
