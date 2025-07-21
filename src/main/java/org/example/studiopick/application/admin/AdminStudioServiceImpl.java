@@ -304,7 +304,7 @@ public class AdminStudioServiceImpl implements AdminStudioService {
     String grantedPermissions = "";
     
     switch (newStatus) {
-      case ACTIVE -> {
+      case APPROVED -> {
         // 승인 시 운영 타입별 권한 부여
         owner.promoteToStudioOwner(); // 기본 STUDIO_OWNER 권한 부여
         

@@ -43,3 +43,11 @@ out/
 
 # .gitignore
 studio_pick.dump
+
+### db 백업 파일 ###
+*.dump
+
+# .gitignore
+studio_pick.dump
+
+.DS_Store
