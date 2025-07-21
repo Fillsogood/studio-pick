@@ -46,7 +46,6 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-<<<<<<< Updated upstream
                                 "/api/auth/oauth/**",
                                 "/oauth2/**", // OAuth2 리디렉션 경로 허용
                                 "/api/studios",    // 스튜디오 검색 공개
@@ -57,12 +56,6 @@ public class SecurityConfig {
                                 "/api/payments/confirm",
                                 "/api/reservations/{reservationId}/cancel",
                                 "/api/payments/{paymentKey}/cancel",
-=======
-
-                                "/api/studios",
-                                "/api/studios/search",
-                                "/api/studios/{studioId}",
->>>>>>> Stashed changes
                                 "/api/users/password/reset-request",
                                 "/api/users/password/reset",
 

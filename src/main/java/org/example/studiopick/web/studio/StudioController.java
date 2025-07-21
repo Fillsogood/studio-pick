@@ -94,10 +94,14 @@ public class StudioController {
   @PatchMapping("/{studioId}")
   public ResponseEntity<ApiSuccessResponse<StudioDetailDto>> updateStudio(
       @PathVariable Long studioId,
-      @RequestBody StudioUpdateRequest request,
-      @AuthenticationPrincipal Long userId
+      @RequestBody StudioDetailDto request,
+      @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
+    Long userId = userPrincipal.getId();
     StudioDetailDto result = studioService.updateStudio(studioId, request, userId);
+    log.info("✅ 스튜디오 요청 도착: {}", studioId); // ← 이거 추가!
+    log.info("✅ 스튜디오 요청 도착: {}", request); // ← 이거 추가!
+    log.info("✅ 스튜디오 요청 도착: {}", userId); // ← 이거 추가!
     return ResponseEntity.ok(new ApiSuccessResponse<>(result, "스튜디오 정보가 수정되었습니다."));
   }
 
