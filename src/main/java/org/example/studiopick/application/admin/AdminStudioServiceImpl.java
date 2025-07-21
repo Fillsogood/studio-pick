@@ -228,7 +228,7 @@ public class AdminStudioServiceImpl implements AdminStudioService {
       studio.updateStatus(newStatus);
 
       // 운영 타입별 사용자 권한 처리
-      String grantedPermissions = processUserPermissionsByOperationType(owner, studio, newStatus);
+      processUserPermissionsByOperationType(owner, studio, newStatus);
 
       jpaStudioRepository.save(studio);
       jpaUserRepository.save(owner);
@@ -291,8 +291,8 @@ public class AdminStudioServiceImpl implements AdminStudioService {
     return new AdminStudioStatsResponse(
         totalStudios,
         approvedStudios,
-        rejectedStudios,
         pendingStudios,
+        rejectedStudios,
         suspendedStudios
     );
   }
@@ -300,21 +300,17 @@ public class AdminStudioServiceImpl implements AdminStudioService {
   /**
    * 운영 타입별 사용자 권한 처리
    */
-  private String processUserPermissionsByOperationType(User owner, Studio studio, StudioStatus newStatus) {
-    String grantedPermissions = "";
-    
+  private void processUserPermissionsByOperationType(User owner, Studio studio, StudioStatus newStatus) {
     switch (newStatus) {
-      case ACTIVE -> {
+      case APPROVED -> {
         // 승인 시 운영 타입별 권한 부여
         owner.promoteToStudioOwner(); // 기본 STUDIO_OWNER 권한 부여
         
         switch (studio.getOperationType()) {
           case SPACE_RENTAL -> {
-            grantedPermissions = "공간 대여 운영 권한 (예약 관리, 요금 설정, 운영시간 관리)";
             log.info("공간 대여 권한 부여: userId={}, studioId={}", owner.getId(), studio.getId());
           }
           case CLASS_WORKSHOP -> {
-            grantedPermissions = "공방 체험 운영 권한 (클래스 개설, 예약 관리, 강사 활동)";
             log.info("공방 체험 권한 부여: userId={}, studioId={}", owner.getId(), studio.getId());
           }
         }
@@ -322,15 +318,11 @@ public class AdminStudioServiceImpl implements AdminStudioService {
       }
       case SUSPENDED -> {
         owner.changeStatus(UserStatus.LOCKED);
-        grantedPermissions = "권한 정지 (서비스 이용 불가)";
       }
       case REJECTED -> {
         // 거부 시에는 권한 변경하지 않음 (일반 사용자 유지)
-        grantedPermissions = "없음 (신청 거부)";
       }
     }
-    
-    return grantedPermissions;
   }
 
   // Private helper methods
