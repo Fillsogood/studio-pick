@@ -324,10 +324,11 @@ public class StudioServiceImpl implements StudioService {
    */
   @Override
   @Transactional
-  public StudioDetailDto updateStudio(Long studioId, StudioUpdateRequest request, Long userId) {
+  public StudioDetailDto updateStudio(Long studioId, StudioDetailDto request, Long userId) {
     Studio studio = studioRepository.findById(studioId)
         .orElseThrow(() -> new EntityNotFoundException("해당 스튜디오가 없습니다."));
 
+    studio.changeStatus(StudioStatus.ACTIVE);
     studio.updateInfo(
         request.description(),
         request.phone(),
@@ -339,6 +340,7 @@ public class StudioServiceImpl implements StudioService {
         request.facilities(),
         request.thumbnailImage(),
         request.size()
+
     );
 
     studio.updateLocation("임시 위치"); // 필요시 위치도 수정
@@ -422,12 +424,12 @@ public class StudioServiceImpl implements StudioService {
 
   private double calculateAverageRating(Long studioId) {
     // TODO: 리뷰 시스템과 연동하여 실제 평점 계산
-    return 4.5;
+    return 0.0;
   }
 
   private int calculateReviewCount(Long studioId) {
     // TODO: 리뷰 시스템과 연동하여 실제 리뷰 개수 계산
-    return 120;
+    return 0;
   }
 
   @Override
