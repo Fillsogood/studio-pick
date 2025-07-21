@@ -45,14 +45,16 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/auth/oauth/**",
                                 "/oauth2/**", // OAuth2 리디렉션 경로 허용
-                                "/api/studios/",    // 스튜디오 검색 공개
+                                "/api/studios",    // 스튜디오 검색 공개
                                 "/api/studios/search",    // 스튜디오 검색 공개
                                 "/api/studios/{studioiId}",
                                 "/api/studios/rental",
                                 "/api/payments/request",
                                 "/api/payments/confirm",
                                 "/api/users/password/reset-request",
-                                "/api/users/password/reset"
+                                "/api/users/password/reset",
+                                "/api/reviews/studio/**",    // 스튜디오 리뷰 조회 공개
+                                "/api/reviews/workshop/**"   // 공방 리뷰 조회 공개
                                 ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

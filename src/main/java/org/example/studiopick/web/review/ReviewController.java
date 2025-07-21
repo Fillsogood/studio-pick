@@ -5,12 +5,14 @@ import lombok.RequiredArgsConstructor;
 import org.example.studiopick.application.review.dto.*;
 import org.example.studiopick.application.review.service.ReviewReplyService;
 import org.example.studiopick.application.review.service.ReviewService;
+import org.example.studiopick.application.studio.FileUploader;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.example.studiopick.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,16 +23,25 @@ public class ReviewController {
 
   private final ReviewService reviewService;
   private final ReviewReplyService reviewReplyService;
+  private final FileUploader fileUploader;
 
   @PostMapping
   public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
       @AuthenticationPrincipal UserPrincipal userPrincipal,
-      @ModelAttribute ReviewCreateRequest request
+      @RequestBody ReviewCreateRequest request
   ) {
     // 토큰에서 직접 사용자 ID 추출
     Long userId = userPrincipal.getUserId();
     ReviewResponse response = reviewService.createReview(userId, request);
     return ResponseEntity.ok(new ApiResponse<>(true, response, "리뷰가 등록되었습니다."));
+  }
+
+  @PostMapping("/images")
+  public ResponseEntity<ApiResponse<List<String>>> uploadReviewImages(
+          @RequestPart List<MultipartFile> images
+  ) {
+    List<String> urls = reviewService.uploadReviewImages(images);
+    return ResponseEntity.ok(new ApiResponse<>(true, urls, "이미지 업로드 완료"));
   }
 
   @PatchMapping("/{reviewId}")
@@ -89,6 +100,12 @@ public class ReviewController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
+    System.out.println("=== 스튜디오 리뷰 조회 요청 ===");
+    System.out.println("studioId: " + studioId);
+    System.out.println("page: " + page);
+    System.out.println("size: " + size);
+    System.out.println("=============================");
+    
     List<ReviewSummaryDto> reviews = reviewService.getReviewsByStudio(studioId, page, size);
     return ResponseEntity.ok(new ApiResponse<>(true, reviews, "스튜디오 리뷰 목록입니다."));
   }

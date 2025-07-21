@@ -12,7 +12,6 @@ public record ReviewCreateRequest(
         Short rating,
         String comment,
 
-        @Schema(description = "이미지 파일들", type = "string", format = "binary")
-        List<MultipartFile> imageUrls
+        List<String> imageUrls   // S3 URL 리스트만 받음!
 ) {}
 
