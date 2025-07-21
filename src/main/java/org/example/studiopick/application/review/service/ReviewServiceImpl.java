@@ -18,6 +18,7 @@ import org.example.studiopick.infrastructure.review.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -117,7 +118,50 @@ public class ReviewServiceImpl implements ReviewService {
       throw new RuntimeException("리뷰 작성자만 수정할 수 있습니다.");
     }
 
+    // 리뷰 기본 정보 업데이트
     review.update(request.rating(), request.comment());
+
+    // 기존 이미지들 삭제 (항상 실행)
+    System.out.println("=== 리뷰 수정 시작 ===");
+    System.out.println("기존 이미지 개수: " + review.getImages().size());
+    
+    // 강제로 모든 기존 이미지 삭제
+    List<ReviewImage> existingImages = new ArrayList<>(review.getImages());
+    for (ReviewImage image : existingImages) {
+      System.out.println("삭제 중인 이미지: " + image.getImageUrl());
+      try {
+        fileUploader.delete(image.getImageUrl());
+      } catch (Exception e) {
+        System.out.println("S3 삭제 실패: " + e.getMessage());
+      }
+      imageRepository.delete(image);
+    }
+    
+    // review 엔티티에서 이미지 리스트 초기화
+    review.getImages().clear();
+    System.out.println("기존 이미지 삭제 완료");
+
+    // 새 이미지 URL 처리
+    System.out.println("새 이미지 URL: " + request.imageUrl());
+    if (request.imageUrl() != null && !request.imageUrl().trim().isEmpty()) {
+      // 새 이미지 URL들을 콤마로 분리하여 저장
+      String[] imageUrlArray = request.imageUrl().split(",");
+      System.out.println("새 이미지 개수: " + imageUrlArray.length);
+      
+      for (String imageUrl : imageUrlArray) {
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+          System.out.println("저장 중인 새 이미지: " + imageUrl.trim());
+          ReviewImage reviewImage = ReviewImage.builder()
+              .review(review)
+              .imageUrl(imageUrl.trim())
+              .build();
+          imageRepository.save(reviewImage);
+        }
+      }
+    } else {
+      System.out.println("새 이미지가 없습니다.");
+    }
+    System.out.println("=== 리뷰 수정 완료 ===");
   }
 
   // ✅ 리뷰 삭제
