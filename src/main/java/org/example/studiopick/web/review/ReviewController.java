@@ -100,6 +100,12 @@ public class ReviewController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size
   ) {
+    System.out.println("=== 스튜디오 리뷰 조회 요청 ===");
+    System.out.println("studioId: " + studioId);
+    System.out.println("page: " + page);
+    System.out.println("size: " + size);
+    System.out.println("=============================");
+    
     List<ReviewSummaryDto> reviews = reviewService.getReviewsByStudio(studioId, page, size);
     return ResponseEntity.ok(new ApiResponse<>(true, reviews, "스튜디오 리뷰 목록입니다."));
   }
