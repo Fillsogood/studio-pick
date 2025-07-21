@@ -180,6 +180,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
     reviewRepository.delete(review);
   }
+  // 평균 평점 조회 (워크샵 기준)
+  @Override
+  public Double getAverageRatingByWorkshopId(Long workshopId) {
+    Double avg = reviewRepository.getAverageRatingByWorkshopId(workshopId);
+    return avg != null ? avg : 0.0;
+  }
 
   // ✅ 리뷰 상세 조회
   @Override

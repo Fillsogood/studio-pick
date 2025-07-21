@@ -94,6 +94,13 @@ public class WorkShop extends BaseEntity {
         this.endTime = endTime;
     }
 
+    public List<String> getImageUrls() {
+        return images.stream()
+                .map(WorkShopImage::getImageUrl)
+                .toList();
+    }
+
+
     public void updateThumbnail(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
     }

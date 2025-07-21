@@ -24,7 +24,7 @@ public class WorkShopController {
   @GetMapping
   public ResponseEntity<ApiSuccessResponse<WorkShopListResponse>> getClasses(
       @RequestParam String status,
-      @RequestParam String date
+      @RequestParam(required = false) String date
   ) {
     WorkShopListResponse response = workShopService.getWorkShopList(status, date);
     return ResponseEntity.ok(new ApiSuccessResponse<>(response));
