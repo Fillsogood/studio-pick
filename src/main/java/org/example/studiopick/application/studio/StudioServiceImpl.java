@@ -2,8 +2,8 @@ package org.example.studiopick.application.studio;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.studio.dto.*;
-import org.example.studiopick.domain.common.enums.OperationType;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.reservation.Reservation;
@@ -13,6 +13,8 @@ import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
+import org.example.studiopick.infrastructure.s3.S3Uploader;
+import org.example.studiopick.infrastructure.studio.JpaStudioImageRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioOperatingHoursRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.springframework.data.domain.Page;
@@ -24,19 +26,23 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StudioServiceImpl implements StudioService {
   private final JpaStudioRepository studioRepository;
   private final JpaStudioOperatingHoursRepository hoursRepository;
   private final JpaReservationRepository reservationRepository;
 //  private final ArtworkRepository artworkRepository;
+  private final JpaStudioImageRepository imageRepository;
   private final FileUploader fileUploader;
   private final JpaUserRepository userRepository;
+  private final S3Uploader s3Uploader;
+
   /**
    * 스튜디오(공간) 검색
    */
@@ -218,17 +224,31 @@ public class StudioServiceImpl implements StudioService {
         .description(request.description())
         .location(request.location())
         .phone(request.phone())
-        .operationType(OperationType.SPACE_RENTAL)
-        .hourlyBaseRate(request.hourlyBaseRate())
-        .weekendPrice(request.weekendPrice())
-        .perPersonRate(request.perPersonRate())
-        .maxPeople(request.maxPeople())
+        .size(request.size())
         .status(StudioStatus.PENDING)
         .owner(owner)
+        .thumbnailImage(request.thumbnailImage()) // 있으면
         .build();
 
-    processFileUploads(studio, request.businessLicense(), request.documents(), request.images());
     studioRepository.save(studio);
+
+    log.info("📌 studioRental 시작");
+    log.info("📌 유저 ID: {}", owner);
+    log.info("📌 요청된 이름: {}", request.name());
+    log.info("📌 썸네일: {}", request.thumbnailImage());
+    log.info("📌 이미지: {}", request.images());
+
+    // 스튜디오 이미지 저장
+    List<String> imageUrls = request.images();
+    if (imageUrls != null) {
+      for (String url : imageUrls) {
+        StudioImage studioImage = StudioImage.builder()
+            .studio(studio)
+            .imageUrl(url)
+            .build();
+        imageRepository.save(studioImage);
+      }
+    }
 
     return new StudioApplicationResponse(
         studio.getId(),
@@ -409,4 +429,51 @@ public class StudioServiceImpl implements StudioService {
     // TODO: 리뷰 시스템과 연동하여 실제 리뷰 개수 계산
     return 120;
   }
+
+  @Override
+  public List<String> uploadStudioImages(MultipartFile[] images) {
+    if (images.length > 5) {
+      throw new IllegalArgumentException("최대 5장의 이미지만 업로드 가능합니다.");
+    }
+
+    return Arrays.stream(images)
+        .map(image -> {
+          validateImageFile(image);
+          return s3Uploader.upload(image, "studio-images");
+        })
+        .toList();
+  }
+
+  private void validateImageFile(MultipartFile file) {
+    if (file.isEmpty()) {
+      throw new IllegalArgumentException("빈 파일은 업로드할 수 없습니다.");
+    }
+
+    String contentType = file.getContentType();
+    if (contentType == null || !contentType.startsWith("image/")) {
+      throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
+    }
+
+    if (file.getSize() > 10 * 1024 * 1024) {
+      throw new IllegalArgumentException("파일 용량은 10MB 이하만 가능합니다.");
+    }
+  }
+
+  @Override
+  public List<StudioDto> getMyStudios(Long userId) {
+    List<Studio> studios = studioRepository.findByOwnerId(userId);
+    return studios.stream()
+        .map(studio -> new StudioDto(
+            studio.getId(),
+            studio.getName(),
+            studio.getLocation(),
+            studio.getHourlyBaseRate(),
+            calculateAverageRating(studio.getId()),
+            calculateReviewCount(studio.getId()),
+            studio.getThumbnailImage(),
+            studio.getStatus()
+        ))
+        .collect(Collectors.toList());
+  }
+
 }

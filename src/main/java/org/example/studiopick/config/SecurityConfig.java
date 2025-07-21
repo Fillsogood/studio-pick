@@ -45,8 +45,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/auth/oauth/**",
                                 "/oauth2/**", // OAuth2 리디렉션 경로 허용
+                                "/api/studios/",    // 스튜디오 검색 공개
                                 "/api/studios/search",    // 스튜디오 검색 공개
-                                "/api/studios/{id}",       // 스튜디오 상세 공개
+                                "/api/studios/{studioiId}",
+                                "/api/studios/rental",
                                 "/api/payments/request",
                                 "/api/payments/confirm",
                                 "/api/users/password/reset-request",

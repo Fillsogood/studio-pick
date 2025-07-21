@@ -1,26 +1,30 @@
 package org.example.studiopick.web.studio;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.studio.StudioService;
 import org.example.studiopick.application.studio.dto.*;
 import org.example.studiopick.common.dto.ApiResponse;
 import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
+import org.example.studiopick.domain.user.User;
+import org.example.studiopick.security.CustomUserDetailsService;
 import org.example.studiopick.security.UserPrincipal;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/studios")
 @RequiredArgsConstructor
+@Slf4j
 public class StudioController {
 
   private final StudioService studioService;
+  private final CustomUserDetailsService userDetailsService;
 
   // 1. 전체 스튜디오 조회
   @GetMapping
@@ -107,14 +111,26 @@ public class StudioController {
   /**
    * 스튜디오 운영 신청
    */
+//  @PostMapping("/rental")
+//  public ResponseEntity<?> apply(
+//      @RequestBody SpaceRentalApplicationRequest request,
+//      @AuthenticationPrincipal Long userId
+//  ) {
+//    StudioApplicationResponse result = studioService.studioRental(request, userId);
+//    return ResponseEntity.status(HttpStatus.CREATED)
+//        .body(new ApiResponse<>(true, result, "스튜디오 운영 신청이 접수되었습니다"));
+//  }
+
   @PostMapping("/rental")
-  public ResponseEntity<ApiResponse<StudioApplicationResponse>> apply(
+  public ResponseEntity<?> applyStudio(
       @RequestBody SpaceRentalApplicationRequest request,
       @AuthenticationPrincipal UserPrincipal userPrincipal
   ) {
-    StudioApplicationResponse result = studioService.studioRental(request, userPrincipal.getUserId());
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(new ApiResponse<>(true, result, "스튜디오 운영 신청이 접수되었습니다"));
+    Long userId = userPrincipal.getId();
+    log.info("✅ 스튜디오 신청 요청 도착: {}", request); // ← 이거 추가!
+    log.info("✅ 스튜디오 신청 요청 도착: {}", userId); // ← 이거 추가!
+    studioService.studioRental(request, userId);
+    return ResponseEntity.ok().build();
   }
 
   /**
@@ -126,6 +142,28 @@ public class StudioController {
   ) {
     StudioApplicationDetailResponse response = studioService.studioRentalApplicationStatus(studioId);
     return ResponseEntity.ok(new ApiResponse<>(true, response, null));
+  }
+
+  /**
+  *  스튜디오 이미지 s3업로드
+  */
+  @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiResponse<List<String>>> uploadStudioImages(
+      @RequestPart("images") MultipartFile[] images
+  ) {
+    List<String> imageUrls = studioService.uploadStudioImages(images);
+    return ResponseEntity.ok(new ApiResponse<>(true, imageUrls, "업로드 완료"));
+  }
+
+  @GetMapping("/my")
+  public ResponseEntity<ApiSuccessResponse<List<StudioDto>>> getMyStudios(
+      @AuthenticationPrincipal UserPrincipal userPrincipal
+  ) {
+    Long userId = userPrincipal.getId();
+    List<StudioDto> result = studioService.getMyStudios(userId);
+    log.info("✅ 스튜디오: {}", result); // ← 이거 추가!
+    log.info("✅ 스튜디오: {}", userId); // ← 이거 추가!
+    return ResponseEntity.ok(new ApiSuccessResponse<>(result, "내 스튜디오 목록 조회 성공"));
   }
 
 }
