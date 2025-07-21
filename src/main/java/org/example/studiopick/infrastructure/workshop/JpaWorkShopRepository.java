@@ -19,6 +19,8 @@ public interface JpaWorkShopRepository extends JpaRepository<WorkShop, Long> {
   // 상태 기반 페이지 조회
   Page<WorkShop> findByStatus(WorkShopStatus status, Pageable pageable);
 
+  List<WorkShop> findByStatus(WorkShopStatus status);
+
   // 상태 + 제목 기반 필터링
   Page<WorkShop> findByStatusAndTitleContaining(WorkShopStatus status, String title, Pageable pageable);
 

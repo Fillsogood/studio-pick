@@ -15,4 +15,7 @@ public interface ReviewService {
   void deleteReviewImages(List<String> fileUrls);
   List<ReviewSummaryDto> getReviewsByStudio(Long studioId, int page, int size);
   List<ReviewSummaryDto> getReviewsByWorkshop(Long workshopId, int page, int size);
+
+  Double getAverageRatingByWorkshopId(Long workshopId);
+
 }
