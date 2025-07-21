@@ -23,10 +23,10 @@ public class StudioImage {
   @Column(name = "image_url", nullable = false, length = 255)
   private String imageUrl;
 
-  @Column(name = "is_thumbnail", nullable = false)
+  @Column(name = "is_thumbnail")
   private Boolean isThumbnail = false;
 
-  @Column(name = "display_order", nullable = false)
+  @Column(name = "display_order")
   private Integer displayOrder = 0;
 
   @Builder

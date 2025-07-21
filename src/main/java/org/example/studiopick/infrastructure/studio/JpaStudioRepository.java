@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Pageable;
-import org.example.studiopick.application.admin.dto.dashboard.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,5 +42,8 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
   long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
   List<Studio> findAllByStatus(StudioStatus status);
+
+  @Query("SELECT s FROM Studio s WHERE s.owner.id = :ownerUserId AND s.status IN ('APPROVED', 'ACTIVE')")
+  List<Studio> findByOwnerId(@Param("ownerUserId") Long userId);
 
 }

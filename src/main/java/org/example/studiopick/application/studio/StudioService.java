@@ -2,6 +2,8 @@ package org.example.studiopick.application.studio;
 
 import org.example.studiopick.application.studio.dto.*;
 import org.example.studiopick.application.studio.dto.SpaceRentalApplicationRequest;
+import org.example.studiopick.domain.user.User;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,4 +21,6 @@ public interface StudioService {
   StudioApplicationResponse studioRental(SpaceRentalApplicationRequest request, Long userId);
   StudioApplicationDetailResponse studioRentalApplicationStatus(Long studioId);
   void deactivateStudio(Long studioId);
+  List<String> uploadStudioImages(MultipartFile[] images);
+  List<StudioDto> getMyStudios(Long userId);
 }
