@@ -51,6 +51,8 @@ public class SecurityConfig {
                                 "/api/studios/rental",
                                 "/api/payments/request",
                                 "/api/payments/confirm",
+                                "/api/reservations/{reservationId}/cancel",
+                                "/api/payments/{paymentKey}/cancel",
                                 "/api/users/password/reset-request",
                                 "/api/users/password/reset",
                                 "/api/reviews/studio/**",    // 스튜디오 리뷰 조회 공개

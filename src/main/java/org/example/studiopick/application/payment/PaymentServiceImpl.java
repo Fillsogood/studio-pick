@@ -239,7 +239,7 @@ public class PaymentServiceImpl implements PaymentService {
             .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
 
         // 2. 취소 가능 상태 확인
-        if (payment.getStatus() != PaymentStatus.DONE) {
+        if (!payment.isCancellable()) {
             throw new IllegalStateException("취소할 수 없는 결제 상태입니다: " + payment.getStatus());
         }
 

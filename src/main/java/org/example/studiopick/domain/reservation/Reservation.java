@@ -148,7 +148,7 @@ public class Reservation extends BaseEntity {
     }
 
     public void refund() {
-        if (this.status == ReservationStatus.CANCEL_REQUESTED) {
+        if (this.status == ReservationStatus.CONFIRMED) {
             this.status = ReservationStatus.REFUNDED;
         } else {
             throw new IllegalStateException("현재 상태에서는 환불 처리할 수 없습니다.");

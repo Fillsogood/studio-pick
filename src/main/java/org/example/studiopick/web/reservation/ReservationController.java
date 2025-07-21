@@ -153,7 +153,7 @@ public class ReservationController {
     ) {
         // 토큰에서 직접 사용자 ID 추출
         Long userId = userPrincipal.getUserId();
-        log.info("예약 취소 요청: reservationId={}, userId={}, reason={}", 
+        log.info("예약 취소 요청: reservationId={}, userId={}, reason={}",
             reservationId, userId, command.cancelReason());
 
         // ReservationCancelRequest 생성

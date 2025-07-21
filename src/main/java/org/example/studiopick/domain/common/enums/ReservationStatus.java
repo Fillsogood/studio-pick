@@ -4,12 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum ReservationStatus {
-    PENDING("pending"),
-    CONFIRMED("confirmed"),
-    CANCEL_REQUESTED("cancel_requested"),
-    CANCELLED("cancelled"),
-    COMPLETED("completed"),
-    REFUNDED("refunded"); // 환불 처리까지 완료된 상태
+    PENDING("PENDING"),
+    CONFIRMED("CONFIRMED"),
+    CANCEL_REQUESTED("CANCEL_REQUESTED"),
+    CANCELLED("CANCELLED"),
+    COMPLETED("COMPLETED"),
+    REFUNDED("REFUNDED");
 
     private final String value;
 

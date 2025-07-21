@@ -14,6 +14,7 @@ import org.example.studiopick.domain.refund.Refund;
 import org.example.studiopick.infrastructure.refund.RefundRepository;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.infrastructure.payment.JpaPaymentRepository;
+import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class RefundServiceImpl implements RefundService {
     private final JpaPaymentRepository paymentRepository;
     private final RefundRepository refundRepository;  // ✅ 환불 내역 Repository 추가
     private final TossPaymentsService tossPaymentsService;
+    private final JpaReservationRepository reservationRepository;
 
     /**
      * ✅ 예약 취소에 따른 환불 처리 (별도 트랜잭션) - 환불 내역 DB 저장
@@ -45,10 +47,11 @@ public class RefundServiceImpl implements RefundService {
         // 1. 예약에 연결된 결제 정보 조회
         Payment payment = paymentRepository.findByReservationId(reservation.getId())
             .orElseThrow(() -> new IllegalArgumentException("해당 예약의 결제 정보를 찾을 수 없습니다."));
-        
-        log.info("환불 처리 시작: reservationId={}, refundAmount={}, paymentStatus={}", 
+
+        log.info("환불 처리 시작: reservationId={}, refundAmount={}, paymentStatus={}",
             reservation.getId(), refundInfo.refundAmount(), payment.getStatus());
 
+        log.info("환불 직전 Payment 상태: {}", payment.getStatus());
         // 2. 결제 상태 확인 (취소 가능 상태인지 확인)
         if (!payment.isCancellable()) {
             throw new IllegalStateException("환불할 수 없는 결제 상태입니다: " + payment.getStatus());
@@ -61,6 +64,7 @@ public class RefundServiceImpl implements RefundService {
 
         // 4. ✅ 환불 내역 생성 및 저장 (PENDING 상태)
         Refund refund = Refund.builder()
+            .user(reservation.getUser())
             .payment(payment)
             .reservation(reservation)
             .refundAmount(refundInfo.refundAmount())
@@ -71,7 +75,7 @@ public class RefundServiceImpl implements RefundService {
             .status(RefundStatus.PENDING)
             .tossPaymentKey(payment.getPaymentKey())
             .build();
-        
+
         Refund savedRefund = refundRepository.save(refund);
         log.info("환불 내역 생성: refundId={}, status={}", savedRefund.getId(), savedRefund.getStatus());
 
@@ -79,13 +83,13 @@ public class RefundServiceImpl implements RefundService {
             // 5. 환불 처리 시작 상태로 변경
             savedRefund.markAsProcessing();
             refundRepository.save(savedRefund);
-            
+
             // 6. 토스페이먼츠 부분 취소 호출
             TossPaymentCancelRequest cancelRequest = new TossPaymentCancelRequest(
                 "예약 취소: " + reason,
                 refundInfo.refundAmount().longValue()
             );
-            
+
             TossPaymentCancelResponse tossResponse = tossPaymentsService.cancelPaymentPartial(
                 payment.getPaymentKey(), cancelRequest);
 
@@ -100,22 +104,26 @@ public class RefundServiceImpl implements RefundService {
             } else {
                 payment.partialCancel(refundInfo.refundAmount()); // 부분 취소
             }
-            
             paymentRepository.save(payment);
 
-            log.info("환불 처리 완료: reservationId={}, refundId={}, refundAmount={}, fee={}", 
-                reservation.getId(), savedRefund.getId(), refundInfo.refundAmount(), refundInfo.cancellationFee());
-                
+            // ✅ 9. 예약 상태 업데이트 (추가된 부분)
+            reservation.refund();
+            reservationRepository.save(reservation);
+
+            log.info("환불 및 예약 상태 처리 최종 완료: reservationId={}, refundId={}, status={}",
+                reservation.getId(), savedRefund.getId(), reservation.getStatus());
+
         } catch (Exception e) {
             // ✅ 환불 실패 시 상태 업데이트 및 상세 오류 정보 저장
             savedRefund.markAsFailed(e.getMessage());
             refundRepository.save(savedRefund);
-            
-            log.error("환불 처리 실패: reservationId={}, refundId={}, error={}", 
+
+            log.error("환불 처리 실패: reservationId={}, refundId={}, error={}",
                 reservation.getId(), savedRefund.getId(), e.getMessage());
             throw new RuntimeException("환불 처리에 실패했습니다: " + e.getMessage(), e);
         }
     }
+
 
     /**
      * ✅ 토스페이먼츠 응답에서 거래 키 추출 (우선순위에 따라)
