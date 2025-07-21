@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ 공개 API (비로그인 허용)
+                        // 공개 API (비로그인 허용)
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/validate/**",
@@ -56,32 +56,35 @@ public class SecurityConfig {
                                 "/api/payments/confirm",
                                 "/api/reservations/{reservationId}/cancel",
                                 "/api/payments/{paymentKey}/cancel",
+                                "/api/studios",
+                                "/api/studios/search",
+                                "/api/studios/{studioId}",
                                 "/api/users/password/reset-request",
                                 "/api/users/password/reset",
 
-                                // ✅ 클래스 탐색은 GET만 허용
+                                // 클래스 탐색은 GET만 허용
                                 "/api/classes",
                                 "/api/classes/{id}",
                                 "/api/classes/images/**"
                         ).permitAll()
 
-                        // ✅ 클래스 등록 및 이미지 업로드 등은 로그인 필요
+                        // 클래스 등록 및 이미지 업로드 등은 로그인 필요
                         .requestMatchers(HttpMethod.POST, "/api/classes").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/classes/**").authenticated()
 
-                        // ✅ 예약/결제 관련은 필요시 추가
+                        // 예약/결제 관련은 필요시 추가
                         .requestMatchers("/api/payments/request", "/api/payments/confirm").permitAll()
 
-                        // ✅ 관리자 전용
+                        // 관리자 전용
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // ✅ 나머지는 인증 필요
+                        // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login.disable())
                 .httpBasic(basic -> basic.disable())
 
-                // ✅ 401/403 예외 처리
+                // 401/403 예외 처리
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그인이 필요합니다.");
@@ -91,7 +94,7 @@ public class SecurityConfig {
                         })
                 )
 
-                // ✅ JWT 인증 필터 등록
+                // JWT 인증 필터 등록
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

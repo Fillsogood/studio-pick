@@ -52,7 +52,7 @@ public class WorkShopServiceImpl implements WorkShopService {
 
     List<WorkShopListDto> result = workshops.stream()
             .map(c -> {
-              Double rating = reviewService.getAverageRatingByWorkshopId(c.getId()); // ✅ 평점 계산
+              Double rating = reviewService.getAverageRatingByWorkshopId(c.getId()); // 평점 계산
 
               return new WorkShopListDto(
                       c.getId(),
@@ -65,7 +65,7 @@ public class WorkShopServiceImpl implements WorkShopService {
                       c.getDate(),
                       c.getStartTime(),
                       c.getEndTime(),
-                      rating != null ? rating : 0.0 // ✅ DTO에 주입
+                      rating != null ? rating : 0.0 // DTO에 주입
               );
             })
             .toList();
@@ -95,7 +95,10 @@ public class WorkShopServiceImpl implements WorkShopService {
             ce.getEndTime(),
             ce.getInstructor(),
             defaultMaxParticipants,
-            getDefaultSupplies()
+            getDefaultSupplies(),
+            ce.getAddress(),
+            ce.getThumbnailUrl(),
+            ce.getImageUrls()
     );
   }
 
