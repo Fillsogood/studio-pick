@@ -8,6 +8,7 @@ public record AdminStudioResponse(
     String ownerName,
     String ownerEmail,
     String phone,
+    String Location,
     String status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt

@@ -18,6 +18,7 @@ public record AdminWorkshopListResponse(
 ) {
     public record AdminWorkshopResponse(
             Long id,
+            String address,
             String title,
             String description,
             String status, // PENDING, ACTIVE, INACTIVE, REJECTED

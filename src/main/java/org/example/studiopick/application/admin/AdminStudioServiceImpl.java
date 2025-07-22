@@ -35,6 +35,7 @@ public class AdminStudioServiceImpl implements AdminStudioService {
   /**
    * 스튜디오 계정 목록 조회 (페이징, 필터링)
    */
+  @Transactional
   public AdminStudioListResponse getStudioAccounts(int page, Integer size, String status, String keyword) {
     // 입력값 검증
     int pageSize = size != null ? size : settingUtils.getIntegerSetting("pagination.default.size", 10);
@@ -342,6 +343,7 @@ public class AdminStudioServiceImpl implements AdminStudioService {
         studio.getOwner().getName(),
         studio.getOwner().getEmail(),
         studio.getPhone(),
+        studio.getLocation(),
         studio.getStatus().getValue(),
         studio.getCreatedAt(),
         studio.getUpdatedAt()
