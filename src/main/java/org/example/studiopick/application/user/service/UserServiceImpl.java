@@ -130,6 +130,8 @@ public class UserServiceImpl implements UserService {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .isStudioOwner(user.isStudioOwner())
+                .isWorkShopOwner(user.isWorkShopOwner())
+                .role(user.getRole().name())
                 .status(user.getStatus().name())
                 .createdAt(user.getCreatedAt())
                 .build();
