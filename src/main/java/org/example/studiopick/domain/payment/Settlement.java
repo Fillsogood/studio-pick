@@ -97,7 +97,7 @@ public class Settlement extends BaseEntity {
     }
 
     public void hold() {
-        this.settlementStatus = SettlementStatus.HOLD;
+        this.settlementStatus = SettlementStatus.CANCELLED;
     }
 
     public boolean isPaid() {
@@ -105,7 +105,7 @@ public class Settlement extends BaseEntity {
     }
 
     public boolean isOnHold() {
-        return this.settlementStatus == SettlementStatus.HOLD;
+        return this.settlementStatus == SettlementStatus.CANCELLED;
     }
 
     public boolean isPending() {

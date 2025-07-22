@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface JpaSettlementRepository extends JpaRepository<Settlement, Long> {
     
@@ -27,6 +28,8 @@ public interface JpaSettlementRepository extends JpaRepository<Settlement, Long>
      * 상태별 정산 내역 조회 (페이징)
      */
     Page<Settlement> findBySettlementStatus(SettlementStatus status, Pageable pageable);
+
+    Optional<Settlement> findByPaymentId(Long paymentId);
     
     /**
      * 기간별 정산 내역 조회

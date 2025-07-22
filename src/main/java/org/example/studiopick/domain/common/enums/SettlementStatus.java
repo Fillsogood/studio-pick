@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum SettlementStatus {
     PENDING("pending"),
     PAID("paid"),
-    HOLD("hold");
+    CANCELLED("cancelled");
 
     private final String value;
 

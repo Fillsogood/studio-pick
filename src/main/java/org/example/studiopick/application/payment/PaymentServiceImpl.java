@@ -11,6 +11,7 @@ import org.example.studiopick.domain.common.enums.PaymentStatus;
 import org.example.studiopick.domain.payment.Payment;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.infrastructure.payment.JpaPaymentRepository;
+import org.example.studiopick.infrastructure.payment.JpaSettlementRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final JpaReservationRepository reservationRepository;
     private final JpaUserRepository userRepository;
     private final ReservationService reservationService;
+    private  final SettlementService settlementService;
 
     @Value("${toss.payments.test-client-key}")
     private String clientKey;
@@ -53,12 +55,10 @@ public class PaymentServiceImpl implements PaymentService {
         Reservation reservation = reservationRepository.findById(command.reservationId())
             .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
 
-        // ✅ 금액 비교 수정 (BigDecimal 안전 비교)
+        // ✅ 금액 일치 여부 확인
         BigDecimal requestAmount = command.amount();
         BigDecimal reservationAmount = BigDecimal.valueOf(reservation.getTotalAmount());
-
-        // 요청 금액과 예약 금액 일치 확인
-        if (!command.amount().equals(BigDecimal.valueOf(reservation.getTotalAmount()))) {
+        if (!requestAmount.equals(reservationAmount)) {
             throw new IllegalArgumentException("결제 금액이 예약 금액과 일치하지 않습니다.");
         }
 
@@ -68,25 +68,36 @@ public class PaymentServiceImpl implements PaymentService {
         // 3. 결제 정보 생성
         Payment payment = Payment.builder()
             .reservation(reservation)
-            .amount(command.amount())
+            .amount(requestAmount)
             .status(PaymentStatus.READY)
             .build();
 
-        // 4. orderId와 기본 정보 설정
+        // 4. 주문 ID 설정
         payment.updateOrderId(orderId);
-
         paymentRepository.save(payment);
 
-        log.info("결제 요청 생성 완료: orderId={}, amount={}", orderId, command.amount());
+        // 5. 주문명 생성 (스튜디오 vs 공방 구분)
+        String orderName;
+        if (reservation.getStudio() != null) {
+            orderName = "[스튜디오] " + reservation.getStudio().getName();
+        } else if (reservation.getWorkshop() != null) {
+            orderName = "[공방] " + reservation.getWorkshop().getTitle();
+        } else {
+            throw new IllegalStateException("예약에 스튜디오와 공방 정보가 모두 없습니다.");
+        }
 
+        log.info("결제 요청 생성 완료: orderId={}, amount={}, orderName={}", orderId, requestAmount, orderName);
+
+        // 6. 응답 반환
         return new PaymentRequestResponse(
             orderId,
-            command.amount(),
-            command.orderName(),
+            requestAmount,
+            orderName,
             command.customerName(),
             clientKey
         );
     }
+
 
     /**
      * ✅ 수정된 결제 승인 메서드
@@ -177,6 +188,7 @@ public class PaymentServiceImpl implements PaymentService {
             reservationService.confirmReservationPayment(payment.getReservation().getId());
             log.info("예약 상태 업데이트 완료: reservationId={}", payment.getReservation().getId());
 
+            settlementService.createSettlement(payment);
             return new PaymentConfirmResponse(
                 command.paymentKey(),
                 command.orderId(),
