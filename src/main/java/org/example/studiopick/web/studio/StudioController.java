@@ -9,6 +9,9 @@ import org.example.studiopick.domain.common.dto.ApiSuccessResponse;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.security.CustomUserDetailsService;
 import org.example.studiopick.security.UserPrincipal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,15 +43,14 @@ public class StudioController {
 
   // 2. 검색 필터 적용 조회
   @GetMapping("/search")
-  public ResponseEntity<ApiSuccessResponse<StudioSearchResponse>> searchStudios(
-      @RequestParam String keyword,
-      @RequestParam(required = false) String location,
-      @RequestParam(defaultValue = "rating") String sort
+  public ResponseEntity<ApiSuccessResponse<Page<StudioSearchResponse>>> searchStudios(
+      @RequestParam(required = false) String region,
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false, defaultValue = "popular") String sort,
+      @PageableDefault(size = 20) Pageable pageable
   ) {
-    List<StudioSearchDto> studios = studioService.searchByKeyword(keyword, location, sort);
-    return ResponseEntity.ok(
-        new ApiSuccessResponse<>(new StudioSearchResponse(studios, studios.size()))
-    );
+    Page<StudioSearchResponse> result = studioService.activeStudios(region, keyword, sort, pageable);
+    return ResponseEntity.ok(new ApiSuccessResponse<>(result));
   }
 
   // 3. 스튜디오 상세 조회

@@ -13,6 +13,7 @@ import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.example.studiopick.domain.user.User;
 import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.reservation.JpaReservationRepository;
+import org.example.studiopick.infrastructure.review.ReviewRepository;
 import org.example.studiopick.infrastructure.s3.S3Uploader;
 import org.example.studiopick.infrastructure.studio.JpaStudioImageRepository;
 import org.example.studiopick.infrastructure.studio.JpaStudioOperatingHoursRepository;
@@ -20,6 +21,7 @@ import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,6 +41,7 @@ public class StudioServiceImpl implements StudioService {
   private final JpaReservationRepository reservationRepository;
 //  private final ArtworkRepository artworkRepository;
   private final JpaStudioImageRepository imageRepository;
+  private final ReviewRepository reviewRepository;
   private final FileUploader fileUploader;
   private final JpaUserRepository userRepository;
   private final S3Uploader s3Uploader;
@@ -77,23 +80,27 @@ public class StudioServiceImpl implements StudioService {
    * 키워드로 스튜디오 검색
    */
   @Override
-  public List<StudioSearchDto> searchByKeyword(String keyword, String location, String price) {
-    List<Studio> studios = studioRepository.searchStudios(keyword, location);
+  @Transactional(readOnly = true)
+  public Page<StudioSearchResponse> activeStudios(String region, String keyword, String sort, Pageable pageable) {
+    // 1. 정렬 조건에 따라 정렬된 Pageable 생성
+    PageRequest sortedPageable = switch (sort) {
+      case "priceLow" -> PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("hourlyBaseRate").ascending());
+      case "priceHigh" -> PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("hourlyBaseRate").descending());
+      case "popular" -> PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "id")); // 정렬용 컬럼 무의미화
+      default ->  PageRequest.of(
+          pageable.getPageNumber(),
+          pageable.getPageSize(),
+          pageable.getSort()
+      );
+    };
 
-    return studios.stream()
-        .map(s -> new StudioSearchDto(
-            s.getId(),
-            s.getName(),
-            s.getLocation(),
-            calculateAverageRating(s.getId())
-        ))
-        .sorted((a, b) -> {
-          if ("rating".equals(price)) {
-            return Double.compare(b.rating(), a.rating());
-          }
-          return 0;
-        })
-        .toList();
+    Page<Studio> studios = studioRepository.searchStudios(region, keyword, sortedPageable);
+    return studios.map(studio -> {
+      Double avg = reviewRepository.getAverageRatingByStudioId(studio.getId());
+      double averageRating = avg != null ? avg : 0.0;
+
+      return StudioSearchResponse.from(studio, averageRating);
+    });
   }
   /**
    * 스튜디오 상세 정보 조회
