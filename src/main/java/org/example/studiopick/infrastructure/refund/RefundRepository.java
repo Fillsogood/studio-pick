@@ -1,5 +1,6 @@
 package org.example.studiopick.infrastructure.refund;
 
+import org.example.studiopick.domain.common.enums.RefundStatus;
 import org.example.studiopick.domain.refund.Refund;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -112,13 +113,15 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
     /**
      * 검색 조건에 따른 환불 내역 조회 (페이징)
      */
-    @Query("SELECT r FROM Refund r " +
-           "WHERE (:status IS NULL OR r.status = :status) " +
-           "AND (:startDate IS NULL OR DATE(r.createdAt) >= :startDate) " +
-           "AND (:endDate IS NULL OR DATE(r.createdAt) <= :endDate) " +
-           "ORDER BY r.createdAt DESC")
-    Page<Refund> searchRefunds(@Param("status") org.example.studiopick.domain.common.enums.RefundStatus status,
-                               @Param("startDate") String startDate,
-                               @Param("endDate") String endDate,
-                               Pageable pageable);
+    @Query("""
+    SELECT r FROM Refund r 
+    WHERE (:status IS NULL OR r.status = :status)
+    ORDER BY r.createdAt DESC
+""")
+    Page<Refund> searchRefunds(
+        @Param("status") RefundStatus status,
+        Pageable pageable
+    );
+
+
 }

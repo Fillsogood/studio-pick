@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.common.validator.PaginationValidator;
 import org.example.studiopick.domain.common.enums.ReportType;
 import org.example.studiopick.domain.common.enums.ReservationStatus;
+import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.WorkShopStatus;
 import org.example.studiopick.domain.report.Report;
+import org.example.studiopick.domain.user.User;
 import org.example.studiopick.domain.workshop.WorkShop;
 import org.example.studiopick.domain.workshop.WorkShopImage;
 import org.example.studiopick.infrastructure.report.ReportRepository;
@@ -114,12 +116,21 @@ public class AdminWorkshopServiceImpl implements AdminWorkshopService {
         WorkShop workshop = workshopRepository.findById(workshopId)
                 .orElseThrow(() -> new IllegalArgumentException("워크샵을 찾을 수 없습니다."));
 
-        String action = command.action();
-        if ("APPROVE".equalsIgnoreCase(action)) {
+        WorkShopStatus action = command.action();
+        if (WorkShopStatus.ACTIVE.equals(action)) {
             workshop.activate();
-        } else if ("REJECT".equalsIgnoreCase(action)) {
+            User owner = workshop.getOwner();
+            if (!owner.getRole().equals(UserRole.WORKSHOP_OWNER)) {
+                owner.changeRole(UserRole.WORKSHOP_OWNER);  // 혹은 WORKSHOP_OWNER
+            }
+            if (!owner.isWorkshopOwner()) {
+                owner.setWorkshopOwner(true);
+            }
+        } else if (WorkShopStatus.INACTIVE.equals(action)) {
             workshop.deactivate();
-        } else {
+            // 비활성화시 권한을 강등시킬지 여부는 정책에 따라
+        }
+        else {
             throw new IllegalArgumentException("지원하지 않는 액션입니다: " + action);
         }
 
@@ -138,14 +149,14 @@ public class AdminWorkshopServiceImpl implements AdminWorkshopService {
         WorkShop workshop = workshopRepository.findById(workshopId)
                 .orElseThrow(() -> new IllegalArgumentException("워크샵을 찾을 수 없습니다."));
 
-        String oldStatus = workshop.getStatus().name();
-        workshop.changeStatus(WorkShopStatus.valueOf(command.status().toUpperCase()));
+        WorkShopStatus oldStatus = workshop.getStatus();
+        workshop.changeStatus(command.status());
 
         return new AdminWorkshopStatusResponse(
                 workshop.getId(),
                 workshop.getTitle(),
                 oldStatus,
-                workshop.getStatus().name(),
+                workshop.getStatus(),
                 command.reason(),
                 LocalDateTime.now()
         );

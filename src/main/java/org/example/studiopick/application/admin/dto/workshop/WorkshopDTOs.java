@@ -1,5 +1,8 @@
 package org.example.studiopick.application.admin.dto.workshop;
 
+import org.example.studiopick.domain.common.enums.WorkShopStatus;
+import org.example.studiopick.domain.workshop.WorkShop;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,28 +55,28 @@ public record AdminWorkshopDetailResponse(
 }
 
 public record AdminWorkshopApprovalCommand(
-        String action, // APPROVE, REJECT
-        String reason
+    WorkShopStatus action, // APPROVE, REJECT
+    String reason
 ) {}
 
 public record AdminWorkshopApprovalResponse(
         Long workshopId,
         String workshopTitle,
-        String action,
+        WorkShopStatus action,
         String reason,
         LocalDateTime processedAt
 ) {}
 
 public record AdminWorkshopStatusCommand(
-        String status, // ACTIVE, INACTIVE, SUSPENDED
+        WorkShopStatus status, // ACTIVE, INACTIVE, SUSPENDED
         String reason
 ) {}
 
 public record AdminWorkshopStatusResponse(
         Long workshopId,
         String workshopTitle,
-        String oldStatus,
-        String newStatus,
+        WorkShopStatus oldStatus,
+        WorkShopStatus newStatus,
         String reason,
         LocalDateTime changedAt
 ) {}
@@ -111,17 +114,6 @@ public record AdminPopularWorkshopResponse(
             BigDecimal revenue
     ) {}
 }
-
-public record AdminWorkshopCategoryResponse(
-        Long id,
-        String name,
-        String description,
-        String imageUrl,
-        boolean isActive,
-        long workshopCount,
-        LocalDateTime createdAt
-) {}
-
     public record ReportedWorkshopDto(
         Long workshopId,
         String title,
@@ -130,15 +122,6 @@ public record AdminWorkshopCategoryResponse(
         int totalReportCount,
         List<String> reportReasons,
         String hideStatus,
-        LocalDateTime createdAt
-    ) {}
-
-    public record AdminWorkshopSummaryDto(
-        Long id,
-        String title,
-        String instructor,
-        String ownerName,
-        String status,
         LocalDateTime createdAt
     ) {}
 }

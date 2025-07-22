@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +41,8 @@ public class AdminRefundServiceImpl implements AdminRefundService {
     }
 
     // 검색 수행
-    Page<Refund> refunds = refundRepository.searchRefunds(refundStatus, startDate, endDate, pageable);
+    Page<Refund> refunds = refundRepository.searchRefunds(refundStatus, pageable);
+
 
     // DTO 변환
     List<RefundDTOs.AdminRefundListResponse.RefundSummary> summaries = refunds.stream()

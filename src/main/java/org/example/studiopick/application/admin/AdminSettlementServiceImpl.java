@@ -44,11 +44,11 @@ public class AdminSettlementServiceImpl implements AdminSettlementService {
     @Override
     public AdminSettlementListResponse getSettlementTargets(int page, int size, String status, String startDate, String endDate) {
         paginationValidator.validatePaginationParameters(page, size);
-        
-        Pageable pageable = PageRequest.of(page, size);
+
+
+        Pageable pageable = PageRequest.of(page - 1, size);
         Page<Settlement> settlements;
-        
-        // 상태별 필터링 (스튜디오 + 워크샵 모두 포함)
+
         if (status != null && !status.isBlank()) {
             SettlementStatus settlementStatus = SettlementStatus.valueOf(status.toUpperCase());
             settlements = settlementRepository.findBySettlementStatus(settlementStatus, pageable);

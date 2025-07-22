@@ -1,10 +1,7 @@
 package org.example.studiopick.domain.user;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.studiopick.domain.common.BaseEntity;
 import org.example.studiopick.domain.common.enums.UserRole;
 import org.example.studiopick.domain.common.enums.UserStatus;
@@ -49,9 +46,12 @@ public class User extends BaseEntity {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
-    @Column(name = "reset_token")
+  // 비밀번호 재설정용 토큰 setter 추가
+  @Setter
+  @Column(name = "reset_token")
     private String resetToken;
 
+    @Setter
     @Column(name = "reset_token_expires_at")
     private LocalDateTime resetTokenExpiresAt;
 
@@ -138,16 +138,7 @@ public class User extends BaseEntity {
         }
     }
 
-    // 비밀번호 재설정용 토큰 setter 추가
-    public void setResetToken(String token) {
-        this.resetToken = token;
-    }
-
-    public void setResetTokenExpiresAt(LocalDateTime expiresAt) {
-        this.resetTokenExpiresAt = expiresAt;
-    }
-
-    // 상태 확인 메서드들
+  // 상태 확인 메서드들
     public void activate() {
         this.status = UserStatus.ACTIVE;
     }
@@ -185,5 +176,13 @@ public class User extends BaseEntity {
      */
     public String getDisplayName() {
         return this.nickname != null && !this.nickname.isEmpty() ? this.nickname : this.name;
+    }
+
+    public boolean isWorkshopOwner() {
+        return this.role == UserRole.WORKSHOP_OWNER || this.isWorkShopOwner;
+    }
+
+    public void setWorkshopOwner(boolean b) {
+        this.role = UserRole.WORKSHOP_OWNER;
     }
 }
