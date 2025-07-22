@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.admin.dto.sales.*;
 import org.example.studiopick.common.validator.PaginationValidator;
-import org.example.studiopick.domain.common.enums.PaymentMethod;
-import org.example.studiopick.domain.common.enums.PaymentStatus;
+import org.example.studiopick.domain.common.enums.*;
 import org.example.studiopick.domain.payment.Payment;
+import org.example.studiopick.infrastructure.User.JpaUserRepository;
 import org.example.studiopick.infrastructure.payment.JpaPaymentRepository;
+import org.example.studiopick.infrastructure.studio.JpaStudioRepository;
+import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,9 @@ public class AdminSalesServiceImpl implements AdminSalesService {
 
   private final JpaPaymentRepository paymentRepository;
   private final PaginationValidator paginationValidator;
+  private final JpaUserRepository userRepository;
+  private final JpaStudioRepository studioRepository;
+  private final JpaWorkShopRepository workshopRepository;
 
   /**
    * 전체 매출 통계 조회
@@ -61,6 +66,11 @@ public class AdminSalesServiceImpl implements AdminSalesService {
     // 결제 건수 통계
     long totalPayments = paymentRepository.countByStatus(PaymentStatus.PAID);
     long totalRefundCount = paymentRepository.countByStatus(PaymentStatus.REFUNDED);
+    long totalStudios = studioRepository.countByStatus(StudioStatus.ACTIVE);
+    long totalWorkShop = workshopRepository.countByStatus(WorkShopStatus.ACTIVE);
+    long total = totalStudios + totalWorkShop;
+    long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
+
 
     return new AdminSalesStatsResponse(
         totalSales != null ? totalSales : BigDecimal.ZERO,
@@ -69,7 +79,9 @@ public class AdminSalesServiceImpl implements AdminSalesService {
         thisYearSales != null ? thisYearSales : BigDecimal.ZERO,
         totalRefunds != null ? totalRefunds : BigDecimal.ZERO,
         totalPayments,
-        totalRefundCount
+        totalRefundCount,
+        total,
+        activeUsers
     );
   }
 

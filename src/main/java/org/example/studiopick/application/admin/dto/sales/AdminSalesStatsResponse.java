@@ -9,5 +9,7 @@ public record AdminSalesStatsResponse(
     BigDecimal thisYearSales,
     BigDecimal totalRefunds,
     long totalPayments,
-    long totalRefundCount
+    long totalRefundCount,
+    long totalStudios,
+    long activeUsers
 ) {}
