@@ -32,4 +32,7 @@ public interface JpaWorkShopRepository extends JpaRepository<WorkShop, Long> {
 
   // 최신순 정렬 조회 (인기 공방용)
   List<WorkShop> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+  List<WorkShop> findByOwnerId(Long ownerUserId);
+
 }

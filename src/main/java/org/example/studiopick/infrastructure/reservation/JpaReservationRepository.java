@@ -2,8 +2,6 @@ package org.example.studiopick.infrastructure.reservation;
 
 import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.reservation.Reservation;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -79,5 +77,21 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
     long countByReservationDate(LocalDate date);
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 주어진 워크샵 ID 리스트에 대해,
+     * 취소되지 않은(reservation.status NOT IN ('CANCELLED','REFUNDED')) 예약 수를
+     * workshopId → count 로 반환
+     */
+    @Query("""
+    SELECT r.workshop.id    AS workshopId,
+           COUNT(r)         AS cnt
+    FROM   Reservation r
+    WHERE  r.workshop.id IN :ids
+      AND  r.status NOT IN ('CANCELLED','REFUNDED')
+    GROUP  BY r.workshop.id
+  """)
+    List<Object[]> countByWorkshopIds(@Param("ids") List<Long> workshopIds);
+
 
 }

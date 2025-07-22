@@ -4,7 +4,8 @@ public enum WorkShopStatus {
 
     PENDING("pending"),
     ACTIVE("active"),
-    INACTIVE("inactive");
+    INACTIVE("inactive"),
+    HIDE("hide");
 
     private final String value;
 
