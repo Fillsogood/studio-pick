@@ -59,6 +59,7 @@ public class AdminWorkshopServiceImpl implements AdminWorkshopService {
         List<AdminWorkshopListResponse.AdminWorkshopResponse> responses = workshops.getContent().stream()
                 .map(w -> new AdminWorkshopListResponse.AdminWorkshopResponse(
                         w.getId(),
+                        w.getAddress(),
                         w.getTitle(),
                         w.getDescription(),
                         w.getStatus().name(),
