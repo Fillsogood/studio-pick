@@ -19,4 +19,12 @@ public class ApiSuccessResponse<T> {
     this.message = message;
   }
 
+  public static <T> ApiSuccessResponse<T> of(T data) {
+    return new ApiSuccessResponse<>(data);
+  }
+
+  public static <T> ApiSuccessResponse<T> of(T data, String message) {
+    return new ApiSuccessResponse<>(data, message);
+  }
+
 }

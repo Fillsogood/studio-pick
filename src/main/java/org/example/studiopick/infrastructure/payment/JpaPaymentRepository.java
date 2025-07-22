@@ -157,4 +157,23 @@ public interface JpaPaymentRepository extends JpaRepository<Payment, Long>{
    */
   @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.id = :userId AND p.paidAt BETWEEN :startDate AND :endDate AND p.status = :status ORDER BY p.paidAt DESC")
   Page<Payment> findByUserIdAndPaidAtBetweenAndStatusOrderByPaidAtDesc(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, @Param("status") PaymentStatus status, Pageable pageable);
+
+  /**
+   * 주어진 워크샵 ID 리스트에 대해,
+   * 결제 완료된 금액(amount) 합계를
+   * workshopId → sum(amount) 로 반환
+   */
+  @Query("""
+    SELECT p.reservation.workshop.id AS workshopId,
+           COALESCE(SUM(p.amount), 0)       AS sum
+    FROM Payment p
+    WHERE p.reservation.workshop.id IN :ids
+      AND p.status = :paidStatus
+    GROUP BY p.reservation.workshop.id
+    """)
+  List<Object[]> sumPaidAmountByWorkshopIds(
+          @Param("ids") List<Long> workshopIds,
+          @Param("paidStatus") PaymentStatus paidStatus
+  );
+
 }

@@ -77,8 +77,7 @@ public class WorkShop extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.thumbnailUrl = thumbnailUrl;
-//        this.address = address;// 원래코드
-        this.address = (address != null) ? address : ""; //null 방지
+        this.address = (address != null) ? address : "";
         this.status = status != null ? status : WorkShopStatus.PENDING;
     }
 
@@ -99,7 +98,6 @@ public class WorkShop extends BaseEntity {
                 .map(WorkShopImage::getImageUrl)
                 .toList();
     }
-
 
     public void updateThumbnail(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
@@ -134,8 +132,21 @@ public class WorkShop extends BaseEntity {
         return this.status == WorkShopStatus.INACTIVE;
     }
 
+    /**
+     * 호스트 숨기기 기능: 상태를 HIDE로 전환
+     */
+    public void hide() {
+        this.status = WorkShopStatus.HIDE;
+    }
+
+    /**
+     * 숨김 상태인지 확인
+     */
+    public boolean isHidden() {
+        return this.status == WorkShopStatus.HIDE;
+    }
+
     public void changeStatus(WorkShopStatus status) {
         this.status = status;
     }
-
 }
