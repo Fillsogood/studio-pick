@@ -178,11 +178,11 @@ public class AdminSettlementServiceImpl implements AdminSettlementService {
         // 통계 계산
         BigDecimal totalPendingAmount = calculateAmountByStatus(filteredSettlements, SettlementStatus.PENDING);
         BigDecimal totalPaidAmount = calculateAmountByStatus(filteredSettlements, SettlementStatus.PAID);
-        BigDecimal totalHoldAmount = calculateAmountByStatus(filteredSettlements, SettlementStatus.HOLD);
+        BigDecimal totalHoldAmount = calculateAmountByStatus(filteredSettlements, SettlementStatus.CANCELLED);
         
         long pendingCount = countByStatus(filteredSettlements, SettlementStatus.PENDING);
         long paidCount = countByStatus(filteredSettlements, SettlementStatus.PAID);
-        long holdCount = countByStatus(filteredSettlements, SettlementStatus.HOLD);
+        long holdCount = countByStatus(filteredSettlements, SettlementStatus.CANCELLED);
         
         return new AdminSettlementStatsResponse(
             startDate != null ? startDate : "",

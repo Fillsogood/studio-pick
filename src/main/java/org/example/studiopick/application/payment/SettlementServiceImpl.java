@@ -52,27 +52,60 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void createSettlement(Payment payment) {
-        var studio = payment.getReservation().getStudio();
-        var commission = studio.getCommission();
-        if (commission == null) throw new IllegalStateException("수수료 정보가 없습니다");
+        var reservation = payment.getReservation();
 
         BigDecimal totalAmount = payment.getAmount();
-        BigDecimal commissionRate = commission.getCommissionRate();
-        BigDecimal platformFee = totalAmount.multiply(commissionRate).divide(BigDecimal.valueOf(100));
-        BigDecimal payoutAmount = totalAmount.subtract(platformFee);
+        BigDecimal platformFee;
+        BigDecimal payoutAmount;
+        BigDecimal taxRate = BigDecimal.valueOf(3.3);
+        BigDecimal taxAmount;
 
-        BigDecimal taxRate = BigDecimal.valueOf(3.3); // 세금율 3.3%
-        BigDecimal taxAmount = payoutAmount.multiply(taxRate).divide(BigDecimal.valueOf(100));
+        Settlement settlement;
 
-        Settlement settlement = Settlement.studioBuilder()
+        if (reservation.getStudio() != null) {
+            var studio = reservation.getStudio();
+            var commission = studio.getCommission();
+            if (commission == null) throw new IllegalStateException("스튜디오 수수료 정보가 없습니다.");
+
+            BigDecimal commissionRate = commission.getCommissionRate();
+            platformFee = totalAmount.multiply(commissionRate).divide(BigDecimal.valueOf(100));
+            payoutAmount = totalAmount.subtract(platformFee);
+            taxAmount = payoutAmount.multiply(taxRate).divide(BigDecimal.valueOf(100));
+
+            settlement = Settlement.studioBuilder()
                 .studio(studio)
                 .payment(payment)
                 .totalAmount(totalAmount)
                 .platformFee(platformFee)
                 .payoutAmount(payoutAmount)
                 .taxAmount(taxAmount)
-                .settlementStatus(SettlementStatus.PENDING)
+                .settlementStatus(SettlementStatus.PAID)
                 .build();
+
+        } else if (reservation.getWorkshop() != null) {
+            var workshop = reservation.getWorkshop();
+            var owner = workshop.getOwner();
+            if (owner == null) throw new IllegalStateException("공방 소유자 정보가 없습니다.");
+
+            // 공방 수수료율은 예시로 10%
+            BigDecimal commissionRate = BigDecimal.valueOf(10);
+            platformFee = totalAmount.multiply(commissionRate).divide(BigDecimal.valueOf(100));
+            payoutAmount = totalAmount.subtract(platformFee);
+            taxAmount = payoutAmount.multiply(taxRate).divide(BigDecimal.valueOf(100));
+
+            settlement = Settlement.workshopBuilder()
+                .workshop(workshop)
+                .payment(payment)
+                .totalAmount(totalAmount)
+                .platformFee(platformFee)
+                .payoutAmount(payoutAmount)
+                .taxAmount(taxAmount)
+                .settlementStatus(SettlementStatus.PAID)
+                .build();
+
+        } else {
+            throw new IllegalStateException("예약에 스튜디오와 공방이 모두 없습니다.");
+        }
 
         settlementRepository.save(settlement);
     }

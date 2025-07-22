@@ -9,8 +9,10 @@ import org.example.studiopick.application.refund.dto.DailyRefundStatsDto;
 import org.example.studiopick.application.reservation.dto.RefundInfo;
 import org.example.studiopick.domain.common.enums.PaymentStatus;
 import org.example.studiopick.domain.common.enums.RefundStatus;
+import org.example.studiopick.domain.common.enums.SettlementStatus;
 import org.example.studiopick.domain.payment.Payment;
 import org.example.studiopick.domain.refund.Refund;
+import org.example.studiopick.infrastructure.payment.JpaSettlementRepository;
 import org.example.studiopick.infrastructure.refund.RefundRepository;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.infrastructure.payment.JpaPaymentRepository;
@@ -37,6 +39,7 @@ public class RefundServiceImpl implements RefundService {
     private final RefundRepository refundRepository;  // ✅ 환불 내역 Repository 추가
     private final TossPaymentsService tossPaymentsService;
     private final JpaReservationRepository reservationRepository;
+    private final JpaSettlementRepository settlementRepository;
 
     /**
      * ✅ 예약 취소에 따른 환불 처리 (별도 트랜잭션) - 환불 내역 DB 저장
@@ -97,6 +100,13 @@ public class RefundServiceImpl implements RefundService {
             String transactionKey = extractTransactionKey(tossResponse);
             savedRefund.markAsCompleted(transactionKey);
             refundRepository.save(savedRefund);
+
+            settlementRepository.findByPaymentId(payment.getId())
+                .ifPresent(settlement -> {
+                    settlement.changeStatus(SettlementStatus.CANCELLED);
+                    settlementRepository.save(settlement);
+                    log.info("정산 상태 변경: settlementId={}, paymentId={}", settlement.getId(), payment.getId());
+                });
 
             // 8. 결제 상태 업데이트
             if (refundInfo.refundAmount().compareTo(payment.getAmount()) >= 0) {
