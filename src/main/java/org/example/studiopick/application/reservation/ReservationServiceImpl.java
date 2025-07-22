@@ -186,7 +186,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ReservationResponse createWorkshopReservation(Long workshopId, ReservationCreateCommand command, Long userId) {
-        validateReservationRules(command);
+        // 공방 예약은 peopleCount 검증을 건너뛰고 기본 검증만 수행
+        validateWorkshopReservationRules(command);
+        
         WorkShop workshop = jpaWorkShopRepository.findById(workshopId)
             .orElseThrow(() -> new IllegalArgumentException("해당 Workshop id를 찾을 수 없습니다."));
         User user = jpaUserRepository.findById(command.userId())
@@ -204,7 +206,7 @@ public class ReservationServiceImpl implements ReservationService {
             .startTime(workshop.getStartTime())
             .endTime(workshop.getEndTime())
             .status(ReservationStatus.PENDING)
-            .peopleCount(command.peopleCount())
+            .peopleCount((short) 1) // 공방 예약은 기본값 1로 고정
             .totalAmount(workshop.getPrice().longValue())
             .build();
         try {
@@ -423,6 +425,29 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // 4. 예약 시간 길이 검증
+        if (!reservationDomainService.isValidReservationDuration(command.startTime(), command.endTime())) {
+            int minHours = settingUtils.getIntegerSetting("reservation.min.hours", 1);
+            int maxHours = settingUtils.getIntegerSetting("reservation.max.hours", 8);
+            throw new IllegalArgumentException("예약 시간은 " + minHours + "시간 이상 " + maxHours + "시간 이하여야 합니다.");
+        }
+    }
+
+    /**
+     * 공방 예약 전용 검증 메서드 (peopleCount 검증 제외)
+     */
+    private void validateWorkshopReservationRules(ReservationCreateCommand command) {
+        // 1. 미래 날짜 검증
+        if (!reservationDomainService.isValidAdvanceReservation(command.reservationDate())) {
+            int maxAdvanceDays = settingUtils.getIntegerSetting("reservation.advance.days", 90);
+            throw new IllegalArgumentException("예약은 최대 " + maxAdvanceDays + "일 후까지만 가능합니다.");
+        }
+
+        // 2. 과거 날짜 검증
+        if (command.reservationDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("과거 날짜로는 예약할 수 없습니다.");
+        }
+
+        // 3. 예약 시간 길이 검증
         if (!reservationDomainService.isValidReservationDuration(command.startTime(), command.endTime())) {
             int minHours = settingUtils.getIntegerSetting("reservation.min.hours", 1);
             int maxHours = settingUtils.getIntegerSetting("reservation.max.hours", 8);
