@@ -35,6 +35,9 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_S3_BUCKET:       studio-pick
 
+      OAUTH_KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+      OAUTH_KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v3
