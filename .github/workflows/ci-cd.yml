@@ -122,16 +122,22 @@ jobs:
               -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e REDIS_HOST=studio-pick-redis \
               -e REDIS_PORT=6379 \
-              -e MAIL_HOST=${{ secrets.MAIL_HOST }} \
-              -e MAIL_PORT=${{ secrets.MAIL_PORT }} \
-              -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
-              -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
-              -e TOSS_TEST_CLIENT_KEY=${{ secrets.TOSS_TEST_CLIENT_KEY }} \
-              -e TOSS_TEST_SECRET_KEY=${{ secrets.TOSS_TEST_SECRET_KEY }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-              -e AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }} \
-              --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
+          +             -e REDIS_DB=${{ secrets.REDIS_DB }} \
+          -e MAIL_HOST=${{ secrets.MAIL_HOST }} \
+          -e MAIL_PORT=${{ secrets.MAIL_PORT }} \
+          -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
+          -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
+          -e TOSS_TEST_CLIENT_KEY=${{ secrets.TOSS_TEST_CLIENT_KEY }} \
+          -e TOSS_TEST_SECRET_KEY=${{ secrets.TOSS_TEST_SECRET_KEY }} \
+          +             -e TOSS_BASE_URL=${{ secrets.TOSS_BASE_URL }} \
+          -e AWS_REGION=${{ secrets.AWS_REGION }} \
+          -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          -e AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }} \
+          +             -e OAUTH_KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
+          +             -e OAUTH_KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} \
+          +             -e OAUTH_KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
+          +             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          --restart always \
+          ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
           EOF
