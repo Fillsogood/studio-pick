@@ -12,6 +12,6 @@ public record AdminSalesDetailData(
     BigDecimal amount,
     String paymentMethod,
     String status,
-    OffsetDateTime paidAt,
+    LocalDateTime paidAt,
     LocalDateTime createdAt
 ) {}

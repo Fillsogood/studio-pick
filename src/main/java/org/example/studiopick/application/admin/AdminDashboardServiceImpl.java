@@ -211,10 +211,10 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         LocalDate lastMonth = currentMonth.minusMonths(1);
         LocalDateTime lastMonthStart = lastMonth.withDayOfMonth(1).atStartOfDay();
         LocalDateTime lastMonthEnd = lastMonth.withDayOfMonth(lastMonth.lengthOfMonth()).atTime(LocalTime.MAX);
-        
+
         BigDecimal lastMonthSales = paymentRepository.getSalesByDateRangeAndStatus(
             lastMonthStart, lastMonthEnd, org.example.studiopick.domain.common.enums.PaymentStatus.PAID);
-        
+
         double growthRate = 0.0;
         if (lastMonthSales != null && lastMonthSales.compareTo(BigDecimal.ZERO) > 0 && monthSales != null) {
             growthRate = monthSales.subtract(lastMonthSales)

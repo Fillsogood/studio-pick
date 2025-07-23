@@ -1,6 +1,7 @@
 package org.example.studiopick.application.payment.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public record PaymentConfirmResponse(
@@ -9,6 +10,6 @@ public record PaymentConfirmResponse(
     String status,
     BigDecimal amount,
     String method,
-    OffsetDateTime approvedAt,
+    LocalDateTime approvedAt,
     Long reservationId
 ) {}
