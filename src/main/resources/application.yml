@@ -1,0 +1,83 @@
+spring:
+  profiles:
+    active: prod
+  application:
+    name: studio-pick
+
+  web:
+    resources:
+      add-mappings: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      database: 0  # 호스트/포트는 프로파일별로 분리
+
+mail:
+  # SMTP 공통 프로퍼티
+  protocol: smtp
+  default-encoding: UTF-8
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.example.studiopick: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+toss:
+  payments:
+    base-url: "https://api.tosspayments.com"
+
+jwt:
+  secret: Toughtimesneverlastbuttoughpeopledo
+  access-token-expiration: 1800000   # 30분
+  refresh-token-expiration: 604800000 # 7일
+
+mybatis:
+  mapper-locations: classpath:/mappers/**/*.xml
+  type-aliases-package: org.example.studiopick.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+oauth:
+  kakao:
+    redirect-uri: http://localhost:8080/api/auth/oauth/kakao
+
+platform:
+  commission:
+    rate: 0.1
+
+system:
+  setting:
+    validation:
+      enabled: false
+
+app:
+  report:
+    auto-hide-threshold: 3
+    notification:
+      admin-email: admin@studiopick.com
+    auto-processing:
+      auto-restore-enabled: false
