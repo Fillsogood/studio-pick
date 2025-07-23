@@ -12,7 +12,8 @@ public record WorkShopCreateCommand(
         TimeRequest startTime,
         TimeRequest endTime,
         String thumbnailUrl,
-        List<String> imageUrls
+        List<String> imageUrls,
+        String address
 ) {
     public record TimeRequest(int hour, int minute, int second, int nano) {}
 }

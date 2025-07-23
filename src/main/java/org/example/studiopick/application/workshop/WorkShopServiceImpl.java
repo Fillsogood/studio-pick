@@ -3,7 +3,14 @@ package org.example.studiopick.application.workshop;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studiopick.application.review.service.ReviewService;
-import org.example.studiopick.application.workshop.dto.*;
+import org.example.studiopick.application.workshop.dto.ClassManageItemResponseDto;
+import org.example.studiopick.application.workshop.dto.WorkShopApplicationDetailResponse;
+import org.example.studiopick.application.workshop.dto.WorkShopApplicationRequest;
+import org.example.studiopick.application.workshop.dto.WorkShopApplicationResponse;
+import org.example.studiopick.application.workshop.dto.WorkShopCreateCommand;
+import org.example.studiopick.application.workshop.dto.WorkShopDetailDto;
+import org.example.studiopick.application.workshop.dto.WorkShopListResponse;
+import org.example.studiopick.application.workshop.dto.WorkShopUpdateRequestDto;
 import org.example.studiopick.common.util.SystemSettingUtils;
 import org.example.studiopick.domain.common.enums.PaymentStatus;
 import org.example.studiopick.domain.common.enums.WorkShopStatus;
@@ -16,6 +23,7 @@ import org.example.studiopick.infrastructure.reservation.JpaReservationRepositor
 import org.example.studiopick.infrastructure.s3.S3Uploader;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopImageRepository;
 import org.example.studiopick.infrastructure.workshop.JpaWorkShopRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -89,23 +97,10 @@ public class WorkShopServiceImpl implements WorkShopService {
     WorkShop ws = jpaWorkShopRepository.findById(workshopId)
             .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다. id=" + workshopId));
 
-    int defaultMax = settingUtils.getIntegerSetting("class.default.max.participants", 8);
-    return new WorkShopDetailDto(
-            ws.getId(),
-            ws.getTitle(),
-            ws.getDescription(),
-            ws.getPrice(),
-            ws.getDate(),
-            ws.getStartTime(),
-            ws.getEndTime(),
-            ws.getInstructor(),
-            defaultMax,
-            getDefaultSupplies(),
-            ws.getAddress(),
-            ws.getThumbnailUrl(),
-            ws.getImageUrls()
-    );
+    // DTO 변환
+    return WorkShopDetailDto.of(ws);
   }
+
 
   @Override
   @Transactional
@@ -163,18 +158,46 @@ public class WorkShopServiceImpl implements WorkShopService {
     return s3Uploader.uploadFiles(files, "classes");
   }
 
+  // ────────────────────────────────────────────────────
   @Override
   @Transactional
-  public void updateWorkshop(Long workshopId, WorkShopApplicationRequest request) {
+  public WorkShopDetailDto updateWorkshop(
+          Long workshopId,
+          WorkShopUpdateRequestDto request,
+          Long ownerUserId
+  ) {
     WorkShop ws = jpaWorkShopRepository.findById(workshopId)
             .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다. id=" + workshopId));
 
-    LocalDate date = LocalDate.parse(request.date());
-    LocalTime start = LocalTime.of(request.startTime().hour(), request.startTime().minute(), 0);
-    LocalTime end   = LocalTime.of(request.endTime().hour(),   request.endTime().minute(),   0);
+    // 1) 권한 체크
+    if (!ws.getOwner().getId().equals(ownerUserId)) {
+      throw new AccessDeniedException("수정 권한이 없습니다.");
+    }
 
-    ws.updateBasicInfo(request.title(), request.description(), request.price());
+    // 2) 날짜/시간 파싱
+    LocalDate date = LocalDate.parse(request.getDate());
+    WorkShopUpdateRequestDto.TimeRequest ts = request.getStartTime();
+    WorkShopUpdateRequestDto.TimeRequest te = request.getEndTime();
+    LocalTime start = LocalTime.of(ts.getHour(), ts.getMinute(), ts.getSecond(), ts.getNano());
+    LocalTime end   = LocalTime.of(te.getHour(), te.getMinute(), te.getSecond(), te.getNano());
+
+    // 3) 엔티티 도메인 메서드로 필드 업데이트
+    ws.updateBasicInfo(
+            request.getTitle(),
+            request.getDescription(),
+            request.getPrice()
+    );
+    ws.updateInstructor(request.getInstructor());
+    ws.updateThumbnail(request.getThumbnailUrl());
     ws.updateSchedule(date, start, end);
+    ws.updateAddress(request.getAddress());
+    // 필요 시: ws.replaceImageUrls(request.getImageUrls());
+
+    // 4) 저장 (dirty checking 으로 자동 반영되므로 생략 가능)
+    jpaWorkShopRepository.save(ws);
+
+    // 5) DTO 변환
+    return WorkShopDetailDto.of(ws);
   }
 
   @Override
@@ -187,7 +210,9 @@ public class WorkShopServiceImpl implements WorkShopService {
 
   @Override
   @Transactional
-  public Long activateAndCreateWorkshop(Long workshopApplicationId, WorkShopCreateCommand cmd, Long adminUserId) {
+  public Long activateAndCreateWorkshop(Long workshopApplicationId,
+                                        WorkShopCreateCommand cmd,
+                                        Long adminUserId) {
     WorkShop ws = jpaWorkShopRepository.findById(workshopApplicationId)
             .orElseThrow(() -> new IllegalArgumentException("공방을 찾을 수 없습니다. id=" + workshopApplicationId));
 
@@ -224,7 +249,7 @@ public class WorkShopServiceImpl implements WorkShopService {
       case PENDING  -> "승인 대기 중입니다.";
       case ACTIVE   -> "운영 중인 클래스입니다.";
       case INACTIVE -> "승인거절된 클래스입니다.";
-      case HIDE -> "숨김처리된 클래스입니다.";
+      case HIDE     -> "숨김처리된 클래스입니다.";
     };
   }
 
@@ -260,8 +285,6 @@ public class WorkShopServiceImpl implements WorkShopService {
             .toList();
   }
 
-  // ────────────────────────────────────────────────────────
-
   @Override
   @Transactional
   public void updateWorkshopStatus(Long workshopId, String status) {
@@ -273,10 +296,9 @@ public class WorkShopServiceImpl implements WorkShopService {
     } else if ("INACTIVE".equalsIgnoreCase(status)) {
       ws.deactivate();
     } else if ("HIDE".equalsIgnoreCase(status)) {
-      ws.hide();  // HIDE와 deactivate()가 동일하다면 이렇게, 혹은 ws.hide()로 분리 구현
+      ws.hide();
     } else {
       throw new IllegalArgumentException("유효하지 않은 상태 값: " + status);
     }
   }
-
 }
