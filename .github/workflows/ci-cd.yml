@@ -83,18 +83,31 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            # 1) Redis 컨테이너가 없다면 띄우기
+            if [ "$(docker ps -q -f name=studio-pick-redis)" = "" ]; then
+              docker pull redis:6-alpine
+              docker run -d \
+                --name studio-pick-redis \
+                --network bridge \
+                --restart always \
+                -p 6379:6379 \
+                redis:6-alpine
+            fi
+          
+            # 2) 앱 컨테이너 업데이트
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
-            docker stop my-app || true
-            docker rm my-app || true
+            docker stop studio-pick-app || true
+            docker rm   studio-pick-app || true
             docker run -d \
-              --name my-app \
+              --name studio-pick-app \
+              --network bridge \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
               -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
               -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
               -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-              -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+              -e REDIS_HOST=studio-pick-redis \
+              -e REDIS_PORT=6379 \
               -e MAIL_HOST=${{ secrets.MAIL_HOST }} \
               -e MAIL_PORT=${{ secrets.MAIL_PORT }} \
               -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
