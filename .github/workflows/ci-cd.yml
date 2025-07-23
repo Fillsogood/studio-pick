@@ -79,15 +79,13 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_HOST:     ${{ secrets.DEPLOY_HOST }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-client
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no -T deploy@$DEPLOY_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
             docker stop my-app || true
-            docker rm my-app     || true
+            docker rm my-app || true
             docker run -d \
               --name my-app \
               -p 8080:8080 \
