@@ -13,6 +13,7 @@ import org.example.studiopick.domain.reservation.Reservation;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "\"Payment\"")
@@ -36,7 +37,7 @@ public class Payment extends BaseEntity {
     private PaymentStatus status = PaymentStatus.PAID;
     
     @Column(name = "paid_at")
-    private LocalDateTime paidAt;
+    private OffsetDateTime paidAt;
 
     @Column(name = "payment_key")
     private String paymentKey;        // 토스 결제 고유 키
@@ -55,7 +56,8 @@ public class Payment extends BaseEntity {
     
     @Builder
     public Payment(Reservation reservation, BigDecimal amount, PaymentMethod method, 
-                   PaymentStatus status, LocalDateTime paidAt) {
+                   PaymentStatus status,
+                   OffsetDateTime paidAt) {
         this.reservation = reservation;
         this.amount = amount;
         this.method = method;
@@ -73,7 +75,8 @@ public class Payment extends BaseEntity {
     
     public void markAsPaid() {
         this.status = PaymentStatus.PAID;
-        this.paidAt = LocalDateTime.now();
+        this.paidAt =
+            OffsetDateTime.now();
     }
     
     public void cancel() {
