@@ -18,6 +18,6 @@ public record UserPaymentHistoryResponse(
     BigDecimal amount,
     PaymentMethod method,
     PaymentStatus status,
-    OffsetDateTime paidAt,
+    LocalDateTime paidAt,
     String failureReason
 ) {}

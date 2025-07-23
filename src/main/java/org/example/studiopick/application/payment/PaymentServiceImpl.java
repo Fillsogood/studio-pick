@@ -195,7 +195,7 @@ public class PaymentServiceImpl implements PaymentService {
             reservationService.confirmReservationPayment(payment.getReservation().getId());
             log.info("예약 상태 업데이트 완료: reservationId={}", payment.getReservation().getId());
 
-            OffsetDateTime paidAt = tossResponse.approvedAt();
+            LocalDateTime paidAt = tossResponse.approvedAt().toLocalDateTime();
             settlementService.createSettlement(payment);
             return new PaymentConfirmResponse(
                 command.paymentKey(),

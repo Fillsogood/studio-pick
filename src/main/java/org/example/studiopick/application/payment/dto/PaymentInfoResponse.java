@@ -15,7 +15,7 @@ public record PaymentInfoResponse(
     BigDecimal amount,
     PaymentMethod method,
     PaymentStatus status,
-    OffsetDateTime paidAt,
+    LocalDateTime paidAt,
     String failureCode,
     String failureReason
 ) {}
