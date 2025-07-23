@@ -66,8 +66,7 @@ jobs:
       - name: Docker Compose Build & Push
         run: |
           docker compose -f docker-compose.yml build
-          docker tag studio-pick-app ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
+          docker push logi5898/my-app:latest
 
       - name: Deploy to Server
         if: github.ref == 'refs/heads/develop'
