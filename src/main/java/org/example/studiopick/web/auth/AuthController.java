@@ -100,7 +100,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false)
             .path("/")
-            .sameSite("None")
+            .sameSite("Lax")
             .maxAge(accessTokenExpiration / 1000)
             .build();
 
@@ -108,7 +108,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false)
             .path("/")
-            .sameSite("None")
+            .sameSite("Lax")
             .maxAge(refreshMaxAge)
             .build();
 
