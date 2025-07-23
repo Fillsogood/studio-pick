@@ -87,7 +87,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         if (user != null) {
             return Collections.singleton(() -> "ROLE_" + user.getRole().name());
         }
-        return Collections.singleton(() -> "ROLE_USER"); // 기본 권한
+        return Collections.singleton(() -> "ROLE_" + userRole.name());
     }
 
     @Override
