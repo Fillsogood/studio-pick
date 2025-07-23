@@ -4,37 +4,13 @@ on:
   push:
     branches: [ develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    env:
-      SPRING_DATASOURCE_URL:      ${{ secrets.DB_URL }}
-      SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USERNAME }}
-      SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      REDIS_DB:   ${{ secrets.REDIS_DB }}
-
-      MAIL_HOST:     smtp.gmail.com
-      MAIL_PORT:     587
-      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-
-      TOSS_TEST_CLIENT_KEY: ${{ secrets.TOSS_TEST_CLIENT_KEY }}
-      TOSS_TEST_SECRET_KEY: ${{ secrets.TOSS_TEST_SECRET_KEY }}
-      TOSS_BASE_URL:       https://api.tosspayments.com
-
-      JWT_SECRET:          ${{ secrets.JWT_SECRET }}
-
-      AWS_REGION:          ap-northeast-2
-      AWS_ACCESS_KEY_ID:   ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_S3_BUCKET:       studio-pick
-
-      OAUTH_KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-      OAUTH_KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
 
     steps:
       - name: Checkout Code
@@ -46,16 +22,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Docker Login
         uses: docker/login-action@v2
         with:
@@ -63,12 +29,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker Compose Build & Push
+      - name: Docker Compose Build & Push App
         run: |
-          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.build.yml build
           docker push logi5898/my-app:latest
 
-      - name: Deploy to Server
+      - name: Deploy to Remote Server
         if: github.ref == 'refs/heads/develop'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -78,13 +44,9 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd ~
-            if [ ! -d studio-pick ]; then
-            git clone https://github.com/Fillsogood/studio-pick.git
-            fi
-            cd studio-pick
-            docker compose down
+          ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOY_HOST << 'EOF'
+            cd ~/studio-pick
             docker compose pull
-            docker compose up -d --build
+            docker compose down
+            docker compose up -d
           EOF

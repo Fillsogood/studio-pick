@@ -13,9 +13,6 @@ services:
   app:
     image: logi5898/my-app:latest
     container_name: studio-pick-app
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -25,30 +22,23 @@ services:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: ${REDIS_DB}
-
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-
       TOSS_TEST_CLIENT_KEY: ${TOSS_TEST_CLIENT_KEY}
       TOSS_TEST_SECRET_KEY: ${TOSS_TEST_SECRET_KEY}
       TOSS_BASE_URL: https://api.tosspayments.com
-
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-
       JWT_SECRET: ${JWT_SECRET}
-
       OAUTH_KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
       OAUTH_KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
-
     networks:
       - studio-pick-net
     restart: always
