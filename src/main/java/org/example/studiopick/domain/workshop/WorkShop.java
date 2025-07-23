@@ -36,7 +36,7 @@ public class WorkShop extends BaseEntity {
     @Column(name = "title", nullable = false, length = 30)
     private String title;
 
-    @Column(name = "description", length = 500)
+    @Column(name = "description", columnDefinition = "TEXT", length = 500)
     private String description;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
