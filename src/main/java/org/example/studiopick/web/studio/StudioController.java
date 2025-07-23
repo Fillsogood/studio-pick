@@ -60,14 +60,6 @@ public class StudioController {
     return ResponseEntity.ok(new ApiSuccessResponse<>(detail));
   }
 
-  // 4. 스튜디오 갤러리 이미지 조회
-  @GetMapping("/{studioId}/gallery")
-  public ResponseEntity<ApiSuccessResponse<List<GalleryDto>>> getGallery(@PathVariable Long studioId) {
-    List<GalleryDto> images = studioService.gallery(studioId);
-    return ResponseEntity.ok(new ApiSuccessResponse<>(images));
-  }
-
-
   // 5. 스튜디오 요금 정보 조회
   @GetMapping("/{studioId}/pricing")
   public ResponseEntity<ApiSuccessResponse<PricingDto>> getPricing(@PathVariable Long studioId) {
@@ -170,6 +162,12 @@ public class StudioController {
     log.info("✅ 스튜디오: {}", result); // ← 이거 추가!
     log.info("✅ 스튜디오: {}", userId); // ← 이거 추가!
     return ResponseEntity.ok(new ApiSuccessResponse<>(result, "내 스튜디오 목록 조회 성공"));
+  }
+
+  @PatchMapping("/{id}/toggle-visibility")
+  public ResponseEntity<Void> toggleVisibility(@PathVariable Long id) {
+    studioService.toggleVisibility(id);
+    return ResponseEntity.ok().build();
   }
 
 }

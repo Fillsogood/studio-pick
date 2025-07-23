@@ -25,4 +25,5 @@ public interface StudioService {
   void deactivateStudio(Long studioId);
   List<String> uploadStudioImages(MultipartFile[] images);
   List<StudioDto> getMyStudios(Long userId);
+  void toggleVisibility(Long studioId);
 }

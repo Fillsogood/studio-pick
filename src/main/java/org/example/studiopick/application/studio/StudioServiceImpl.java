@@ -485,4 +485,23 @@ public class StudioServiceImpl implements StudioService {
         .collect(Collectors.toList());
   }
 
+  @Override
+  @Transactional
+  public void toggleVisibility(Long studioId) {
+    Studio studio = studioRepository.findById(studioId)
+        .orElseThrow(() -> new RuntimeException("스튜디오를 찾을 수 없습니다."));
+
+    StudioStatus current = studio.getStatus();
+
+    if (current == StudioStatus.ACTIVE) {
+      studio.deactivate();
+    } else if (current == StudioStatus.INACTIVE) {
+      studio.activate();
+    } else {
+      throw new IllegalStateException("ACTIVE 또는 INACTIVE 상태만 토글할 수 있습니다.");
+    }
+
+    studioRepository.save(studio);
+  }
+
 }
