@@ -15,7 +15,7 @@ RUN chmod +x gradlew \
 
 # ---------------------------------------------------------------------
 # 2) 런타임 단계: 가벼운 JRE 이미지를 사용해 애플리케이션만 실행합니다.
-FROM eclipse-temurin:17-jre-alpine
+FROM openjdk:17-jre-slim
 WORKDIR /app
 
 # 빌드 단계에서 생성된 fat‑jar 파일을 가져옵니다.
