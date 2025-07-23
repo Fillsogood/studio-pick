@@ -81,7 +81,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
             cd ~
             if [ ! -d studio-pick ]; then
-            git clone https://github.com/your-username/studio-pick.git
+            git clone https://github.com/Fillsogood/studio-pick.git
             fi
             cd studio-pick
             docker compose down
