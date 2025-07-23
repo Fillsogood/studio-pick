@@ -4,10 +4,6 @@ spring:
   application:
     name: studio-pick
 
-  web:
-    resources:
-      add-mappings: false
-
   jpa:
     hibernate:
       ddl-auto: update
