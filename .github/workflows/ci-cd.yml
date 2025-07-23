@@ -1,0 +1,96 @@
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # ① 여기에 한 번에 환경변수를 다 주입
+    env:
+      SPRING_DATASOURCE_URL:      ${{ secrets.DB_URL }}
+      SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USERNAME }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      REDIS_DB:   ${{ secrets.REDIS_DB }}
+
+      MAIL_HOST:     smtp.gmail.com
+      MAIL_PORT:     587
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+
+      TOSS_TEST_CLIENT_KEY: ${{ secrets.TOSS_TEST_CLIENT_KEY }}
+      TOSS_TEST_SECRET_KEY: ${{ secrets.TOSS_TEST_SECRET_KEY }}
+      TOSS_BASE_URL:       https://api.tosspayments.com
+
+      JWT_SECRET:          ${{ secrets.JWT_SECRET }}
+
+      AWS_REGION:          ap-northeast-2
+      AWS_ACCESS_KEY_ID:   ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_S3_BUCKET:       studio-pick
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v3
+
+      - name: JDK 17 설정
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gradle 캐시
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*','**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Docker 로그인
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 도커 이미지 빌드 & 푸시
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+
+      # main 브랜치로 머지되었을 때만 실제 서버에 배포
+      - name: 서버에 배포
+        if: github.ref == 'refs/heads/develop'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_HOST:     ${{ secrets.DEPLOY_HOST }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -T deploy@$DEPLOY_HOST << 'EOF'
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
+            docker stop my-app || true
+            docker rm my-app     || true
+            docker run -d \
+              --name my-app \
+              -p 8080:8080 \
+              --restart always \
+              ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
+          EOF

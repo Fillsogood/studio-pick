@@ -149,4 +149,15 @@ public class WorkShop extends BaseEntity {
     public void changeStatus(WorkShopStatus status) {
         this.status = status;
     }
+
+    /** 강사명 변경 */
+    public void updateInstructor(String instructor) {
+        this.instructor = instructor;
+    }
+
+    /** 주소 변경 */
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
 }

@@ -62,13 +62,20 @@ public class WorkShopController {
   /**
    * 공방 정보 수정
    */
-  @PatchMapping("/{id}")
-  public ResponseEntity<ApiSuccessResponse<Void>> updateWorkshop(
-      @PathVariable Long id,
-      @RequestBody WorkShopApplicationRequest request
+  @PutMapping("/{id}")
+  @Operation(summary = "워크샵 정보 수정")
+  public ResponseEntity<ApiSuccessResponse<WorkShopDetailDto>> updateWorkshop(
+          @PathVariable Long id,
+          @RequestBody WorkShopUpdateRequestDto request,
+          @AuthenticationPrincipal UserPrincipal principal
   ) {
-    workShopService.updateWorkshop(id, request);
-    return ResponseEntity.ok(new ApiSuccessResponse<>(null, "공방 정보가 수정되었습니다."));
+    WorkShopDetailDto updated = workShopService.updateWorkshop(
+            id,
+            request,
+            principal.getId()
+    );
+    return ResponseEntity
+            .ok(ApiSuccessResponse.of(updated));
   }
 
   /**

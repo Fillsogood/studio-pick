@@ -9,5 +9,6 @@ public record PaymentConfirmResponse(
     String status,
     BigDecimal amount,
     String method,
-    OffsetDateTime approvedAt
+    OffsetDateTime approvedAt,
+    Long reservationId
 ) {}

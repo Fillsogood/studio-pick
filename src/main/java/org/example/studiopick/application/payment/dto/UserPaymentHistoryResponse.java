@@ -5,6 +5,7 @@ import org.example.studiopick.domain.common.enums.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record UserPaymentHistoryResponse(
     Long paymentId,
@@ -17,6 +18,6 @@ public record UserPaymentHistoryResponse(
     BigDecimal amount,
     PaymentMethod method,
     PaymentStatus status,
-    LocalDateTime paidAt,
+    OffsetDateTime paidAt,
     String failureReason
 ) {}
