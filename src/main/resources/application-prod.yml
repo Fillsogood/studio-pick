@@ -19,11 +19,20 @@ spring:
     port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 toss:
   payments:
     test-client-key: ${TOSS_TEST_CLIENT_KEY}
     test-secret-key: ${TOSS_TEST_SECRET_KEY}
+    base-url: ${TOSS_BASE_URL}
 
 cloud:
   aws:
@@ -35,3 +44,8 @@ cloud:
     region:
       static: ${AWS_REGION}
       auto: false
+
+oauth:
+  kakao:
+    client-id: ${OAUTH_KAKAO_CLIENT_ID}
+    redirect-uri: ${OAUTH_KAKAO_REDIRECT_URI}

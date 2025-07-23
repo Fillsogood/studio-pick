@@ -47,7 +47,7 @@ toss:
     base-url: "https://api.tosspayments.com"
 
 jwt:
-  secret: Toughtimesneverlastbuttoughpeopledo
+  secret: ${JWT_SECRET}
   access-token-expiration: 1800000   # 30분
   refresh-token-expiration: 604800000 # 7일
 
@@ -56,10 +56,6 @@ mybatis:
   type-aliases-package: org.example.studiopick.domain
   configuration:
     map-underscore-to-camel-case: true
-
-oauth:
-  kakao:
-    redirect-uri: http://localhost:8080/api/auth/oauth/kakao
 
 platform:
   commission:
