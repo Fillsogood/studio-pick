@@ -105,6 +105,8 @@ jobs:
               docker rm -f $EXISTING
             fi
           
+            docker rm -f studio-pick-app || true
+          
             # 3) 새 앱 배포
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
             docker run -d \
