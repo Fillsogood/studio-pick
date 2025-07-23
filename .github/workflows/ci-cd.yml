@@ -4,8 +4,6 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
 
 jobs:
   build-and-deploy:
@@ -80,7 +78,8 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          apk add --no-cache openssh-client
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
