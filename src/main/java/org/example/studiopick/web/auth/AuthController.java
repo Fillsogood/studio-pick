@@ -161,7 +161,7 @@ public class AuthController {
     private ResponseCookie createResponseCookie(String name, String value, int maxAge) {
         return ResponseCookie.from(name, value)
             .httpOnly(true)
-            .secure(true)
+            .secure(false)
             .sameSite("None")
             .path("/")
             .maxAge(maxAge)
