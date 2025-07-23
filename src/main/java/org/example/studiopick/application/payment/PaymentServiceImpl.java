@@ -18,8 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -127,7 +126,15 @@ public class PaymentServiceImpl implements PaymentService {
         // ✅ 3. 결제 상태 확인
         if (payment.getStatus() == PaymentStatus.DONE) {
             log.warn("이미 완료된 결제입니다: orderId={}", command.orderId());
-            throw new IllegalStateException("이미 완료된 결제입니다.");
+            return new PaymentConfirmResponse(
+                payment.getPaymentKey(),
+                payment.getOrderId(),
+                "DONE",
+                payment.getAmount(),
+                payment.getMethod() != null ? payment.getMethod().name() : null,
+                payment.getPaidAt(),
+                payment.getReservation().getId()
+            );
         }
 
         // ✅ 4. 금액 검증
@@ -188,6 +195,7 @@ public class PaymentServiceImpl implements PaymentService {
             reservationService.confirmReservationPayment(payment.getReservation().getId());
             log.info("예약 상태 업데이트 완료: reservationId={}", payment.getReservation().getId());
 
+            OffsetDateTime paidAt = tossResponse.approvedAt();
             settlementService.createSettlement(payment);
             return new PaymentConfirmResponse(
                 command.paymentKey(),
@@ -195,7 +203,8 @@ public class PaymentServiceImpl implements PaymentService {
                 tossResponse.status(),
                 command.amount(),
                 tossResponse.method(),
-                tossResponse.approvedAt()
+                paidAt,
+                payment.getReservation().getId()
             );
 
         } catch (Exception e) {
