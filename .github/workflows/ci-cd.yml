@@ -79,7 +79,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd ~/studio-pick
+            cd ~
+            if [ ! -d studio-pick ]; then
+            git clone https://github.com/your-username/studio-pick.git
+            fi
+            cd studio-pick
             docker compose down
             docker compose pull
             docker compose up -d --build
