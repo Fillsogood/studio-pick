@@ -1,12 +1,6 @@
 package org.example.studiopick.application.workshop;
 
-import org.example.studiopick.application.workshop.dto.ClassManageItemResponseDto;
-import org.example.studiopick.application.workshop.dto.WorkShopApplicationDetailResponse;
-import org.example.studiopick.application.workshop.dto.WorkShopApplicationRequest;
-import org.example.studiopick.application.workshop.dto.WorkShopApplicationResponse;
-import org.example.studiopick.application.workshop.dto.WorkShopCreateCommand;
-import org.example.studiopick.application.workshop.dto.WorkShopDetailDto;
-import org.example.studiopick.application.workshop.dto.WorkShopListResponse;
+import org.example.studiopick.application.workshop.dto.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -35,7 +29,11 @@ public interface WorkShopService {
     void updateWorkshopStatus(Long workshopId, String status);
 
     /** 공방 정보 수정 */
-    void updateWorkshop(Long workshopId, WorkShopApplicationRequest request);
+    WorkShopDetailDto updateWorkshop(
+      Long workshopId,
+      WorkShopUpdateRequestDto request,
+      Long ownerUserId
+    );
 
     /** 공방 비활성화 (별도 hideStatus 플래그 없이 도메인 메서드로 처리) */
     void deactivateWorkshop(Long workshopId);
