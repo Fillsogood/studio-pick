@@ -83,24 +83,33 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            # 1) Redis 컨테이너가 없다면 띄우기
-            if [ "$(docker ps -q -f name=studio-pick-redis)" = "" ]; then
+            # 0) 사용자 정의 네트워크 생성
+            if ! docker network inspect studio-pick-net >/dev/null 2>&1; then
+              docker network create studio-pick-net
+            fi
+          
+            # 1) Redis 컨테이너 없으면 띄우기
+            if [ -z "$(docker ps -q -f name=studio-pick-redis)" ]; then
               docker pull redis:6-alpine
               docker run -d \
                 --name studio-pick-redis \
-                --network bridge \
+                --network studio-pick-net \
                 --restart always \
                 -p 6379:6379 \
                 redis:6-alpine
             fi
           
-            # 2) 앱 컨테이너 업데이트
+            # 2) 8080 포트를 쓰고 있는 컨테이너가 있으면 강제 삭제
+            EXISTING=$(docker ps -q --filter "publish=8080")
+            if [ -n "$EXISTING" ]; then
+              docker rm -f $EXISTING
+            fi
+          
+            # 3) 새 앱 배포
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
-            docker stop studio-pick-app || true
-            docker rm   studio-pick-app || true
             docker run -d \
               --name studio-pick-app \
-              --network bridge \
+              --network studio-pick-net \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
               -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
