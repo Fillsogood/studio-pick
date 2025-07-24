@@ -17,13 +17,11 @@ import java.util.List;
 public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpecificationExecutor<Studio> {
   Page<Studio> findAll(Pageable pageable);
 
-  @Query("SELECT s FROM Studio s " +
-      "WHERE (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-      "OR LOWER(s.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-      "AND (:location IS NULL OR s.location LIKE CONCAT('%', :location, '%'))")
-  List<Studio> searchStudios(
+  @Query("SELECT s FROM Studio s WHERE s.status = 'ACTIVE' AND (:region IS NULL OR (s.location IS NOT NULL AND SUBSTRING(s.location, 1, 2) = :region)) AND (:keyword IS NULL OR s.name LIKE :keyword OR s.description LIKE :keyword)")
+  Page<Studio> searchStudios(
+      @Param("region") String region,
       @Param("keyword") String keyword,
-      @Param("location") String location
+      Pageable pageable
   );
 
   // 활성화된 스튜디오만 조회

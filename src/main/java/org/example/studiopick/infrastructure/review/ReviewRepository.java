@@ -19,5 +19,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   @Query("SELECT AVG(r.rating) FROM Review r WHERE r.workShop.id = :workshopId AND r.status = 'VISIBLE'")
   Double getAverageRatingByWorkshopId(@Param("workshopId") Long workshopId);
 
+  // 스튜딩오 평점 평균 구하는 쿼리 추가
+  @Query("SELECT AVG(r.rating) FROM Review r WHERE r.studio.id = :studioId AND r.status = 'VISIBLE'")
+  Double getAverageRatingByStudioId(@Param("studioId") Long studioId);
+
 }
 
