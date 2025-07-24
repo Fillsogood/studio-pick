@@ -52,6 +52,7 @@ public class StudioServiceImpl implements StudioService {
    * 스튜디오(공간) 검색
    */
   @Override
+  @Transactional(readOnly = true)
   public StudioListResponse searchStudios(String location, String price, int page, int limit) {
     Pageable pageable = PageRequest.of(page - 1, limit);
     Page<Studio> studios = studioRepository.findActiveStudios(pageable);
