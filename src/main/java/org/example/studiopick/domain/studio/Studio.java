@@ -85,6 +85,7 @@ public class Studio extends BaseEntity {
     @Column(name = "available_classes", length = 1000)
     private String availableClasses;
 
+    @Setter
     @OneToOne(mappedBy = "studio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StudioCommission commission;
     
@@ -149,8 +150,8 @@ public class Studio extends BaseEntity {
         this.phone = phone;
         this.location = location;
     }
-    
-    public void changeStatus(StudioStatus status) {
+
+  public void changeStatus(StudioStatus status) {
         this.status = status;
     }
     
