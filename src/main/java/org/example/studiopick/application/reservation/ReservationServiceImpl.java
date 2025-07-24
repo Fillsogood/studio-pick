@@ -50,6 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final RefundService refundService;
 
     @Override
+    @Transactional(readOnly = true)
     public UserReservationDetailResponse getReservationDetail(Long reservationId, Long userId) {
         Reservation reservation = jpaReservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
