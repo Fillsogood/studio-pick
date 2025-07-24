@@ -91,7 +91,7 @@
         LOWER(r.status) as status,
         r.total_amount as totalAmount,
         -- 스튜디오 썸네일 이미지
-        (SELECT si.image_url FROM studio_image si WHERE si.studio_id = s.id AND si.is_thumbnail = true LIMIT 1) AS studioImageUrl,
+        s.thumbnail_image AS studioImageUrl,
         -- 워크샵 썸네일 이미지
         w.thumbnail_url AS workshopImageUrl
         FROM "reservation" r

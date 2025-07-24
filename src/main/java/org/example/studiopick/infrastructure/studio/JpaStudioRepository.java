@@ -43,7 +43,7 @@ public interface JpaStudioRepository extends JpaRepository<Studio, Long>, JpaSpe
 
   List<Studio> findAllByStatus(StudioStatus status);
 
-  @Query("SELECT s FROM Studio s WHERE s.owner.id = :ownerUserId AND s.status IN ('APPROVED', 'ACTIVE')")
+  @Query("SELECT s FROM Studio s WHERE s.owner.id = :ownerUserId")
   List<Studio> findByOwnerId(@Param("ownerUserId") Long userId);
 
 }

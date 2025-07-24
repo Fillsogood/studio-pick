@@ -8,6 +8,7 @@ import org.example.studiopick.domain.common.enums.ReservationStatus;
 import org.example.studiopick.domain.common.enums.StudioStatus;
 import org.example.studiopick.domain.reservation.Reservation;
 import org.example.studiopick.domain.studio.Studio;
+import org.example.studiopick.domain.studio.StudioCommission;
 import org.example.studiopick.domain.studio.StudioImage;
 import org.example.studiopick.domain.studio.StudioOperatingHours;
 import org.example.studiopick.domain.user.User;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -229,6 +231,13 @@ public class StudioServiceImpl implements StudioService {
         .owner(owner)
         .thumbnailImage(request.thumbnailImage()) // 있으면
         .build();
+
+    StudioCommission commission = StudioCommission.builder()
+        .studio(studio) // 연관관계 주인 설정
+        .commissionRate(BigDecimal.valueOf(10)) // 기본 수수료율
+        .build();
+
+    studio.setCommission(commission);
 
     studioRepository.save(studio);
 
